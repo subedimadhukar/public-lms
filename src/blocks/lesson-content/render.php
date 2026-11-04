@@ -73,7 +73,7 @@ $publiclms_files = ! empty( $attributes['showAttachments'] ) && PostTypes::LESSO
 	<?php echo $publiclms_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Lesson HTML, passed through wp_kses_post() before the_content. ?>
 	<?php if ( ! empty( $publiclms_files ) ) : ?>
 		<section class="wp-block-publiclms-lesson-content__attachments" aria-labelledby="<?php echo esc_attr( 'publiclms-attachments-' . $publiclms_item ); ?>">
-			<h2 id="<?php echo esc_attr( 'publiclms-attachments-' . $publiclms_item ); ?>" class="wp-block-publiclms-lesson-content__attachments-title"><?php esc_html_e( 'Lesson files', 'public-lms' ); ?></h2>
+			<h2 id="<?php echo esc_attr( 'publiclms-attachments-' . $publiclms_item ); ?>" class="wp-block-publiclms-lesson-content__attachments-title has-lg-font-size"><?php esc_html_e( 'Lesson files', 'public-lms' ); ?></h2>
 			<ul class="wp-block-publiclms-lesson-content__files">
 				<?php foreach ( $publiclms_files as $publiclms_file ) : ?>
 					<li class="wp-block-publiclms-lesson-content__file">

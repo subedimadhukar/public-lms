@@ -98,7 +98,7 @@ if ( '' !== $publiclms_order_key ) {
 			<p><a class="wp-element-button" href="<?php echo esc_url( $publiclms_retry ); ?>"><?php esc_html_e( 'Try again', 'public-lms' ); ?></a></p>
 		<?php endif; ?>
 	</div>
-	<h2 id="<?php echo esc_attr( $publiclms_uid . '-order' ); ?>" class="wp-block-publiclms-checkout__title">
+	<h2 id="<?php echo esc_attr( $publiclms_uid . '-order' ); ?>" class="wp-block-publiclms-checkout__title has-xl-font-size">
 		<?php
 		/* translators: %d: order number. */
 		echo esc_html( sprintf( __( 'Order #%d', 'public-lms' ), (int) $publiclms_view['id'] ) );
@@ -253,7 +253,7 @@ $publiclms_context = array(
 		<?php endforeach; ?>
 
 		<section class="wp-block-publiclms-checkout__summary" aria-labelledby="<?php echo esc_attr( $publiclms_uid . '-summary' ); ?>">
-			<h2 id="<?php echo esc_attr( $publiclms_uid . '-summary' ); ?>" class="wp-block-publiclms-checkout__title"><?php esc_html_e( 'Your order', 'public-lms' ); ?></h2>
+			<h2 id="<?php echo esc_attr( $publiclms_uid . '-summary' ); ?>" class="wp-block-publiclms-checkout__title has-xl-font-size"><?php esc_html_e( 'Your order', 'public-lms' ); ?></h2>
 			<table class="wp-block-publiclms-checkout__lines">
 				<thead class="publiclms-visually-hidden">
 					<tr><th scope="col"><?php esc_html_e( 'Course', 'public-lms' ); ?></th><th scope="col"><?php esc_html_e( 'Price', 'public-lms' ); ?></th></tr>

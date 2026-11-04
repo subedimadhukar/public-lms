@@ -187,7 +187,7 @@ $publiclms_uid   = wp_unique_id( 'publiclms-quiz-' );
 	</div>
 
 	<div class="wp-block-publiclms-quiz__results" hidden data-wp-bind--hidden="!state.quizIsDone" data-wp-class--is-passed="state.quizPassed">
-		<h2 class="wp-block-publiclms-quiz__results-title" tabindex="-1"><?php esc_html_e( 'Your result', 'public-lms' ); ?></h2>
+		<h2 class="wp-block-publiclms-quiz__results-title has-xl-font-size" tabindex="-1"><?php esc_html_e( 'Your result', 'public-lms' ); ?></h2>
 		<p class="wp-block-publiclms-quiz__score" data-wp-text="state.quizScore"></p>
 		<p class="wp-block-publiclms-quiz__verdict" data-wp-text="state.quizVerdict"></p>
 		<p class="wp-block-publiclms-quiz__actions">
@@ -199,7 +199,7 @@ $publiclms_uid   = wp_unique_id( 'publiclms-quiz-' );
 	</div>
 
 	<form class="wp-block-publiclms-quiz__form" hidden data-wp-bind--hidden="state.quizIsIntro" data-wp-on--submit="actions.submitQuiz" novalidate aria-labelledby="<?php echo esc_attr( $publiclms_uid . '-title' ); ?>">
-		<h2 id="<?php echo esc_attr( $publiclms_uid . '-title' ); ?>" class="wp-block-publiclms-quiz__form-title" tabindex="-1"><?php esc_html_e( 'Questions', 'public-lms' ); ?></h2>
+		<h2 id="<?php echo esc_attr( $publiclms_uid . '-title' ); ?>" class="wp-block-publiclms-quiz__form-title has-xl-font-size" tabindex="-1"><?php esc_html_e( 'Questions', 'public-lms' ); ?></h2>
 		<p class="wp-block-publiclms-quiz__timer" role="timer" hidden data-wp-bind--hidden="!state.quizHasTimer" data-wp-text="state.quizTimeText"></p>
 		<ol class="wp-block-publiclms-quiz__questions">
 			<template data-wp-each--question="state.quizQuestions" data-wp-each-key="context.question.key">

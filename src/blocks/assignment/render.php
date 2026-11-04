@@ -111,7 +111,7 @@ $publiclms_types = strtoupper( implode( ', ', $publiclms_settings['file_types'] 
 >
 	<?php if ( null !== $publiclms_prepared ) : ?>
 		<section class="wp-block-publiclms-assignment__status <?php echo esc_attr( $publiclms_status ); ?>" aria-labelledby="<?php echo esc_attr( 'publiclms-handin-' . $publiclms_assignment ); ?>">
-			<h2 id="<?php echo esc_attr( 'publiclms-handin-' . $publiclms_assignment ); ?>" class="wp-block-publiclms-assignment__status-title" tabindex="-1" data-wp-init="callbacks.focusHandIn"><?php esc_html_e( 'Your hand-in', 'public-lms' ); ?></h2>
+			<h2 id="<?php echo esc_attr( 'publiclms-handin-' . $publiclms_assignment ); ?>" class="wp-block-publiclms-assignment__status-title has-xl-font-size" tabindex="-1" data-wp-init="callbacks.focusHandIn"><?php esc_html_e( 'Your hand-in', 'public-lms' ); ?></h2>
 			<?php if ( SubmissionRepository::STATUS_GRADED === $publiclms_prepared['status'] ) : ?>
 				<p class="wp-block-publiclms-assignment__grade">
 					<?php
@@ -164,7 +164,7 @@ $publiclms_types = strtoupper( implode( ', ', $publiclms_settings['file_types'] 
 
 	<?php if ( $publiclms_can['allowed'] ) : ?>
 		<form class="wp-block-publiclms-assignment__form" method="post" enctype="multipart/form-data" data-wp-on--submit="actions.submitAssignment" aria-labelledby="<?php echo esc_attr( $publiclms_uid . '-form' ); ?>">
-			<h2 id="<?php echo esc_attr( $publiclms_uid . '-form' ); ?>" class="wp-block-publiclms-assignment__status-title">
+			<h2 id="<?php echo esc_attr( $publiclms_uid . '-form' ); ?>" class="wp-block-publiclms-assignment__status-title has-xl-font-size">
 				<?php echo esc_html( null === $publiclms_prepared ? __( 'Hand in your work', 'public-lms' ) : __( 'Hand in again', 'public-lms' ) ); ?>
 			</h2>
 			<?php if ( null !== $publiclms_prepared && SubmissionRepository::STATUS_SUBMITTED === $publiclms_prepared['status'] ) : ?>

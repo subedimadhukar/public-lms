@@ -121,7 +121,7 @@ $publiclms_heading = sprintf(
 	data-wp-interactive="publiclms/learning"
 	<?php echo wp_interactivity_data_wp_context( array( 'selected' => $publiclms_default ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by wp_interactivity_data_wp_context(). ?>
 >
-	<h2 class="wp-block-publiclms-student-dashboard__heading"><?php echo esc_html( $publiclms_heading ); ?></h2>
+	<h2 class="wp-block-publiclms-student-dashboard__heading has-2-xl-font-size"><?php echo esc_html( $publiclms_heading ); ?></h2>
 
 	<?php if ( count( $publiclms_tabs ) > 1 ) : ?>
 		<div class="wp-block-publiclms-student-dashboard__tabs" role="tablist" aria-label="<?php esc_attr_e( 'My courses', 'public-lms' ); ?>">
