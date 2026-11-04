@@ -85,8 +85,10 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      # Block scalar: a plain scalar containing ': ' is read as a YAML mapping.
       - name: Configure wp-env without the sibling theme checkout
-        run: printf '{ "themes": [] }\n' > .wp-env.override.json
+        run: |
+          printf '{ "themes": [] }\n' > .wp-env.override.json
 
       - run: npx wp-env start
       - run: npx playwright install chromium --with-deps

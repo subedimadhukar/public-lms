@@ -12,3 +12,14 @@ parameters:
 		- tests/phpstan/bootstrap.php
 		- tests/phpstan/wp-cli-stubs.php
 	treatPhpDocTypesAsCertain: false
+	ignoreErrors:
+		# The asset files come from `npm run build` and are not committed. Each
+		# require is guarded by is_readable(), so a missing build is handled at
+		# runtime; the rule only fires where build/ is absent, such as CI lint.
+		-
+			identifier: require.fileNotFound
+			paths:
+				- includes/Admin/AdminApp.php
+				- includes/Admin/EditorAssets.php
+				- includes/Blocks/Blocks.php
+			reportUnmatched: false
