@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<phpunit
+	bootstrap="tests/phpunit/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	convertDeprecationsToExceptions="true"
+	beStrictAboutTestsThatDoNotTestAnything="true"
+	>
+	<testsuites>
+		<testsuite name="public-lms">
+			<directory suffix="Test.php">./tests/phpunit/</directory>
+		</testsuite>
+	</testsuites>
+	<coverage includeUncoveredFiles="true" processUncoveredFiles="false">
+		<include>
+			<directory suffix=".php">./includes/</directory>
+		</include>
+	</coverage>
+</phpunit>

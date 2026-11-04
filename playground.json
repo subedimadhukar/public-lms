@@ -1,0 +1,57 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "Public LMS with CampusInterface",
+		"description": "Installs the Public LMS plugin and the CampusInterface theme from their main branches.",
+		"author": "WPInterface",
+		"categories": [
+			"LMS",
+			"Education"
+		]
+	},
+	"landingPage": "/wp-admin/edit.php?post_type=plms_course",
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": true
+	},
+	"login": true,
+	"steps": [
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/wpinterface/public-lms",
+				"ref": "main",
+				"refType": "branch",
+				"path": "/"
+			},
+			"options": {
+				"activate": true,
+				"targetFolderName": "public-lms"
+			}
+		},
+		{
+			"step": "installTheme",
+			"themeData": {
+				"resource": "git:directory",
+				"url": "https://github.com/wpinterface/campusinterface",
+				"ref": "main",
+				"refType": "branch",
+				"path": "/"
+			},
+			"options": {
+				"activate": true,
+				"targetFolderName": "campusinterface"
+			}
+		},
+		{
+			"step": "setSiteOptions",
+			"options": {
+				"blogname": "Public LMS demo"
+			}
+		}
+	]
+}

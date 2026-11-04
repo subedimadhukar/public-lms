@@ -1,0 +1,58 @@
+{
+	"name": "public-lms",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Public LMS: a block-native learning management system for WordPress.",
+	"author": "WPInterface (https://wpinterface.com)",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"wordpress",
+		"wordpress-plugin",
+		"lms",
+		"e-learning",
+		"block-editor"
+	],
+	"homepage": "https://wpinterface.com/plugins/public-lms/",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/wpinterface/public-lms.git"
+	},
+	"bugs": {
+		"url": "https://github.com/wpinterface/public-lms/issues"
+	},
+	"engines": {
+		"node": "^22.22.2 || >=24.15.0",
+		"npm": ">=10.8.0"
+	},
+	"files": [
+		"build",
+		"includes",
+		"languages",
+		"patterns",
+		"templates",
+		"vendor",
+		"public-lms.php",
+		"uninstall.php",
+		"readme.txt"
+	],
+	"devDependencies": {
+		"@wordpress/env": "^12.0.0",
+		"@wordpress/scripts": "^37.0.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"format": "wp-scripts format",
+		"lint:js": "wp-scripts lint-js",
+		"lint:css": "wp-scripts lint-style",
+		"lint:md": "wp-scripts lint-md-docs",
+		"lint:pkg-json": "wp-scripts lint-pkg-json",
+		"test:js": "wp-scripts test-unit-js --passWithNoTests",
+		"packages-update": "wp-scripts packages-update",
+		"plugin-zip": "wp-scripts plugin-zip",
+		"env": "wp-env",
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/public-lms vendor/bin/phpunit"
+	}
+}

@@ -1,0 +1,13 @@
+includes:
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+	level: 6
+	phpVersion: 70400
+	paths:
+		- public-lms.php
+		- uninstall.php
+		- includes/
+	bootstrapFiles:
+		- tests/phpstan/bootstrap.php
+	treatPhpDocTypesAsCertain: false

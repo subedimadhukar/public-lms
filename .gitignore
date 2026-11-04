@@ -1,0 +1,18 @@
+# Dependencies and build output
+/vendor/
+/node_modules/
+/build/
+
+# Local tooling
+/.wp-env.override.json
+/.phpunit.result.cache
+/.phpcs-cache
+/coverage/
+*.log
+*.zip
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

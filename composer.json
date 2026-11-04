@@ -1,0 +1,68 @@
+{
+	"name": "wpinterface/public-lms",
+	"description": "Public LMS: a block-native learning management system for WordPress.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"homepage": "https://wpinterface.com/plugins/public-lms/",
+	"authors": [
+		{
+			"name": "WPInterface",
+			"homepage": "https://wpinterface.com"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/wpinterface/public-lms/issues",
+		"source": "https://github.com/wpinterface/public-lms"
+	},
+	"require": {
+		"php": ">=7.4",
+		"woocommerce/action-scheduler": "^4.1"
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"php-stubs/wordpress-stubs": "^6.7 || ^7.0",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"phpstan/phpstan": "^2.1",
+		"phpunit/phpunit": "^9.6",
+		"szepeviktor/phpstan-wordpress": "^2.0",
+		"wp-coding-standards/wpcs": "^3.4",
+		"yoast/phpunit-polyfills": "^4.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"PublicLMS\\": "includes/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"PublicLMS\\Tests\\": "tests/phpunit/"
+		}
+	},
+	"config": {
+		"platform": {
+			"php": "7.4.33"
+		},
+		"optimize-autoloader": true,
+		"sort-packages": true,
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"scripts": {
+		"lint": "phpcs",
+		"lint:fix": "phpcbf",
+		"analyse": "phpstan analyse --memory-limit=1G",
+		"test": "phpunit",
+		"check": [
+			"@lint",
+			"@analyse"
+		]
+	},
+	"scripts-descriptions": {
+		"lint": "Check PHP against the WordPress coding standards and PHP 7.4 compatibility.",
+		"lint:fix": "Fix what PHPCS can fix automatically.",
+		"analyse": "Run PHPStan at level 6.",
+		"test": "Run PHPUnit. Needs the WordPress test suite; use `npm run test:php` for wp-env.",
+		"check": "Run lint and static analysis."
+	}
+}

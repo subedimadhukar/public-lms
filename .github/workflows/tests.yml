@@ -1,0 +1,59 @@
+name: Unit tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  phpunit:
+    name: PHP ${{ matrix.php }} on WordPress ${{ matrix.wp }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.3']
+        wp: ['6.7', 'latest']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - uses: ramsey/composer-install@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # The committed .wp-env.json maps the sibling theme checkout, which CI
+      # does not have; the override drops it and pins the matrix versions.
+      - name: Configure wp-env for this matrix cell
+        run: |
+          if [ "${{ matrix.wp }}" = "latest" ]; then
+            CORE='null'
+          else
+            CORE='"https://wordpress.org/wordpress-${{ matrix.wp }}.zip"'
+          fi
+          printf '{ "core": %s, "phpVersion": "%s", "themes": [] }\n' "$CORE" "${{ matrix.php }}" > .wp-env.override.json
+          cat .wp-env.override.json
+
+      - name: Start wp-env
+        run: npx wp-env start
+
+      - name: Run PHPUnit
+        run: npm run test:php
