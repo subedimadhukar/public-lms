@@ -72,7 +72,11 @@ final class CheckoutPage {
 	}
 
 	/**
-	 * Creates a published "Checkout" page with the checkout block and selects it.
+	 * Creates a published checkout page with the checkout block and selects it.
+	 *
+	 * The slug is `course-checkout`, never `checkout`, so the page cannot take
+	 * WooCommerce's address on a site that runs both; with WooCommerce
+	 * active the title says "Course checkout" so the two pages differ in menus.
 	 *
 	 * @return int|WP_Error Page ID.
 	 */
@@ -81,8 +85,8 @@ final class CheckoutPage {
 			array(
 				'post_type'    => 'page',
 				'post_status'  => 'publish',
-				'post_title'   => __( 'Checkout', 'public-lms' ),
-				'post_name'    => 'checkout',
+				'post_title'   => class_exists( 'WooCommerce' ) ? __( 'Course checkout', 'public-lms' ) : __( 'Checkout', 'public-lms' ),
+				'post_name'    => 'course-checkout',
 				'post_content' => '<!-- wp:publiclms/checkout /-->',
 			),
 			true

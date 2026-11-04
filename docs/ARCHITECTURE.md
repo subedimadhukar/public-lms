@@ -810,7 +810,7 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   name (for certificates) and an email. The account is created only once the order is paid, with
   WordPress's own "set your password" email; an email that already has an account buys into it.
 - **Decision (the page).** One page holds `publiclms/checkout` (option `publiclms_checkout_page_id`,
-  created from Payments). `?course=` sells, `?order={key}` shows the order to whoever holds the link (the
+  created from Payments with the slug `course-checkout`, so it never takes WooCommerce's `/checkout/`). `?course=` sells, `?order={key}` shows the order to whoever holds the link (the
   key is 29 random characters), `?cancelled={key}` cancels a pending order the buyer abandoned at the
   provider. Provider returns are handled on `template_redirect` and redirected to the clean URL, so a
   reload never repeats a capture. Without JavaScript the form posts to `admin-post.php`
@@ -931,6 +931,14 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   price (`publiclms_course_price_label`), and the native checkout refuses them
   (`publiclms_course_purchasable`). Orders are read only through WooCommerce's order objects, and the
   plugin declares compatibility with WooCommerce's order tables (HPOS).
-- **Consequences.** Verified with unit tests against stand-ins for WooCommerce's objects; a run against a
-  real WooCommerce install is still owed. Partial WooCommerce refunds keep access, like native ones.
+  Saving a product that gives courses makes it "sold individually", so the cart has no quantity field and
+  refuses a second copy.
+- **Consequences.** Partial WooCommerce refunds keep access, like native ones. Verified against
+  WooCommerce 11.2.1 on the dev site (2026-11-05), with both order storages (HPOS and posts): the product
+  field links and unlinks; a linked course's Buy button adds the product to the cart and shows
+  WooCommerce's price, and the native checkout refuses it; processing enrols once (completed adds
+  nothing), refunded and cancelled close the access, a guest order gets its account only once paid, and
+  access from elsewhere survives a WooCommerce refund; a real purchase in the browser (Buy button, cart,
+  block checkout, cash on delivery) enrolled the buyer and noted it on the order. Public LMS is listed as
+  compatible with the order tables.
 

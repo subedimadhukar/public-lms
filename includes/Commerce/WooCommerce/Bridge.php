@@ -310,7 +310,7 @@ final class Bridge {
 	}
 
 	/**
-	 * Saves the "Courses" field.
+	 * Saves the "Courses" field, and makes a product that gives courses "sold individually".
 	 *
 	 * @param \WC_Product $product The product being saved.
 	 * @return void
@@ -322,6 +322,10 @@ final class Bridge {
 		}
 		$ids = isset( $_POST['publiclms_courses'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['publiclms_courses'] ) ) : array();
 		$this->link( (int) $product->get_id(), $ids );
+		if ( ! empty( $this->product_courses( (int) $product->get_id() ) ) ) {
+			// A course is bought once: no quantity field, and the cart refuses a second one.
+			$product->set_sold_individually( true );
+		}
 	}
 
 	/**

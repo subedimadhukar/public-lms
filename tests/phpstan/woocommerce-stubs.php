@@ -45,6 +45,8 @@ class WC_Product extends WC_Data {
 	public function get_status() {}
 	/** @return bool */
 	public function is_purchasable() {}
+	/** @param bool $sold_individually @return void */
+	public function set_sold_individually( $sold_individually ) {}
 }
 
 /** @param int $id @return WC_Order|false */

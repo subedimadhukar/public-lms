@@ -98,6 +98,58 @@ class WooCommerceBridgeTest extends CommerceTestCase {
 		$this->assertSame( array(), $order->notes );
 	}
 
+	public function test_saving_a_product_with_courses_sells_it_individually() {
+		$product                                  = new class( $this->product ) {
+			/**
+			 * Product ID.
+			 *
+			 * @var int
+			 */
+			public $id;
+
+			/**
+			 * Sold individually.
+			 *
+			 * @var bool
+			 */
+			public $single = false;
+
+			/**
+			 * Constructor.
+			 *
+			 * @param int $id Product ID.
+			 */
+			public function __construct( int $id ) {
+				$this->id = $id;
+			}
+
+			/**
+			 * Product ID.
+			 *
+			 * @return int
+			 */
+			public function get_id() {
+				return $this->id;
+			}
+
+			/**
+			 * Sets sold individually.
+			 *
+			 * @param bool $value Value.
+			 * @return void
+			 */
+			public function set_sold_individually( $value ) {
+				$this->single = (bool) $value;
+			}
+		};
+		$_POST['publiclms_product_courses_nonce'] = wp_create_nonce( 'publiclms_product_courses' );
+		$_POST['publiclms_courses']               = array( (string) $this->courses[0] );
+		$this->bridge->save_product( $product );
+		unset( $_POST['publiclms_product_courses_nonce'], $_POST['publiclms_courses'] );
+		$this->assertTrue( $product->single );
+		$this->assertSame( array( $this->courses[0] ), $this->bridge->product_courses( $this->product ) );
+	}
+
 	public function test_bridge_is_off_by_default_and_needs_woocommerce() {
 		$this->assertFalse( Bridge::enabled() );
 		$this->assertFalse( Bridge::woocommerce_active(), 'The tests site has no WooCommerce.' );
