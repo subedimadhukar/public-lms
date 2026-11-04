@@ -41,7 +41,7 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Core | PSR-4 under `includes/`, `Core\Plugin`, `Core\Container`, Composer autoload with a fallback loader | Done | The container builds services lazily; Pro rebinds services on `publiclms_register_services`. |
 | Post types and taxonomies | `PostTypes\PostTypes`, `Taxonomies\Taxonomies` | Done | All `show_in_rest`; capability mapping in ADR-025. |
 | Capabilities | `Capabilities\Capabilities`, `Capabilities\Roles` | Done | Five primitive capabilities, four meta capabilities, three roles. |
-| Data | `Core\Installer` (dbDelta schema), `Repositories\*` | Schema done; interfaces and base repository only | Repository implementations arrive in phase 1. |
+| Data | `Core\Installer` (dbDelta schema), `Repositories\*` | Schema done; interfaces and base repository only | Phase 1: enrolment, progress, event and course structure repositories with object caching. |
 | Access | `Access\AccessPolicy`, `Access\AccessDecision` | Signatures and docs; permissive stub | Rule order documented in the class. |
 | REST | `Rest\AbstractController`, `Rest\Api`, `Rest\HealthController` | Namespace and health route | Controllers per resource in phase 1. |
 | Templates | `Templates\TemplateRegistrar` | Slug list and hierarchy mapping; no template files | Files under `templates/` in phase 1. |
@@ -107,8 +107,11 @@ attempt or per order is a table with indexes.
 
 Taxonomies, all on `plms_course`: `plms_course_category` (hierarchical, `/course-category/`),
 `plms_course_tag` (flat, `/course-tag/`), `plms_level` (flat list with checkbox UI, `/course-level/`).
-Relationships (lesson → section → course, quiz → course, question → quiz) are post meta with the `_plms_`
-prefix, defined with the course builder in phase 1. Lessons, quizzes and assignments are excluded from
+Curriculum relationships are `post_parent` and `menu_order` (ADR-028): a section's parent is its course, a
+lesson's, quiz's or assignment's parent is its section. Question → quiz links arrive with quizzes in phase 2.
+Course and item settings are registered post meta with the `_plms_` prefix (`PostTypes\Meta`):
+`_plms_access_mode` (free, closed, paid), `_plms_price`, `_plms_sale_price`, `_plms_duration` (minutes) and,
+on items, `_plms_preview`. Lessons, quizzes and assignments are excluded from
 search so gated content never leaks through it.
 
 ### 3.2 Tables
@@ -388,3 +391,36 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
 - **Decision.** WPCS 3.4 (`WordPress-Extra` and `WordPress-Docs`), PHPCompatibilityWP with `testVersion 7.4-`
   (added beyond the brief to enforce the PHP floor), PHPStan level 6 with `szepeviktor/phpstan-wordpress`,
   ESLint through `@wordpress/scripts`. PSR-4 file names are allowed in place of `class-*.php`.
+
+### ADR-028 Course structure in `post_parent` and `menu_order`
+- **Context.** The phase 1 brief asked for the curriculum in a `plms_course_items` table or in ordered meta,
+  recorded here. Sections and items are already posts.
+- **Decision.** Neither: the structure is stored on the posts. A section's `post_parent` is its course; a
+  lesson's, quiz's or assignment's `post_parent` is its section; `menu_order`, then ID, orders both.
+  `Repositories\CourseStructureRepository` is the only writer. It reads a course's structure with two queries
+  and caches it under `structure:{course_id}` in the `publiclms` group, cleared on `clean_post_cache` and
+  `post_updated` for any course, section or item, so edits made in the block editor or wp-admin invalidate it
+  too.
+- **Why not a table or meta.** WordPress's exporter and importer carry `post_parent` and remap it to the new
+  IDs; a table is not exported at all, and meta holding post IDs is copied with the old IDs. Posts need no
+  sync code for trash, restore and delete, and core already caches them. Items are non-hierarchical post
+  types, so a parent never changes their URLs.
+- **Consequences.** An item belongs to exactly one section; lessons shared between courses (LearnDash's
+  "shared steps") would need a join table later. Deleting a section in the builder trashes its items;
+  deleting one from wp-admin leaves its items orphaned, outside any curriculum, until phase 2 adds an
+  "Unassigned" bin. Progress totals count only published items in published sections, so a deleted lesson
+  never pushes a learner past 100 percent.
+
+### ADR-029 Enrolment and progress semantics
+- **Decision.** One enrolment row per user and course, written with `INSERT … ON DUPLICATE KEY UPDATE`.
+  Status is `active`, `pending`, `cancelled` or `expired`; completion is `completed_at`, not a status, so a
+  learner who finishes keeps access. Unenrolling sets `cancelled` and keeps progress, so re-enrolling resumes
+  it. Item progress is an upsert on (user, item) that never downgrades `completed` and keeps the first
+  completion time; "mark incomplete" deletes the row. The course aggregate is recomputed from the course's
+  current published items on every completion and sets `completed_at` the first time it reaches 100 percent
+  (cleared if new lessons bring it below). `VALUES()` is used in the upserts rather than the MySQL 8 row
+  alias, which MariaDB and MySQL 5.7 lack.
+- **Caching.** `enrollments:user:{id}` (every row of a user, which serves all access checks in a request),
+  `enrolled_count:{course}`, `progress_items:{user}:{course}` and `course_progress:user:{id}`, all cleared by
+  the repository that writes them.
+- **Events.** Enrolment, item completion and course completion append to `plms_events` for phase 2 reports.

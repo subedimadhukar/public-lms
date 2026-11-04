@@ -11,7 +11,14 @@ use PublicLMS\Access\AccessPolicy;
 use PublicLMS\Capabilities\Capabilities;
 use PublicLMS\Licensing\LicenseProvider;
 use PublicLMS\Licensing\NullLicenseProvider;
+use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
+use PublicLMS\Repositories\CourseStructureRepository;
+use PublicLMS\Repositories\CourseStructureRepositoryInterface;
+use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Repositories\EventRepository;
+use PublicLMS\Repositories\EventRepositoryInterface;
+use PublicLMS\Repositories\ProgressRepository;
 use PublicLMS\Rest\Api;
 use PublicLMS\Taxonomies\Taxonomies;
 use PublicLMS\Templates\TemplateRegistrar;
@@ -94,6 +101,9 @@ final class Plugin {
 		add_action( 'init', array( $this->container->get( Taxonomies::class ), 'register' ), 5 );
 		add_action( 'init', array( Installer::class, 'maybe_flush_rewrite_rules' ), 99 );
 
+		$this->container->get( Meta::class )->register();
+		$this->container->get( CourseStructureRepository::class )->register();
+
 		$this->container->get( Capabilities::class )->register();
 		$this->container->get( TemplateRegistrar::class )->register();
 		$this->container->get( Api::class )->register();
@@ -130,6 +140,45 @@ final class Plugin {
 			Taxonomies::class,
 			static function () {
 				return new Taxonomies();
+			}
+		);
+		$c->set(
+			Meta::class,
+			static function () {
+				return new Meta();
+			}
+		);
+		$c->set(
+			CourseStructureRepository::class,
+			static function () {
+				return new CourseStructureRepository();
+			}
+		);
+		$c->set(
+			CourseStructureRepositoryInterface::class,
+			static function ( Container $container ) {
+				return $container->get( CourseStructureRepository::class );
+			}
+		);
+		$c->set(
+			EnrollmentRepository::class,
+			static function () {
+				global $wpdb;
+				return new EnrollmentRepository( $wpdb );
+			}
+		);
+		$c->set(
+			ProgressRepository::class,
+			static function () {
+				global $wpdb;
+				return new ProgressRepository( $wpdb );
+			}
+		);
+		$c->set(
+			EventRepositoryInterface::class,
+			static function () {
+				global $wpdb;
+				return new EventRepository( $wpdb );
 			}
 		);
 		$c->set(

@@ -50,10 +50,15 @@ interface ProgressRepositoryInterface {
 	/**
 	 * Recalculates and stores the course progress aggregate.
 	 *
-	 * @param int $user_id     User ID.
-	 * @param int $course_id   Course ID.
-	 * @param int $items_total Number of completable items in the course.
+	 * Only completed rows whose item is still in the course count, so a
+	 * deleted lesson never pushes the percentage past 100.
+	 *
+	 * @param int             $user_id       User ID.
+	 * @param int             $course_id     Course ID.
+	 * @param array<int, int> $item_ids      The course's current completable items.
+	 * @param int             $last_item_id  The item just worked on, or 0 to keep the stored one.
+	 * @param int             $enrollment_id The enrolment the aggregate belongs to, or 0.
 	 * @return array<string, mixed> The stored aggregate.
 	 */
-	public function refresh_course_progress( int $user_id, int $course_id, int $items_total ): array;
+	public function refresh_course_progress( int $user_id, int $course_id, array $item_ids, int $last_item_id = 0, int $enrollment_id = 0 ): array;
 }

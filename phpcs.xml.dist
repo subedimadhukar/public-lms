@@ -55,4 +55,8 @@
 	<rule ref="Squiz.Commenting.FunctionComment.Missing">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
+	<!-- Test docblocks may hold only PHPUnit annotations such as @covers. -->
+	<rule ref="Generic.Commenting.DocComment.MissingShort">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
 </ruleset>
