@@ -337,6 +337,26 @@ export default function PaymentsScreen() {
 						onChange={ set( 'guest_checkout' ) }
 					/>
 				</PanelBody>
+				{ ( settings.woocommerce_active || settings.woocommerce ) && (
+					<PanelBody
+						title={ __( 'WooCommerce', 'public-lms' ) }
+						initialOpen={ !! settings.woocommerce }
+					>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __(
+								'Sell courses with WooCommerce products',
+								'public-lms'
+							) }
+							help={ __(
+								'Choose the courses on a product’s General tab. A paid order enrols the customer; a refunded or cancelled one closes that access. Linked courses’ “Buy” buttons add the product to the cart.',
+								'public-lms'
+							) }
+							checked={ !! value( 'woocommerce' ) }
+							onChange={ set( 'woocommerce' ) }
+						/>
+					</PanelBody>
+				) }
 				{ settings.gateways.map( ( gateway ) => (
 					<PanelBody
 						key={ gateway.id }

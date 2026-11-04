@@ -900,3 +900,33 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   leaving the order pending. Still owed: the owner's approval of a sandbox order in a browser, and a
   live webhook once a public URL exists.
 
+### ADR-050 Coupons as a post type, uses counted from orders
+- **Decision.** A coupon is a `plms_coupon` post (orders capability profile, not public, not in
+  `wp/v2`): the title is the code as typed, `_plms_coupon_code` the lookup form (trimmed, lower-cased with
+  `mb_strtolower`, so codes in any script match without regard to case). Published coupons are active,
+  drafts paused. Meta: type (`percent` or `fixed`, the latter in the store currency), amount, courses
+  (empty for all), first and last day (site time, inclusive), uses in all and per buyer. Uses are counted
+  from orders that are paid, on hold or pending, so an unpaid order holds its use; per-buyer limits match
+  the user or the billing email. Percentages round per line to the currency's minor units; fixed amounts
+  spread over eligible lines in proportion, with the last line taking the remainder, and never take a line
+  below zero. A 100% coupon completes the order without a gateway. Managed under Public LMS → Coupons and
+  `publiclms/v1/coupons`; quotes are rate-limited against guessing.
+- **Consequences.** Two buyers racing for the last use of a limited coupon can both get it; the limit is a
+  business rule, not a lock. Deleting a coupon leaves the code on the orders that used it.
+
+### ADR-051 The WooCommerce bridge
+- **Context.** ADR-011: a WooCommerce bridge is free, for sites that already sell with WooCommerce.
+- **Decision.** Off by default; switched on in Payments when WooCommerce is active
+  (`publiclms_woocommerce_bridge`). A product's General tab gets a "Public LMS courses" field
+  (`_publiclms_courses` on the product, `_plms_wc_product` on each course). When an order reaches
+  processing or completed, the bridge enrols the customer in the products' courses with source
+  `woocommerce` and the WooCommerce order ID, once per order (order meta `_publiclms_enrolled`), skipping
+  courses the customer already has from elsewhere; guest orders get an account the same way native guest
+  orders do. Refunded or cancelled orders close exactly the enrolments they gave. Linked paid courses point
+  their "Buy" buttons at the cart with the product added (`publiclms_purchase_url`), show WooCommerce's
+  price (`publiclms_course_price_label`), and the native checkout refuses them
+  (`publiclms_course_purchasable`). Orders are read only through WooCommerce's order objects, and the
+  plugin declares compatibility with WooCommerce's order tables (HPOS).
+- **Consequences.** Verified with unit tests against stand-ins for WooCommerce's objects; a run against a
+  real WooCommerce install is still owed. Partial WooCommerce refunds keep access, like native ones.
+

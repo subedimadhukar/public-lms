@@ -32,7 +32,7 @@ class EnrollmentRepository extends AbstractRepository implements EnrollmentRepos
 
 	const STATUSES = array( self::STATUS_ACTIVE, self::STATUS_PENDING, self::STATUS_CANCELLED, self::STATUS_EXPIRED );
 
-	const SOURCES = array( 'free', 'manual', 'order', 'group', 'import' );
+	const SOURCES = array( 'free', 'manual', 'order', 'group', 'import', 'woocommerce' );
 
 	/**
 	 * Sort orders the student list supports.

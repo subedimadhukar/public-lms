@@ -12,6 +12,7 @@ parameters:
 		- tests/phpstan/bootstrap.php
 		- vendor-prefixed/autoload.php
 		- tests/phpstan/wp-cli-stubs.php
+		- tests/phpstan/woocommerce-stubs.php
 	treatPhpDocTypesAsCertain: false
 	ignoreErrors:
 		# The asset files come from `npm run build` and are not committed. Each

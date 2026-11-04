@@ -803,6 +803,16 @@ class OrderService {
 		if ( PostTypes::COURSE !== get_post_type( $course_id ) || 'publish' !== get_post_status( $course_id ) || 'paid' !== Meta::access_mode( $course_id ) || null === $this->fields->effective_price( $course_id ) ) {
 			return new WP_Error( 'publiclms_not_for_sale', __( 'This course is not for sale.', 'public-lms' ), array( 'status' => 400 ) );
 		}
+		/**
+		 * Filters whether the native checkout may sell a course. Return a WP_Error to refuse with its message.
+		 *
+		 * @param true|WP_Error $purchasable True, or the reason it cannot be bought here.
+		 * @param int           $course_id   Course ID.
+		 */
+		$purchasable = apply_filters( 'publiclms_course_purchasable', true, $course_id );
+		if ( is_wp_error( $purchasable ) ) {
+			return $purchasable;
+		}
 		$title = wp_strip_all_tags( get_the_title( $course_id ) );
 		if ( $owner > 0 ) {
 			$decision = $this->policy->can_enroll( $course_id, $owner );

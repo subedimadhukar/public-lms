@@ -12,6 +12,7 @@ use PublicLMS\Commerce\Gateways\Gateways;
 use PublicLMS\Commerce\Gateways\OfflineGateway;
 use PublicLMS\Commerce\Gateways\PayPalGateway;
 use PublicLMS\Commerce\Gateways\StripeGateway;
+use PublicLMS\Commerce\WooCommerce\Bridge;
 use PublicLMS\Core\Container;
 use PublicLMS\Courses\CourseFields;
 use PublicLMS\Repositories\EnrollmentRepository;
@@ -102,6 +103,16 @@ final class CommerceServices {
 			}
 		);
 		$c->set(
+			Bridge::class,
+			static function ( Container $container ) {
+				return new Bridge(
+					$container->get( EnrollmentService::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( Customers::class )
+				);
+			}
+		);
+		$c->set(
 			OrdersTab::class,
 			static function ( Container $container ) {
 				return new OrdersTab( $container->get( OrderService::class ) );
@@ -118,5 +129,6 @@ final class CommerceServices {
 	public static function boot( Container $c ): void {
 		$c->get( CheckoutHandler::class )->register();
 		$c->get( OrdersTab::class )->register();
+		$c->get( Bridge::class )->register();
 	}
 }

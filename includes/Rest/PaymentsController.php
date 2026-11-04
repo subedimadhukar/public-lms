@@ -12,6 +12,7 @@ use PublicLMS\Commerce\CheckoutPage;
 use PublicLMS\Commerce\Gateways\AbstractGateway;
 use PublicLMS\Commerce\Gateways\Gateways;
 use PublicLMS\Commerce\Money;
+use PublicLMS\Commerce\WooCommerce\Bridge;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -93,6 +94,12 @@ final class PaymentsController extends AbstractController {
 							'description' => __( 'Gateway settings by gateway ID.', 'public-lms' ),
 							'type'        => 'object',
 						),
+						'woocommerce'      => array(
+							'description'       => __( 'Sell courses through WooCommerce products (needs WooCommerce).', 'public-lms' ),
+							'type'              => 'boolean',
+							'sanitize_callback' => 'rest_sanitize_boolean',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
 					),
 				),
 			)
@@ -141,6 +148,9 @@ final class PaymentsController extends AbstractController {
 		}
 		if ( isset( $request['guest_checkout'] ) ) {
 			update_option( CheckoutPage::GUEST_OPTION, $request['guest_checkout'] ? 'yes' : 'no' );
+		}
+		if ( isset( $request['woocommerce'] ) ) {
+			update_option( Bridge::OPTION, $request['woocommerce'] ? 'yes' : 'no' );
 		}
 		$gateways = $request['gateways'];
 		if ( is_array( $gateways ) ) {
@@ -212,12 +222,14 @@ final class PaymentsController extends AbstractController {
 			);
 		}
 		return array(
-			'currency'          => $currency,
-			'currencies'        => Money::CURRENCIES,
-			'checkout_page_id'  => $page_id,
-			'checkout_page_url' => $page_id > 0 ? (string) get_permalink( $page_id ) : '',
-			'guest_checkout'    => CheckoutPage::guests_allowed(),
-			'gateways'          => $gateways,
+			'currency'           => $currency,
+			'currencies'         => Money::CURRENCIES,
+			'checkout_page_id'   => $page_id,
+			'checkout_page_url'  => $page_id > 0 ? (string) get_permalink( $page_id ) : '',
+			'guest_checkout'     => CheckoutPage::guests_allowed(),
+			'gateways'           => $gateways,
+			'woocommerce_active' => Bridge::woocommerce_active(),
+			'woocommerce'        => Bridge::enabled(),
 		);
 	}
 }

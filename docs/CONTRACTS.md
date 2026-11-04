@@ -18,7 +18,8 @@ post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the
    `__details` and `__gateways` (fieldsets), `__notice.is-success|is-warning|is-danger`, `__submit`.
 2. A7: `enroll_url` of a paid course now points to the checkout page (`?course={id}`), also for logged-out
    visitors while guest checkout is on; it stays the course URL when no checkout page exists. Plugins can
-   change it with `publiclms_purchase_url` (the WooCommerce bridge points it at the linked product).
+   change it with `publiclms_purchase_url`: with the WooCommerce bridge on, a course sold by a product
+   points to the WooCommerce cart with that product added, and `price` shows WooCommerce's price.
 3. A7: `price`, `regular_price` and `enroll_label` are formatted for the visitor's locale and the store's
    ISO 4217 currency: the symbol may come after the number ("49,50 €") and digits may be non-Latin. Themes
    must not assume a symbol-first, Latin-digit price. With no store currency chosen, prices print as plain
