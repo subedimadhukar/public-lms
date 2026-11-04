@@ -10,4 +10,5 @@ parameters:
 		- includes/
 	bootstrapFiles:
 		- tests/phpstan/bootstrap.php
+		- tests/phpstan/wp-cli-stubs.php
 	treatPhpDocTypesAsCertain: false

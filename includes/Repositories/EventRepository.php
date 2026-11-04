@@ -104,4 +104,16 @@ class EventRepository implements EventRepositoryInterface {
 			$rows
 		);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param int $user_id User ID.
+	 * @return int
+	 */
+	public function delete_for_user( int $user_id ): int {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom append-only table; events are not cached.
+		$result = $this->db->delete( $this->table(), array( 'user_id' => $user_id ), array( '%d' ) );
+		return is_int( $result ) ? $result : 0;
+	}
 }

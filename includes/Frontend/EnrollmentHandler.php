@@ -56,6 +56,27 @@ final class EnrollmentHandler {
 	public function register(): void {
 		add_action( 'admin_post_publiclms_enroll', array( $this, 'handle' ) );
 		add_action( 'admin_post_nopriv_publiclms_enroll', array( $this, 'handle_logged_out' ) );
+		add_filter( 'login_redirect', array( $this, 'login_redirect' ), 10, 3 );
+	}
+
+	/**
+	 * Sends learners to their dashboard after login instead of wp-admin's profile
+	 * screen, unless the login link asked for somewhere else.
+	 *
+	 * @param string             $redirect_to           Where WordPress will redirect.
+	 * @param string             $requested_redirect_to The redirect_to the login form received.
+	 * @param \WP_User|\WP_Error $user                  The user, or the login error.
+	 * @return string
+	 */
+	public function login_redirect( $redirect_to, $requested_redirect_to, $user ): string {
+		$page_id = (int) get_option( 'publiclms_dashboard_page_id', 0 );
+		if ( '' !== (string) $requested_redirect_to || ! $user instanceof \WP_User || $page_id <= 0 || 'publish' !== get_post_status( $page_id ) ) {
+			return (string) $redirect_to;
+		}
+		if ( user_can( $user, 'edit_posts' ) || user_can( $user, \PublicLMS\Capabilities\Capabilities::EDIT_OWN_COURSE ) ) {
+			return (string) $redirect_to;
+		}
+		return (string) get_permalink( $page_id );
 	}
 
 	/**

@@ -60,3 +60,40 @@ jobs:
 
       - name: Run PHPUnit
         run: npm run test:php
+
+  e2e:
+    name: End-to-end (Playwright, WordPress latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+
+      - uses: ramsey/composer-install@v3
+        with:
+          composer-options: --no-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Configure wp-env without the sibling theme checkout
+        run: printf '{ "themes": [] }\n' > .wp-env.override.json
+
+      - run: npx wp-env start
+      - run: npx playwright install chromium --with-deps
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-artifacts
+          path: artifacts

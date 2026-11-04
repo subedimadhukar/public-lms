@@ -11,6 +11,19 @@ npm run env:start          # wp-env on http://localhost:8888 (admin / password);
 npm run test:php           # PHPUnit inside wp-env
 ```
 
+```bash
+npm run build                                   # blocks, admin app, editor script, store module
+npx wp-env run cli wp publiclms seed --courses=10   # sample courses, instructors and learners
+npx wp-env run cli wp publiclms reset --yes         # remove everything the seed made
+WP_BASE_URL=http://localhost:8889 npm run test:e2e  # Playwright against the wp-env tests site
+bin/timing-check.sh http://localhost:8888/lessons/<slug>/  # time to first byte, median and slowest
+```
+
+Seeded users share the password `public-lms-demo` unless you pass `--password` or set
+`PUBLICLMS_SEED_PASSWORD`. The e2e spec activates the plugin and Twenty Twenty-Five on the tests site and
+creates its own users. Blocks must be built before `npm run test:php`; the block render tests skip
+otherwise.
+
 In CI, or without the sibling theme checkout, create `.wp-env.override.json` with `{ "themes": [] }`.
 The override file is gitignored; use it locally to pin `core` or `phpVersion` too, for example
 `{ "core": "https://wordpress.org/wordpress-6.7.zip", "phpVersion": "7.4" }` to test the floor.

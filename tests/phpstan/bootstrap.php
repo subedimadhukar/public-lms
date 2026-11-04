@@ -5,7 +5,7 @@
  * @package PublicLMS
  */
 
-define( 'PUBLICLMS_VERSION', '0.1.0' );
+define( 'PUBLICLMS_VERSION', '0.2.0' );
 define( 'PUBLICLMS_FILE', __DIR__ . '/../../public-lms.php' );
 define( 'PUBLICLMS_PATH', dirname( __DIR__, 2 ) . '/' );
 define( 'PUBLICLMS_URL', 'https://example.test/wp-content/plugins/public-lms/' );

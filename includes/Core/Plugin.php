@@ -17,6 +17,7 @@ use PublicLMS\Access\ContentGate;
 use PublicLMS\Courses\CourseFields;
 use PublicLMS\Frontend\EnrollmentHandler;
 use PublicLMS\Capabilities\Capabilities;
+use PublicLMS\Cli\Command;
 use PublicLMS\Licensing\LicenseProvider;
 use PublicLMS\Licensing\NullLicenseProvider;
 use PublicLMS\PostTypes\Meta;
@@ -132,6 +133,10 @@ final class Plugin {
 		$this->container->get( PatternRegistrar::class )->register();
 		$this->container->get( ClassicTemplates::class )->register();
 		$this->container->get( Api::class )->register();
+
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			\WP_CLI::add_command( 'publiclms', $this->container->get( Command::class ) );
+		}
 
 		add_action( 'wp_initialize_site', array( Installer::class, 'install_on_new_site' ), 200 );
 		add_filter( 'wpmu_drop_tables', array( Installer::class, 'drop_tables_on_site_delete' ) );
@@ -302,6 +307,19 @@ final class Plugin {
 			EditorAssets::class,
 			static function () {
 				return new EditorAssets();
+			}
+		);
+		$c->set(
+			Command::class,
+			static function ( Container $container ) {
+				return new Command(
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( EnrollmentService::class ),
+					$container->get( ProgressService::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( ProgressRepository::class ),
+					$container->get( EventRepositoryInterface::class )
+				);
 			}
 		);
 		$c->set(

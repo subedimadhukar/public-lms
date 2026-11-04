@@ -32,4 +32,12 @@ interface EventRepositoryInterface {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function since( int $after_id, int $limit = 500 ): array;
+
+	/**
+	 * Deletes every event of a user, for data erasure and fixture resets.
+	 *
+	 * @param int $user_id User ID.
+	 * @return int Rows deleted.
+	 */
+	public function delete_for_user( int $user_id ): int;
 }

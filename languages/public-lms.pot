@@ -2,20 +2,23 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Public LMS 0.1.0\n"
+"Project-Id-Version: Public LMS 0.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/public-lms\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-04T09:06:51+00:00\n"
+"POT-Creation-Date: 2026-11-04T11:49:10+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: public-lms\n"
 
 #. Plugin Name of the plugin
 #: public-lms.php
+#: includes/Admin/AdminApp.php:61
+#: includes/Blocks/Blocks.php:208
+#: includes/Templates/PatternRegistrar.php:63
 msgid "Public LMS"
 msgstr ""
 
@@ -39,507 +42,972 @@ msgstr ""
 msgid "https://wpinterface.com"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:112
+#: includes/Access/AccessDecision.php:124
+msgid "Log in and enrol in this course to open this lesson."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:126
+msgid "Enrol in this course to open this lesson."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:128
+msgid "Your access to this course has ended."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:130
+msgid "Complete the earlier steps of this course first."
+msgstr ""
+
+#. translators: %s: date the item becomes available.
+#: includes/Access/AccessDecision.php:134
+#, php-format
+msgid "This opens on %s."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:136
+msgid "This is not available yet."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:138
+msgid "This is not available."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:140
+msgid "You have used all your attempts."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:142
+msgid "You are already enrolled in this course."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:144
+msgid "Enrolment in this course is by invitation only."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:146
+msgid "This course is not open for enrolment yet."
+msgstr ""
+
+#: includes/Access/AccessDecision.php:148
+msgid "You cannot open this."
+msgstr ""
+
+#: includes/Admin/AdminApp.php:66
+#: src/admin/courses/course-list.js:364
+#: src/admin/students/student-list.js:201
+#: src/editor/course-query.js:115
+msgid "Courses"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:70
+#: src/admin/students/student-list.js:233
+msgid "Students"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:74
+msgid "Course Categories"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:74
+#: includes/Taxonomies/Taxonomies.php:78
+msgid "Categories"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:75
+#: includes/Taxonomies/Taxonomies.php:127
+msgid "Levels"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:76
+#: src/admin/settings/settings-screen.js:97
+#: src/blocks/curriculum/edit.js:52
+#: src/blocks/enroll-button/edit.js:19
+#: src/blocks/lesson-navigation/edit.js:14
+msgid "Settings"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:89
+msgid "Loading…"
+msgstr ""
+
+#: includes/Admin/AdminApp.php:90
+msgid "Public LMS needs JavaScript to manage courses."
+msgstr ""
+
+#: includes/Blocks/BindingsSource.php:71
+#: src/editor/bindings.js:42
+msgid "Course field"
+msgstr ""
+
+#: includes/Blocks/Blocks.php:277
+msgid "That did not work. Check your connection and try again."
+msgstr ""
+
+#: includes/Blocks/Blocks.php:278
+msgid "You are enrolled. Your first lesson is ready."
+msgstr ""
+
+#. translators: %d: percentage of the course completed.
+#. translators: %d: percentage.
+#: includes/Blocks/Blocks.php:280
+#: includes/Blocks/Blocks.php:420
+#: src/blocks/course-progress/edit.js:22
+#, php-format,js-format
+msgid "%d%% complete"
+msgstr ""
+
+#: includes/Blocks/Blocks.php:281
+#: includes/Blocks/Blocks.php:407
+msgid "Back to course"
+msgstr ""
+
+#: includes/Blocks/Blocks.php:282
+msgid "Course complete"
+msgstr ""
+
+#: includes/Blocks/Blocks.php:283
+#: includes/Courses/CourseFields.php:234
+#: includes/Courses/CourseFields.php:241
+#: src/blocks/enroll-button/render.php:75
+msgid "Start learning"
+msgstr ""
+
+#. translators: %s: number of lessons.
+#: includes/Courses/CourseFields.php:159
+#, php-format
+msgid "%s lesson"
+msgid_plural "%s lessons"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of learners.
+#: includes/Courses/CourseFields.php:171
+#: src/admin/students/student-list.js:240
+#, php-format,js-format
+msgid "%s learner"
+msgid_plural "%s learners"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: percentage of the course completed.
+#. translators: %d: percentage.
+#: includes/Courses/CourseFields.php:183
+#: src/admin/students/student-list.js:91
+#, php-format,js-format
+msgid "%d%%"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:234
+msgid "Review course"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:241
+msgid "Continue learning"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:252
+#: src/blocks/enroll-button/edit.js:55
+msgid "Enrol for free"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:260
+msgid "Log in to enrol"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:274
+msgid "Enrolment by invitation"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:281
+msgid "Not open for enrolment"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:314
+#: src/blocks/course-meta/edit.js:41
+#: src/blocks/enroll-button/edit.js:48
+msgid "Free"
+msgstr ""
+
+#. translators: %d: minutes.
+#: includes/Courses/CourseFields.php:401
+#, php-format
+msgid "%dm"
+msgstr ""
+
+#. translators: %d: hours.
+#: includes/Courses/CourseFields.php:405
+#, php-format
+msgid "%dh"
+msgstr ""
+
+#. translators: 1: hours, 2: minutes.
+#: includes/Courses/CourseFields.php:408
+#, php-format
+msgid "%1$dh %2$dm"
+msgstr ""
+
+#: includes/Courses/CourseFields.php:452
+msgid "Enrol now"
+msgstr ""
+
+#. translators: %s: formatted price.
+#: includes/Courses/CourseFields.php:455
+#, php-format
+msgid "Buy for %s"
+msgstr ""
+
+#: includes/Frontend/EnrollmentHandler.php:92
+msgid "This course does not exist."
+msgstr ""
+
+#: includes/PostTypes/Meta.php:69
+msgid "How learners enrol: free, closed or paid."
+msgstr ""
+
+#: includes/PostTypes/Meta.php:89
+msgid "Price as a decimal number, or empty."
+msgstr ""
+
+#: includes/PostTypes/Meta.php:105
+#: includes/Rest/LessonsController.php:154
+msgid "Duration in minutes."
+msgstr ""
+
+#: includes/PostTypes/Meta.php:126
+msgid "Whether anyone can open this item as a free preview."
+msgstr ""
+
+#: includes/PostTypes/PostTypes.php:115
 msgctxt "post type general name"
 msgid "Courses"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:113
+#: includes/PostTypes/PostTypes.php:116
 msgctxt "post type singular name"
 msgid "Course"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:114
+#: includes/PostTypes/PostTypes.php:117
 msgctxt "admin menu"
 msgid "Courses"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:115
+#: includes/PostTypes/PostTypes.php:118
 msgid "All Courses"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:116
+#: includes/PostTypes/PostTypes.php:119
 msgid "Add Course"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:117
+#: includes/PostTypes/PostTypes.php:120
 msgid "Add New Course"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:118
+#: includes/PostTypes/PostTypes.php:121
 msgid "Edit Course"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:119
+#: includes/PostTypes/PostTypes.php:122
 msgid "New Course"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:120
+#: includes/PostTypes/PostTypes.php:123
 msgid "View Course"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:121
+#: includes/PostTypes/PostTypes.php:124
 msgid "View Courses"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:122
+#: includes/PostTypes/PostTypes.php:125
 msgid "Search Courses"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:123
+#: includes/PostTypes/PostTypes.php:126
+#: src/editor/course-query.js:95
 msgid "No courses found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:124
+#: includes/PostTypes/PostTypes.php:127
 msgid "No courses found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:125
+#: includes/PostTypes/PostTypes.php:128
 msgid "Course Archives"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:126
+#: includes/PostTypes/PostTypes.php:129
 msgid "Course published."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:127
+#: includes/PostTypes/PostTypes.php:130
 msgid "Course updated."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:129
+#: includes/PostTypes/PostTypes.php:132
 msgid "A course: the unit learners enrol in."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:155
+#: includes/PostTypes/PostTypes.php:158
 msgctxt "post type general name"
 msgid "Sections"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:156
+#: includes/PostTypes/PostTypes.php:159
 msgctxt "post type singular name"
 msgid "Section"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:157
+#: includes/PostTypes/PostTypes.php:160
 msgid "Sections"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:158
+#: includes/PostTypes/PostTypes.php:161
 msgid "Add Section"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:159
+#: includes/PostTypes/PostTypes.php:162
 msgid "Add New Section"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:160
+#: includes/PostTypes/PostTypes.php:163
 msgid "Edit Section"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:161
+#: includes/PostTypes/PostTypes.php:164
 msgid "New Section"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:162
+#: includes/PostTypes/PostTypes.php:165
 msgid "Search Sections"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:163
+#: includes/PostTypes/PostTypes.php:166
 msgid "No sections found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:164
+#: includes/PostTypes/PostTypes.php:167
 msgid "No sections found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:166
+#: includes/PostTypes/PostTypes.php:169
 msgid "A group of lessons, quizzes and assignments inside a course."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:175
+#: includes/PostTypes/PostTypes.php:178
 msgctxt "post type general name"
 msgid "Lessons"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:176
+#: includes/PostTypes/PostTypes.php:179
 msgctxt "post type singular name"
 msgid "Lesson"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:177
+#: includes/PostTypes/PostTypes.php:180
+#: patterns/course-details.php:31
+#: src/blocks/course-meta/render.php:31
+#: src/admin/courses/course-list.js:278
+#: src/blocks/course-meta/edit.js:14
 msgid "Lessons"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:178
+#: includes/PostTypes/PostTypes.php:181
 msgid "Add Lesson"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:179
+#: includes/PostTypes/PostTypes.php:182
 msgid "Add New Lesson"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:180
+#: includes/PostTypes/PostTypes.php:183
 msgid "Edit Lesson"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:181
+#: includes/PostTypes/PostTypes.php:184
 msgid "New Lesson"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:182
+#: includes/PostTypes/PostTypes.php:185
 msgid "View Lesson"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:183
+#: includes/PostTypes/PostTypes.php:186
 msgid "View Lessons"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:184
+#: includes/PostTypes/PostTypes.php:187
 msgid "Search Lessons"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:185
+#: includes/PostTypes/PostTypes.php:188
 msgid "No lessons found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:186
+#: includes/PostTypes/PostTypes.php:189
 msgid "No lessons found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:187
+#: includes/PostTypes/PostTypes.php:190
 msgid "Lesson published."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:188
+#: includes/PostTypes/PostTypes.php:191
+#: src/admin/courses/curriculum-tree.js:212
 msgid "Lesson updated."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:190
+#: includes/PostTypes/PostTypes.php:193
 msgid "A lesson inside a course."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:202
+#: includes/PostTypes/PostTypes.php:205
 msgctxt "post type general name"
 msgid "Quizzes"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:203
+#: includes/PostTypes/PostTypes.php:206
 msgctxt "post type singular name"
 msgid "Quiz"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:204
+#: includes/PostTypes/PostTypes.php:207
 msgid "Quizzes"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:205
+#: includes/PostTypes/PostTypes.php:208
 msgid "Add Quiz"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:206
+#: includes/PostTypes/PostTypes.php:209
 msgid "Add New Quiz"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:207
+#: includes/PostTypes/PostTypes.php:210
 msgid "Edit Quiz"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:208
+#: includes/PostTypes/PostTypes.php:211
 msgid "New Quiz"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:209
+#: includes/PostTypes/PostTypes.php:212
 msgid "View Quiz"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:210
+#: includes/PostTypes/PostTypes.php:213
 msgid "View Quizzes"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:211
+#: includes/PostTypes/PostTypes.php:214
 msgid "Search Quizzes"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:212
+#: includes/PostTypes/PostTypes.php:215
 msgid "No quizzes found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:213
+#: includes/PostTypes/PostTypes.php:216
 msgid "No quizzes found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:214
+#: includes/PostTypes/PostTypes.php:217
 msgid "Quiz published."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:215
+#: includes/PostTypes/PostTypes.php:218
 msgid "Quiz updated."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:217
+#: includes/PostTypes/PostTypes.php:220
 msgid "A graded quiz inside a course."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:229
+#: includes/PostTypes/PostTypes.php:232
 msgctxt "post type general name"
 msgid "Questions"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:230
+#: includes/PostTypes/PostTypes.php:233
 msgctxt "post type singular name"
 msgid "Question"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:231
+#: includes/PostTypes/PostTypes.php:234
 msgid "Question Bank"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:232
+#: includes/PostTypes/PostTypes.php:235
 msgid "Add Question"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:233
+#: includes/PostTypes/PostTypes.php:236
 msgid "Add New Question"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:234
+#: includes/PostTypes/PostTypes.php:237
 msgid "Edit Question"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:235
+#: includes/PostTypes/PostTypes.php:238
 msgid "New Question"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:236
+#: includes/PostTypes/PostTypes.php:239
 msgid "Search Questions"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:237
+#: includes/PostTypes/PostTypes.php:240
 msgid "No questions found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:238
+#: includes/PostTypes/PostTypes.php:241
 msgid "No questions found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:240
+#: includes/PostTypes/PostTypes.php:243
 msgid "A reusable question in the question bank."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:249
+#: includes/PostTypes/PostTypes.php:252
 msgctxt "post type general name"
 msgid "Assignments"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:250
+#: includes/PostTypes/PostTypes.php:253
 msgctxt "post type singular name"
 msgid "Assignment"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:251
+#: includes/PostTypes/PostTypes.php:254
 msgid "Assignments"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:252
+#: includes/PostTypes/PostTypes.php:255
 msgid "Add Assignment"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:253
+#: includes/PostTypes/PostTypes.php:256
 msgid "Add New Assignment"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:254
+#: includes/PostTypes/PostTypes.php:257
 msgid "Edit Assignment"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:255
+#: includes/PostTypes/PostTypes.php:258
 msgid "New Assignment"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:256
+#: includes/PostTypes/PostTypes.php:259
 msgid "View Assignment"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:257
+#: includes/PostTypes/PostTypes.php:260
 msgid "View Assignments"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:258
+#: includes/PostTypes/PostTypes.php:261
 msgid "Search Assignments"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:259
+#: includes/PostTypes/PostTypes.php:262
 msgid "No assignments found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:260
+#: includes/PostTypes/PostTypes.php:263
 msgid "No assignments found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:261
+#: includes/PostTypes/PostTypes.php:264
 msgid "Assignment published."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:262
+#: includes/PostTypes/PostTypes.php:265
 msgid "Assignment updated."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:264
+#: includes/PostTypes/PostTypes.php:267
 msgid "An assignment learners submit files or text for."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:276
+#: includes/PostTypes/PostTypes.php:279
 msgctxt "post type general name"
 msgid "Certificates"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:277
+#: includes/PostTypes/PostTypes.php:280
 msgctxt "post type singular name"
 msgid "Certificate"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:278
+#: includes/PostTypes/PostTypes.php:281
 msgid "Certificates"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:279
+#: includes/PostTypes/PostTypes.php:282
 msgid "Add Certificate"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:280
+#: includes/PostTypes/PostTypes.php:283
 msgid "Add New Certificate Template"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:281
+#: includes/PostTypes/PostTypes.php:284
 msgid "Edit Certificate Template"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:282
+#: includes/PostTypes/PostTypes.php:285
 msgid "New Certificate Template"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:283
+#: includes/PostTypes/PostTypes.php:286
 msgid "Search Certificates"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:284
+#: includes/PostTypes/PostTypes.php:287
 msgid "No certificate templates found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:285
+#: includes/PostTypes/PostTypes.php:288
 msgid "No certificate templates found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:287
+#: includes/PostTypes/PostTypes.php:290
 msgid "A block-built certificate template."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:296
+#: includes/PostTypes/PostTypes.php:299
 msgctxt "post type general name"
 msgid "Memberships"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:297
+#: includes/PostTypes/PostTypes.php:300
 msgctxt "post type singular name"
 msgid "Membership"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:298
+#: includes/PostTypes/PostTypes.php:301
 msgid "Memberships"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:299
+#: includes/PostTypes/PostTypes.php:302
 msgid "Add Membership"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:300
+#: includes/PostTypes/PostTypes.php:303
 msgid "Add New Membership"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:301
+#: includes/PostTypes/PostTypes.php:304
 msgid "Edit Membership"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:302
+#: includes/PostTypes/PostTypes.php:305
 msgid "New Membership"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:303
+#: includes/PostTypes/PostTypes.php:306
 msgid "Search Memberships"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:304
+#: includes/PostTypes/PostTypes.php:307
 msgid "No memberships found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:305
+#: includes/PostTypes/PostTypes.php:308
 msgid "No memberships found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:307
+#: includes/PostTypes/PostTypes.php:310
 msgid "An access plan that grants a set of courses."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:316
+#: includes/PostTypes/PostTypes.php:319
 msgctxt "post type general name"
 msgid "Groups"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:317
+#: includes/PostTypes/PostTypes.php:320
 msgctxt "post type singular name"
 msgid "Group"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:318
+#: includes/PostTypes/PostTypes.php:321
 msgid "Groups"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:319
+#: includes/PostTypes/PostTypes.php:322
 msgid "Add Group"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:320
+#: includes/PostTypes/PostTypes.php:323
 msgid "Add New Group"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:321
+#: includes/PostTypes/PostTypes.php:324
 msgid "Edit Group"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:322
+#: includes/PostTypes/PostTypes.php:325
 msgid "New Group"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:323
+#: includes/PostTypes/PostTypes.php:326
 msgid "Search Groups"
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:324
+#: includes/PostTypes/PostTypes.php:327
 msgid "No groups found."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:325
+#: includes/PostTypes/PostTypes.php:328
 msgid "No groups found in Trash."
 msgstr ""
 
-#: includes/PostTypes/PostTypes.php:327
+#: includes/PostTypes/PostTypes.php:330
 msgid "A group of learners enrolled together, with seats and a leader."
 msgstr ""
 
-#: includes/Rest/AbstractController.php:68
+#: includes/Rest/AbstractController.php:74
 msgid "Sorry, you are not allowed to do that."
 msgstr ""
 
-#: includes/Rest/AbstractController.php:81
+#: includes/Rest/AbstractController.php:87
 msgid "The requested item could not be found."
 msgstr ""
 
-#: includes/Rest/AbstractController.php:94
+#: includes/Rest/AbstractController.php:100
 msgid "Return items with an ID greater than this."
 msgstr ""
 
-#: includes/Rest/AbstractController.php:102
+#: includes/Rest/AbstractController.php:108
+#: includes/Rest/AbstractController.php:133
 msgid "Maximum number of items to return."
+msgstr ""
+
+#: includes/Rest/AbstractController.php:126
+msgid "Opaque cursor from the X-PublicLMS-Next-Cursor header of the previous page."
+msgstr ""
+
+#: includes/Rest/AbstractController.php:184
+msgid "The cursor must be a string."
+msgstr ""
+
+#: includes/Rest/AbstractController.php:187
+msgid "The cursor is not valid."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:142
+#: includes/Rest/CoursesController.php:173
+#: includes/Rest/CoursesController.php:639
+#: includes/Rest/EnrollmentsController.php:122
+#: includes/Rest/EnrollmentsController.php:159
+#: includes/Rest/ProgressController.php:104
+msgid "Course ID."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:187
+msgid "Every section of the course in order, each with every item in order."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:487
+msgid "The course could not be moved to the trash."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:558
+msgid "The curriculum changed since it was loaded. Reload it and try again."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:645
+#: includes/Rest/CoursesController.php:913
+msgid "Course title."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:650
+msgid "URL slug."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:656
+#: includes/Rest/CoursesController.php:929
+#: includes/Rest/LessonsController.php:94
+msgid "Post status."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:662
+msgid "Course URL."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:669
+#: includes/Rest/CoursesController.php:922
+msgid "Short description."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:674
+msgid "Publication date in UTC."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:681
+msgid "Last modified date in UTC."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:688
+msgid "Instructor."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:698
+msgid "Featured image attachment ID."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:703
+msgid "Featured image URL, medium size."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:709
+#: includes/Rest/CoursesController.php:943
+msgid "Course category term IDs."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:715
+#: includes/Rest/CoursesController.php:953
+msgid "Level term IDs."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:721
+#: includes/Rest/CoursesController.php:963
+msgid "How learners enrol."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:727
+msgid "Regular price for paid courses."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:732
+msgid "Sale price for paid courses."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:737
+#: includes/Rest/CoursesController.php:984
+msgid "Duration in minutes; 0 sums the lessons."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:742
+msgid "Human-readable duration."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:748
+msgid "Published sections."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:754
+msgid "Published lessons."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:760
+msgid "Active enrolments."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:766
+msgid "Block editor URL, for users who can edit."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:772
+msgid "What the current user may do with the course."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:842
+msgid "Limit results to courses matching a string."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:849
+msgid "Statuses to list; \"any\" lists every status but trash. Needs edit rights unless only \"publish\"."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:860
+msgid "Limit to one instructor."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:868
+msgid "Limit to course category term IDs."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:876
+msgid "Limit to level term IDs."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:884
+#: includes/Rest/StudentsController.php:285
+msgid "Sort by."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:892
+#: includes/Rest/StudentsController.php:293
+msgid "Sort direction."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:936
+msgid "Featured image attachment ID; 0 removes it."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:970
+msgid "Regular price as a decimal number."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:977
+msgid "Sale price as a decimal number."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:1007
+msgid "The featured image must be an image in the media library."
+msgstr ""
+
+#: includes/Rest/CoursesController.php:1024
+msgid "A selected term does not exist."
+msgstr ""
+
+#. translators: %d: post ID.
+#: includes/Rest/CoursesController.php:1133
+#, php-format
+msgid "Item %d cannot be placed here."
+msgstr ""
+
+#. translators: %d: post ID.
+#: includes/Rest/CoursesController.php:1137
+#, php-format
+msgid "Item %d is listed twice."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:96
+#: includes/Rest/EnrollmentsController.php:131
+msgid "Only enrolments with this status."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:110
+msgid "Course to enrol in."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:147
+msgid "Learner to enrol."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:160
+#: includes/Rest/StudentsController.php:83
+msgid "Learner ID."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:181
+#: includes/Rest/ProgressController.php:129
+#: includes/Rest/ProgressController.php:167
+msgid "Please log in first."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:298
+msgid "That user does not exist."
+msgstr ""
+
+#: includes/Rest/EnrollmentsController.php:301
+msgid "The enrolment could not be saved."
 msgstr ""
 
 #: includes/Rest/HealthController.php:111
@@ -558,6 +1026,150 @@ msgstr ""
 msgid "Whether each plugin table exists. Only for users who can manage courses."
 msgstr ""
 
+#: includes/Rest/LessonsController.php:86
+msgid "Lesson title."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:110
+msgid "Section the lesson belongs to."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:124
+msgid "Lesson ID."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:139
+msgid "Move to this section."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:141
+msgid "Zero-based position in the section."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:148
+msgid "Open to anyone as a free preview."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:236
+msgid "The lesson could not be created."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:257
+msgid "The target section does not exist."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:340
+msgid "The lesson could not be deleted."
+msgstr ""
+
+#: includes/Rest/LessonsController.php:459
+msgid "Rendered content, present on single reads and empty when the lesson is locked."
+msgstr ""
+
+#: includes/Rest/PostFields.php:62
+msgid "Public LMS course context: course ID and title, builder link and course field values."
+msgstr ""
+
+#: includes/Rest/ProgressController.php:84
+msgid "Lesson, quiz or assignment ID."
+msgstr ""
+
+#: includes/Rest/ProgressController.php:86
+msgid "completed, or incomplete to undo a completion."
+msgstr ""
+
+#: includes/Rest/ProgressController.php:195
+msgid "Lesson complete. You have finished the course."
+msgstr ""
+
+#. translators: %d: percentage of the course completed.
+#: includes/Rest/ProgressController.php:197
+#, php-format
+msgid "Progress saved. Course progress %d%%."
+msgstr ""
+
+#. translators: %d: percentage of the course completed.
+#: includes/Rest/ProgressController.php:200
+#, php-format
+msgid "Marked as not complete. Course progress %d%%."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:54
+msgid "Section title."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:71
+msgid "Course the section belongs to."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:84
+msgid "Section ID."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:93
+msgid "Zero-based position among the course's sections."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:136
+msgid "The section could not be created."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:170
+msgid "The section could not be renamed."
+msgstr ""
+
+#: includes/Rest/SectionsController.php:214
+msgid "The section could not be deleted."
+msgstr ""
+
+#: includes/Rest/SettingsController.php:69
+msgid "Page that shows the student dashboard; 0 for none."
+msgstr ""
+
+#: includes/Rest/SettingsController.php:76
+msgid "ISO 4217 currency code for prices."
+msgstr ""
+
+#: includes/Rest/SettingsController.php:83
+msgid "Delete every course, enrolment and order when the plugin is deleted."
+msgstr ""
+
+#: includes/Rest/SettingsController.php:144
+msgid "Choose a page for the dashboard."
+msgstr ""
+
+#: includes/Rest/SettingsController.php:179
+msgid "My learning"
+msgstr ""
+
+#: includes/Rest/SettingsController.php:181
+msgid "Pick up where you left off, or start something new."
+msgstr ""
+
+#: includes/Rest/StudentsController.php:270
+msgid "Match name, email or username."
+msgstr ""
+
+#: includes/Rest/StudentsController.php:277
+msgid "Only learners of this course."
+msgstr ""
+
+#: includes/Rest/StudentsController.php:327
+msgid "Number of enrolments in scope on lists; enrolment details on single reads."
+msgstr ""
+
+#: includes/Services/EnrollmentService.php:98
+msgid "The enrolment could not be saved. Please try again."
+msgstr ""
+
+#: includes/Services/ProgressService.php:237
+msgid "This lesson is not part of a course."
+msgstr ""
+
+#: includes/Services/ProgressService.php:253
+msgid "Enrol in this course to save your progress."
+msgstr ""
+
 #: includes/Taxonomies/Taxonomies.php:76
 msgctxt "taxonomy general name"
 msgid "Course Categories"
@@ -566,10 +1178,6 @@ msgstr ""
 #: includes/Taxonomies/Taxonomies.php:77
 msgctxt "taxonomy singular name"
 msgid "Course Category"
-msgstr ""
-
-#: includes/Taxonomies/Taxonomies.php:78
-msgid "Categories"
 msgstr ""
 
 #: includes/Taxonomies/Taxonomies.php:79
@@ -668,10 +1276,6 @@ msgctxt "taxonomy singular name"
 msgid "Level"
 msgstr ""
 
-#: includes/Taxonomies/Taxonomies.php:127
-msgid "Levels"
-msgstr ""
-
 #: includes/Taxonomies/Taxonomies.php:128
 msgid "All Levels"
 msgstr ""
@@ -704,50 +1308,1334 @@ msgstr ""
 msgid "No levels found."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:89
+#: includes/Templates/PatternRegistrar.php:64
+msgid "Course, lesson and dashboard sections from Public LMS."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:145
+msgctxt "Pattern title"
+msgid "Course archive header"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:146
+msgctxt "Pattern description"
+msgid "The catalogue or category title and its description."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:149
+msgctxt "Pattern title"
+msgid "Course curriculum"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:150
+msgctxt "Pattern description"
+msgid "The course's sections and lessons, with completion and lock states."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:153
+msgctxt "Pattern title"
+msgid "Course details"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:154
+msgctxt "Pattern description"
+msgid "Duration, lessons, level and last update of the course, from the course-field bindings source."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:157
+msgctxt "Pattern title"
+msgid "Course enrol card"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:158
+msgctxt "Pattern description"
+msgid "Price, enrol button and what the course includes, sticky on wide screens."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:161
+msgctxt "Pattern title"
+msgid "Course grid"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:162
+msgctxt "Pattern description"
+msgid "A grid of course cards: image, level, title, short description and price, with pagination."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:165
+msgctxt "Pattern title"
+msgid "Course hero"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:166
+msgctxt "Pattern description"
+msgid "Course title, short description and featured image, with level, instructor and the enrol button."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:169
+msgctxt "Pattern title"
+msgid "Course instructor"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:170
+msgctxt "Pattern description"
+msgid "The instructor's avatar, name and biography."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:173
+msgctxt "Pattern title"
+msgid "Lesson content"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:174
+msgctxt "Pattern description"
+msgid "The lesson, shown to learners who can open it, and the mark complete button."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:177
+msgctxt "Pattern title"
+msgid "Lesson header"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:178
+msgctxt "Pattern description"
+msgid "Link back to the course, the section name, the lesson title and the learner's progress."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:181
+msgctxt "Pattern title"
+msgid "Lesson navigation"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:182
+msgctxt "Pattern description"
+msgid "Links to the previous and next lessons in the course."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:185
+msgctxt "Pattern title"
+msgid "Lesson sidebar"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:186
+msgctxt "Pattern description"
+msgid "The course curriculum beside a lesson, with the current lesson highlighted."
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:189
+msgctxt "Pattern title"
+msgid "Student dashboard"
+msgstr ""
+
+#: includes/Templates/PatternRegistrar.php:190
+msgctxt "Pattern description"
+msgid "The learner's courses with progress, in tabs."
+msgstr ""
+
+#: includes/Templates/TemplateRegistrar.php:92
 msgid "Single Course"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:90
+#: includes/Templates/TemplateRegistrar.php:93
 msgid "Displays a course landing page with its curriculum and enrol button."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:94
+#: includes/Templates/TemplateRegistrar.php:97
 msgid "Course Archive"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:95
+#: includes/Templates/TemplateRegistrar.php:98
 msgid "Displays the course catalogue and course category, tag and level archives."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:99
+#: includes/Templates/TemplateRegistrar.php:102
 msgid "Single Lesson"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:100
+#: includes/Templates/TemplateRegistrar.php:103
 msgid "Displays a lesson in a distraction-free layout with lesson navigation."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:104
+#: includes/Templates/TemplateRegistrar.php:107
 msgid "Single Quiz"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:105
+#: includes/Templates/TemplateRegistrar.php:108
 msgid "Displays a quiz and its runner."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:109
+#: includes/Templates/TemplateRegistrar.php:112
 msgid "Student Dashboard"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:110
+#: includes/Templates/TemplateRegistrar.php:113
 msgid "The learner dashboard: enrolled courses, progress, quiz results and certificates."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:114
+#: includes/Templates/TemplateRegistrar.php:117
 msgid "Instructor Dashboard"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:115
+#: includes/Templates/TemplateRegistrar.php:118
 msgid "The instructor dashboard: own courses, learners, submissions and reports."
+msgstr ""
+
+#: patterns/course-curriculum.php:19
+#: src/admin/courses/course-builder.js:108
+msgid "Curriculum"
+msgstr ""
+
+#: patterns/course-details.php:21
+#: src/blocks/course-meta/render.php:34
+#: src/blocks/course-meta/edit.js:19
+msgid "Duration"
+msgstr ""
+
+#: patterns/course-details.php:41
+#: src/blocks/course-meta/render.php:37
+#: src/admin/courses/course-list.js:240
+#: src/admin/courses/course-settings.js:196
+#: src/blocks/course-meta/edit.js:24
+msgid "Level"
+msgstr ""
+
+#: patterns/course-details.php:51
+#: src/blocks/course-meta/render.php:50
+#: src/blocks/course-meta/edit.js:44
+#: src/editor/bindings.js:29
+msgid "Last updated"
+msgstr ""
+
+#: patterns/course-enroll-card.php:21
+msgid "This course includes"
+msgstr ""
+
+#: patterns/course-grid.php:46
+msgid "No courses here yet. Check back soon."
+msgstr ""
+
+#: patterns/course-hero.php:37
+msgid "Taught by"
+msgstr ""
+
+#: patterns/course-instructor.php:19
+msgid "Your instructor"
+msgstr ""
+
+#: patterns/lesson-header.php:23
+#: src/admin/students/student-list.js:55
+#: src/admin/students/student-list.js:189
+#: src/editor/course-panel.js:34
+msgid "Course"
+msgstr ""
+
+#: patterns/lesson-sidebar.php:19
+msgid "Course content"
+msgstr ""
+
+#: src/blocks/course-meta/render.php:40
+#: src/admin/courses/course-list.js:233
+#: src/blocks/course-meta/edit.js:29
+msgid "Instructor"
+msgstr ""
+
+#: src/blocks/course-meta/render.php:44
+#: src/admin/courses/course-list.js:285
+#: src/blocks/course-meta/edit.js:34
+msgid "Learners"
+msgstr ""
+
+#: src/blocks/course-meta/render.php:47
+#: src/blocks/course-meta/edit.js:39
+msgid "Price"
+msgstr ""
+
+#: src/blocks/course-progress/render.php:49
+msgid "Course progress"
+msgstr ""
+
+#: src/blocks/curriculum/render.php:39
+msgid "The curriculum for this course is being prepared."
+msgstr ""
+
+#: src/blocks/curriculum/render.php:44
+msgid "Course curriculum"
+msgstr ""
+
+#. translators: %d: number of lessons in the section.
+#. translators: %d: number of lessons.
+#: src/blocks/curriculum/render.php:56
+#: src/admin/courses/curriculum-tree.js:342
+#: src/blocks/curriculum/edit.js:113
+#, php-format,js-format
+msgid "%d lesson"
+msgid_plural "%d lessons"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/blocks/curriculum/render.php:105
+msgid "(completed)"
+msgstr ""
+
+#: src/blocks/curriculum/render.php:107
+msgid "(locked)"
+msgstr ""
+
+#: src/blocks/curriculum/render.php:110
+msgid "Preview"
+msgstr ""
+
+#: src/blocks/lesson-content/render.php:44
+#: src/blocks/student-dashboard/render.php:32
+msgid "Log in"
+msgstr ""
+
+#: src/blocks/lesson-content/render.php:47
+msgid "View the course"
+msgstr ""
+
+#: src/blocks/lesson-navigation/render.php:33
+#: src/blocks/lesson-navigation/edit.js:31
+msgid "Previous"
+msgstr ""
+
+#: src/blocks/lesson-navigation/render.php:35
+#: src/blocks/lesson-navigation/edit.js:50
+msgid "Next"
+msgstr ""
+
+#: src/blocks/lesson-navigation/render.php:42
+msgid "Lesson navigation"
+msgstr ""
+
+#: src/blocks/mark-complete/render.php:35
+#: src/blocks/mark-complete/edit.js:16
+msgid "Mark as complete"
+msgstr ""
+
+#: src/blocks/mark-complete/render.php:37
+#: src/blocks/student-dashboard/render.php:40
+#: src/admin/students/student-list.js:95
+#: src/blocks/mark-complete/edit.js:31
+#: src/blocks/student-dashboard/edit.js:11
+msgid "Completed"
+msgstr ""
+
+#: src/blocks/mark-complete/render.php:65
+msgid "Select again to mark this lesson as not complete."
+msgstr ""
+
+#: src/blocks/student-dashboard/render.php:30
+msgid "Log in to see your courses and progress."
+msgstr ""
+
+#: src/blocks/student-dashboard/render.php:39
+#: src/blocks/student-dashboard/edit.js:10
+msgid "In progress"
+msgstr ""
+
+#. translators: %s: learner's display name.
+#: src/blocks/student-dashboard/render.php:71
+#, php-format
+msgid "Welcome back, %s"
+msgstr ""
+
+#: src/blocks/student-dashboard/render.php:82
+msgid "My courses"
+msgstr ""
+
+#: src/blocks/student-dashboard/render.php:125
+msgid "Courses you finish appear here."
+msgstr ""
+
+#: src/blocks/student-dashboard/render.php:126
+msgid "You are not taking any courses yet."
+msgstr ""
+
+#: src/blocks/student-dashboard/render.php:130
+msgid "Browse courses"
+msgstr ""
+
+#. translators: %s: course title.
+#: src/blocks/student-dashboard/render.php:141
+#: src/admin/students/student-list.js:82
+#, php-format,js-format
+msgid "Progress in %s"
+msgstr ""
+
+#. translators: 1: lessons completed, 2: lessons in the course, 3: percentage.
+#: src/blocks/student-dashboard/render.php:172
+#, php-format
+msgid "%1$d of %2$d lessons · %3$d%%"
+msgstr ""
+
+#: src/admin/components/confirm-dialog.js:44
+#: src/admin/courses/course-list.js:113
+#: src/admin/courses/inline-forms.js:72
+msgid "Cancel"
+msgstr ""
+
+#: src/admin/components/notices.js:46
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: src/admin/courses/course-builder.js:16
+#: src/admin/courses/course-list.js:21
+#: src/admin/courses/course-settings.js:65
+msgid "Published"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:17
+#: src/admin/courses/course-list.js:22
+#: src/admin/courses/course-settings.js:77
+msgid "Scheduled"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:18
+#: src/admin/courses/course-list.js:23
+#: src/admin/courses/course-settings.js:61
+#: src/admin/courses/curriculum-tree.js:145
+msgid "Draft"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:19
+#: src/admin/courses/course-list.js:24
+#: src/admin/courses/course-settings.js:62
+msgid "Pending review"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:20
+#: src/admin/courses/course-list.js:25
+#: src/admin/courses/course-settings.js:70
+msgid "Private"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:52
+msgid "This course could not be loaded."
+msgstr ""
+
+#: src/admin/courses/course-builder.js:55
+msgid "Back to courses"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:70
+msgid "All courses"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:74
+#: src/admin/courses/course-list.js:213
+#: src/admin/courses/curriculum-tree.js:71
+msgid "(no title)"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:82
+msgid "Edit course page"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:94
+#: src/admin/courses/course-list.js:315
+msgid "View course"
+msgstr ""
+
+#: src/admin/courses/course-builder.js:95
+msgid "Preview course"
+msgstr ""
+
+#: src/admin/courses/course-list.js:94
+msgid "Add a course"
+msgstr ""
+
+#: src/admin/courses/course-list.js:102
+#: src/editor/bindings.js:26
+msgid "Course title"
+msgstr ""
+
+#: src/admin/courses/course-list.js:105
+msgid "You can change it later. The course starts as a draft."
+msgstr ""
+
+#: src/admin/courses/course-list.js:121
+msgid "Create and open builder"
+msgstr ""
+
+#: src/admin/courses/course-list.js:188
+msgid "Image"
+msgstr ""
+
+#: src/admin/courses/course-list.js:205
+#: src/admin/courses/course-settings.js:109
+msgid "Title"
+msgstr ""
+
+#: src/admin/courses/course-list.js:219
+#: src/admin/courses/course-settings.js:247
+msgid "Status"
+msgstr ""
+
+#: src/admin/courses/course-list.js:259
+#: src/admin/courses/course-settings.js:185
+msgid "Category"
+msgstr ""
+
+#: src/admin/courses/course-list.js:292
+msgid "Date"
+msgstr ""
+
+#: src/admin/courses/course-list.js:307
+msgid "Open builder"
+msgstr ""
+
+#: src/admin/courses/course-list.js:322
+#: src/admin/courses/course-list.js:337
+msgid "Move to trash"
+msgstr ""
+
+#: src/admin/courses/course-list.js:328
+msgid "Move course to trash?"
+msgstr ""
+
+#. translators: %s: course title.
+#: src/admin/courses/course-list.js:331
+#, js-format
+msgid "“%s” moves to the trash with its sections and lessons. Learners keep their progress records."
+msgstr ""
+
+#: src/admin/courses/course-list.js:343
+msgid "Course moved to the trash."
+msgstr ""
+
+#: src/admin/courses/course-list.js:371
+msgid "Add course"
+msgstr ""
+
+#. translators: %s: number of courses.
+#: src/admin/courses/course-list.js:379
+#, js-format
+msgid "%s course"
+msgid_plural "%s courses"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/admin/courses/course-list.js:399
+msgid "Search courses"
+msgstr ""
+
+#: src/admin/courses/course-list.js:403
+msgid "No courses match."
+msgstr ""
+
+#: src/admin/courses/course-list.js:404
+msgid "No courses yet. Add your first course to start building."
+msgstr ""
+
+#: src/admin/courses/course-settings.js:48
+msgid "No category"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:52
+msgid "No level"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:90
+msgid "Course settings saved."
+msgstr ""
+
+#: src/admin/courses/course-settings.js:105
+msgid "Course settings"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:115
+msgid "Short description"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:116
+msgid "Shown on course cards and at the top of the course page."
+msgstr ""
+
+#: src/admin/courses/course-settings.js:126
+#: src/admin/courses/course-settings.js:139
+msgid "Featured image"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:155
+msgid "Replace image"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:159
+msgid "Choose image"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:178
+msgid "Remove"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:207
+msgid "Access"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:216
+msgid "Free: anyone with an account can enrol"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:223
+msgid "Invitation only: you enrol learners"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:234
+msgid "Duration in minutes"
+msgstr ""
+
+#: src/admin/courses/course-settings.js:235
+msgid "Leave at 0 to add up the lesson durations."
+msgstr ""
+
+#: src/admin/courses/course-settings.js:259
+#: src/admin/settings/settings-screen.js:182
+msgid "Save settings"
+msgstr ""
+
+#. translators: %s: lesson title.
+#: src/admin/courses/curriculum-tree.js:114
+#, js-format
+msgid "Reorder lesson: %s"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:126
+#: src/admin/courses/curriculum-tree.js:412
+msgid "Lesson title"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:128
+#: src/admin/courses/curriculum-tree.js:319
+msgid "Save"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:135
+msgid "Lesson renamed."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:151
+msgid "Free preview"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:161
+msgid "Edit content"
+msgstr ""
+
+#. translators: %s: lesson title.
+#: src/admin/courses/curriculum-tree.js:168
+#, js-format
+msgid "Actions for lesson: %s"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:174
+#: src/admin/courses/curriculum-tree.js:361
+msgid "Rename"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:180
+msgid "Remove free preview"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:181
+msgid "Make free preview"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:189
+msgid "Free preview removed."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:193
+msgid "Lesson is now a free preview."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:202
+msgid "Switch to draft"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:203
+msgid "Publish"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:216
+#: src/admin/courses/curriculum-tree.js:366
+msgid "Move up"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:222
+#: src/admin/courses/curriculum-tree.js:372
+msgid "Move down"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:228
+#: src/admin/courses/curriculum-tree.js:378
+msgid "Delete"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:236
+msgid "Delete lesson?"
+msgstr ""
+
+#. translators: %s: lesson title.
+#: src/admin/courses/curriculum-tree.js:239
+#, js-format
+msgid "“%s” moves to the trash. You can restore it from the Lessons trash."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:245
+msgid "Delete lesson"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:250
+msgid "Lesson deleted."
+msgstr ""
+
+#. translators: %s: section title.
+#: src/admin/courses/curriculum-tree.js:306
+#, js-format
+msgid "Reorder section: %s"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:317
+#: src/admin/courses/curriculum-tree.js:772
+#: src/editor/bindings.js:28
+msgid "Section title"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:327
+msgid "Section renamed."
+msgstr ""
+
+#. translators: %s: section title.
+#: src/admin/courses/curriculum-tree.js:355
+#, js-format
+msgid "Actions for section: %s"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:402
+msgid "No lessons yet. Add one, or drag a lesson here."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:411
+msgid "Add lesson"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:415
+msgid "Lesson added."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:420
+msgid "Delete section?"
+msgstr ""
+
+#. translators: 1: section title, 2: number of lessons.
+#: src/admin/courses/curriculum-tree.js:423
+#, js-format
+msgid "“%1$s” and its %2$d lesson move to the trash."
+msgid_plural "“%1$s” and its %2$d lessons move to the trash."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/admin/courses/curriculum-tree.js:432
+msgid "Delete section"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:438
+msgid "Section deleted."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:490
+msgid "Curriculum order saved."
+msgstr ""
+
+#. translators: %s: title.
+#: src/admin/courses/curriculum-tree.js:539
+#, js-format
+msgid "Picked up %s."
+msgstr ""
+
+#. translators: 1: dragged title, 2: title it is over.
+#: src/admin/courses/curriculum-tree.js:546
+#, js-format
+msgid "%1$s is over %2$s."
+msgstr ""
+
+#. translators: %s: title.
+#: src/admin/courses/curriculum-tree.js:552
+#, js-format
+msgid "%s is no longer over a drop position."
+msgstr ""
+
+#. translators: %s: title.
+#: src/admin/courses/curriculum-tree.js:562
+#, js-format
+msgid "Dropped %s."
+msgstr ""
+
+#. translators: %s: title.
+#: src/admin/courses/curriculum-tree.js:567
+#, js-format
+msgid "%s was dropped where it started."
+msgstr ""
+
+#. translators: %s: title.
+#: src/admin/courses/curriculum-tree.js:573
+#, js-format
+msgid "Moving %s was cancelled."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:730
+msgid "To pick up a section or lesson, press Space or Enter. Use the arrow keys to move it, then press Space or Enter to drop it, or Escape to cancel."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:764
+msgid "This course has no sections yet. Add the first one to start the curriculum."
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:771
+msgid "Add section"
+msgstr ""
+
+#: src/admin/courses/curriculum-tree.js:775
+msgid "Section added."
+msgstr ""
+
+#: src/admin/courses/inline-forms.js:102
+msgid "Add"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:68
+msgid "Settings saved."
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:85
+msgid "Dashboard page created."
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:101
+msgid "Learner pages"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:104
+msgid "Student dashboard page"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:105
+msgid "This page uses the Student Dashboard template and lists each learner's courses."
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:113
+msgid "— Select a page —"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:130
+msgid "Open the dashboard page"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:142
+msgid "Create a dashboard page"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:146
+msgid "Prices"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:149
+msgid "Currency"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:159
+msgid "Data"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:161
+msgid "Delete all Public LMS data when the plugin is deleted"
+msgstr ""
+
+#: src/admin/settings/settings-screen.js:165
+msgid "Courses, lessons, enrolments, progress and orders are removed for good. Leave off unless you are sure."
+msgstr ""
+
+#: src/admin/students/student-list.js:41
+msgid "Learner"
+msgstr ""
+
+#: src/admin/students/student-list.js:50
+msgid "Courses and progress"
+msgstr ""
+
+#: src/admin/students/student-list.js:58
+msgid "Enrolled"
+msgstr ""
+
+#: src/admin/students/student-list.js:61
+msgid "Progress"
+msgstr ""
+
+#: src/admin/students/student-list.js:164
+msgid "Avatar"
+msgstr ""
+
+#: src/admin/students/student-list.js:177
+msgid "Name"
+msgstr ""
+
+#: src/admin/students/student-list.js:183
+msgid "Email"
+msgstr ""
+
+#: src/admin/students/student-list.js:208
+msgid "Last enrolled"
+msgstr ""
+
+#: src/admin/students/student-list.js:221
+msgid "View progress"
+msgstr ""
+
+#: src/admin/students/student-list.js:260
+msgid "Search learners"
+msgstr ""
+
+#: src/admin/students/student-list.js:261
+msgid "No learners yet."
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:26
+msgid "Beginner"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:46
+msgid "Last month"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:66
+msgid "Details to show"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:79
+msgid "Layout"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:82
+msgid "Show labels"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:91
+msgid "Arrangement"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:96
+msgid "List"
+msgstr ""
+
+#: src/blocks/course-meta/edit.js:100
+msgid "Inline"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:18
+msgid "Getting started"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:20
+msgid "Welcome to the course"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:21
+msgid "How this course works"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:26
+msgid "Core ideas"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:27
+msgid "The first big idea"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:55
+msgid "Collapsible sections"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:63
+msgid "Show locked lessons"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:72
+msgid "Section heading level"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:87
+#: src/blocks/enroll-button/edit.js:33
+msgid "Course ID"
+msgstr ""
+
+#: src/blocks/curriculum/edit.js:88
+msgid "Leave at 0 to use the course of the page."
+msgstr ""
+
+#: src/blocks/enroll-button/edit.js:22
+msgid "Show price"
+msgstr ""
+
+#: src/blocks/enroll-button/edit.js:34
+msgid "Leave at 0 to use the course of the page or Query Loop."
+msgstr ""
+
+#: src/blocks/enroll-button/edit.js:54
+#: src/editor/bindings.js:24
+msgid "Enrol button text"
+msgstr ""
+
+#: src/blocks/lesson-content/edit.js:8
+msgid "The lesson content shows here for learners who can open it. Edit lessons from the course builder."
+msgstr ""
+
+#: src/blocks/lesson-content/edit.js:17
+msgid "Message for learners who cannot open the lesson"
+msgstr ""
+
+#: src/blocks/lesson-content/edit.js:21
+msgid "Locked message (leave empty to explain the reason automatically)"
+msgstr ""
+
+#: src/blocks/lesson-navigation/edit.js:17
+msgid "Show lesson titles"
+msgstr ""
+
+#: src/blocks/lesson-navigation/edit.js:30
+msgid "Previous link text"
+msgstr ""
+
+#: src/blocks/lesson-navigation/edit.js:41
+msgid "Previous lesson title"
+msgstr ""
+
+#: src/blocks/lesson-navigation/edit.js:49
+msgid "Next link text"
+msgstr ""
+
+#: src/blocks/lesson-navigation/edit.js:60
+msgid "Next lesson title"
+msgstr ""
+
+#: src/blocks/mark-complete/edit.js:15
+msgid "Button text"
+msgstr ""
+
+#: src/blocks/mark-complete/edit.js:24
+msgid "After completion:"
+msgstr ""
+
+#: src/blocks/mark-complete/edit.js:27
+msgid "Button text after completion"
+msgstr ""
+
+#: src/blocks/student-dashboard/edit.js:21
+msgid "Tabs"
+msgstr ""
+
+#: src/blocks/student-dashboard/edit.js:44
+msgid "Open first"
+msgstr ""
+
+#: src/blocks/student-dashboard/edit.js:58
+msgid "Welcome back"
+msgstr ""
+
+#: src/blocks/student-dashboard/edit.js:72
+msgid "Each learner sees their own courses here, with progress and a link to continue."
+msgstr ""
+
+#: src/editor/bindings.js:13
+msgid "Course price"
+msgstr ""
+
+#: src/editor/bindings.js:14
+msgid "Course regular price"
+msgstr ""
+
+#: src/editor/bindings.js:15
+msgid "Course duration"
+msgstr ""
+
+#: src/editor/bindings.js:16
+msgid "Lesson count"
+msgstr ""
+
+#: src/editor/bindings.js:17
+msgid "Course level"
+msgstr ""
+
+#: src/editor/bindings.js:18
+msgid "Instructor name"
+msgstr ""
+
+#: src/editor/bindings.js:19
+msgid "Instructor URL"
+msgstr ""
+
+#: src/editor/bindings.js:20
+msgid "Instructor avatar"
+msgstr ""
+
+#: src/editor/bindings.js:21
+msgid "Learner count"
+msgstr ""
+
+#: src/editor/bindings.js:22
+msgid "Course rating"
+msgstr ""
+
+#: src/editor/bindings.js:23
+msgid "Enrol URL"
+msgstr ""
+
+#: src/editor/bindings.js:25
+msgid "My progress"
+msgstr ""
+
+#: src/editor/bindings.js:27
+msgid "Course URL"
+msgstr ""
+
+#: src/editor/course-panel.js:41
+msgid "Back to the course builder"
+msgstr ""
+
+#: src/editor/course-panel.js:47
+msgid "Not in a course yet. Add it from the course builder."
+msgstr ""
+
+#: src/editor/course-query.js:19
+msgid "Course Grid"
+msgstr ""
+
+#: src/editor/course-query.js:20
+msgid "A grid of courses with their image, title, level and price."
+msgstr ""
+
+#: src/editor/course-query.js:118
+msgid "Hide courses the learner is enrolled in"
+msgstr ""
+
+#: src/blocks/course-meta/block.json
+msgctxt "block title"
+msgid "Course Details"
+msgstr ""
+
+#: src/blocks/course-meta/block.json
+msgctxt "block description"
+msgid "Lists course facts: lessons, duration, level, instructor, learners and last update."
+msgstr ""
+
+#: src/blocks/course-meta/block.json
+msgctxt "block keyword"
+msgid "meta"
+msgstr ""
+
+#: src/blocks/course-meta/block.json
+msgctxt "block keyword"
+msgid "duration"
+msgstr ""
+
+#: src/blocks/course-meta/block.json
+msgctxt "block keyword"
+msgid "level"
+msgstr ""
+
+#: src/blocks/course-meta/block.json
+#: src/blocks/curriculum/block.json
+msgctxt "block keyword"
+msgid "lessons"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block title"
+msgid "Course Progress"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block description"
+msgid "Shows the current learner's progress in a course. Styles: bar, ring or text."
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+#: src/blocks/mark-complete/block.json
+msgctxt "block keyword"
+msgid "progress"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block keyword"
+msgid "completion"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block keyword"
+msgid "percent"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block style label"
+msgid "Bar"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block style label"
+msgid "Ring"
+msgstr ""
+
+#: src/blocks/course-progress/block.json
+msgctxt "block style label"
+msgid "Text"
+msgstr ""
+
+#: src/blocks/curriculum/block.json
+msgctxt "block title"
+msgid "Curriculum"
+msgstr ""
+
+#: src/blocks/curriculum/block.json
+msgctxt "block description"
+msgid "Shows a course's sections and lessons with completion and lock states."
+msgstr ""
+
+#: src/blocks/curriculum/block.json
+msgctxt "block keyword"
+msgid "syllabus"
+msgstr ""
+
+#: src/blocks/curriculum/block.json
+msgctxt "block keyword"
+msgid "outline"
+msgstr ""
+
+#: src/blocks/curriculum/block.json
+msgctxt "block keyword"
+msgid "sections"
+msgstr ""
+
+#: src/blocks/enroll-button/block.json
+msgctxt "block title"
+msgid "Enrol Button"
+msgstr ""
+
+#: src/blocks/enroll-button/block.json
+msgctxt "block description"
+msgid "Lets a learner enrol in a course, or continue where they left off."
+msgstr ""
+
+#: src/blocks/enroll-button/block.json
+msgctxt "block keyword"
+msgid "enroll"
+msgstr ""
+
+#: src/blocks/enroll-button/block.json
+msgctxt "block keyword"
+msgid "enrol"
+msgstr ""
+
+#: src/blocks/enroll-button/block.json
+msgctxt "block keyword"
+msgid "join"
+msgstr ""
+
+#: src/blocks/enroll-button/block.json
+msgctxt "block keyword"
+msgid "start"
+msgstr ""
+
+#: src/blocks/lesson-content/block.json
+msgctxt "block title"
+msgid "Lesson Content"
+msgstr ""
+
+#: src/blocks/lesson-content/block.json
+msgctxt "block description"
+msgid "Shows the lesson's content to learners who can open it, and a locked notice to everyone else."
+msgstr ""
+
+#: src/blocks/lesson-content/block.json
+msgctxt "block keyword"
+msgid "content"
+msgstr ""
+
+#: src/blocks/lesson-content/block.json
+msgctxt "block keyword"
+msgid "lesson"
+msgstr ""
+
+#: src/blocks/lesson-content/block.json
+msgctxt "block keyword"
+msgid "locked"
+msgstr ""
+
+#: src/blocks/lesson-navigation/block.json
+msgctxt "block title"
+msgid "Lesson Navigation"
+msgstr ""
+
+#: src/blocks/lesson-navigation/block.json
+msgctxt "block description"
+msgid "Links to the previous and next items in the course."
+msgstr ""
+
+#: src/blocks/lesson-navigation/block.json
+msgctxt "block keyword"
+msgid "next"
+msgstr ""
+
+#: src/blocks/lesson-navigation/block.json
+msgctxt "block keyword"
+msgid "previous"
+msgstr ""
+
+#: src/blocks/lesson-navigation/block.json
+msgctxt "block keyword"
+msgid "pagination"
+msgstr ""
+
+#: src/blocks/mark-complete/block.json
+msgctxt "block title"
+msgid "Mark Complete"
+msgstr ""
+
+#: src/blocks/mark-complete/block.json
+msgctxt "block description"
+msgid "Button that marks the current lesson complete and updates progress without reloading."
+msgstr ""
+
+#: src/blocks/mark-complete/block.json
+msgctxt "block keyword"
+msgid "complete"
+msgstr ""
+
+#: src/blocks/mark-complete/block.json
+msgctxt "block keyword"
+msgid "done"
+msgstr ""
+
+#: src/blocks/student-dashboard/block.json
+msgctxt "block title"
+msgid "Student Dashboard"
+msgstr ""
+
+#: src/blocks/student-dashboard/block.json
+msgctxt "block description"
+msgid "Lists the learner's courses with progress, in tabs."
+msgstr ""
+
+#: src/blocks/student-dashboard/block.json
+msgctxt "block keyword"
+msgid "dashboard"
+msgstr ""
+
+#: src/blocks/student-dashboard/block.json
+msgctxt "block keyword"
+msgid "my courses"
+msgstr ""
+
+#: src/blocks/student-dashboard/block.json
+msgctxt "block keyword"
+msgid "learning"
 msgstr ""

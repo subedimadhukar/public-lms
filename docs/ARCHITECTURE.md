@@ -1,6 +1,6 @@
 # Public LMS architecture
 
-Status: phase 0, frozen at the phase 0 gate. Source: the "LMS plugin architecture and complete ecosystem"
+Status: phase 1 (internal alpha, 0.2.0). Phase 0 decisions stand; phase 1 decisions are ADR-028 onwards. Source: the "LMS plugin architecture and complete ecosystem"
 section of the WPInterface strategy document (4 Nov 2026). Where that document and the phase 0 brief
 disagree, the brief wins; each such case is an ADR below marked **Deviation**.
 
@@ -57,19 +57,19 @@ admin passes the REST layer and the single access policy before it reaches a pos
 
 ```
 public-lms/
-├─ public-lms.php  uninstall.php  readme.txt
-├─ composer.json  package.json  phpcs.xml.dist  phpstan.neon  phpunit.xml.dist
-├─ .wp-env.json  playground.json  .nvmrc  .editorconfig  .gitignore
-├─ includes/   Core/ PostTypes/ Taxonomies/ Capabilities/ Repositories/ Rest/
-│             Access/ Templates/ Licensing/
-│             (phase 1+: Models/ Blocks/ Bindings/ Payments/ Emails/ Certificates/
-│              Reports/ Jobs/ Admin/ Abilities/)
-├─ src/        index.js (phase 1+: blocks/<name>/{block.json, edit.js, render.php, view.js},
-│             admin/, store/, bindings/, interactivity/)
-├─ patterns/   templates/      (phase 1: plugin-side defaults the theme mirrors 1:1)
-├─ build/      (gitignored)    languages/   docs/
-├─ tests/      phpunit/  phpstan/   (phase 1: e2e/)
-└─ .github/workflows/  lint.yml  tests.yml  build.yml
+├─ public-lms.php  uninstall.php  readme.txt  README.md
+├─ composer.json  package.json  webpack.config.js  playwright.config.js
+├─ phpcs.xml.dist  phpstan.neon  phpunit.xml.dist  .wp-env.json  playground.json
+├─ includes/   Core/ PostTypes/ Taxonomies/ Capabilities/ Repositories/ Services/ Courses/ Access/
+│             Rest/ Admin/ Blocks/ Templates/ Frontend/ Cli/ Licensing/
+│             (phase 2+: Payments/ Emails/ Certificates/ Reports/ Jobs/ Abilities/)
+├─ src/        admin/ (React app)  store/ (data stores)  editor/ (bindings, query variation, course panel)
+│             blocks/<name>/{block.json, index.js, edit.js, render.php, style.scss}
+│             interactivity/learning.js (the shared store module)
+├─ patterns/   templates/   assets/css/tokens.css
+├─ build/      (gitignored)    languages/   docs/   bin/timing-check.sh
+├─ tests/      phpunit/  phpstan/  e2e/
+└─ .github/workflows/  lint.yml  tests.yml (PHPUnit matrix, Playwright)  build.yml
 ```
 
 ### Hooks Pro and add-ons use
@@ -558,3 +558,18 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   themes.
 - **Consequences.** Verified on Twenty Twenty-Five (block) and Twenty Twenty-One (classic) without the
   CampusInterface theme. The course template leaves out `publiclms/course-reviews` until reviews exist.
+
+### ADR-038 Fixtures, end-to-end tests and the alpha timing check
+- **Decision.** `wp publiclms seed --courses=10` creates three instructors, up to six learners, ten distinct
+  courses (two sections of three lessons each, real teaching copy, categories and levels), free enrolments
+  with varied progress and a dashboard page; everything it creates carries `_plms_seed` post, term or user
+  meta, so `wp publiclms reset --yes` removes exactly that, including the seeded users' enrolment, progress
+  and event rows. It refuses to run on a production environment without `--force`. Seeded users share one
+  password (`--password`, `PUBLICLMS_SEED_PASSWORD`, or `public-lms-demo`). Playwright
+  (`@wordpress/e2e-test-utils-playwright`) covers the alpha journey in `tests/e2e/`: an instructor builds a
+  course with two sections and three lessons in the admin app, a student enrols, completes a lesson
+  (no navigation, progress 33 percent, next link ready) and sees it on the dashboard, whose tabs work from the
+  keyboard. The same test records the lesson page's navigation timing; `bin/timing-check.sh` measures
+  time to first byte with curl, logged out or with a learner's cookie.
+- **Consequences.** CI runs the e2e job on WordPress latest. Learners (no `edit_posts`) land on the
+  dashboard page after login unless the login link asked for somewhere else.

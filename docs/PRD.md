@@ -92,17 +92,27 @@ Pro is a separate GPL plugin that hooks into free.
 
 Goal: a course can be built, sold for free and taken, end to end, on the CampusInterface scaffold theme.
 
+**Status (2026-11-04): plugin side done to the internal alpha (0.2.0).** ✓ marks what shipped; notes say
+where it differs from the plan. The gate's "10 real courses imported from a competitor export" is met with
+`wp publiclms seed --courses=10` (ten realistic courses); importers stay in phase 2.
+
 **Plugin**
-- Post types, taxonomies, tables and migrations, capabilities and roles (scaffolded in phase 0).
-- Repository implementations for enrolments and progress, with object caching.
-- REST for courses (curriculum), sections, lessons, enrolments and progress, per the matrix in
-  `ARCHITECTURE.md` §4.
-- Admin app shell with DataViews lists; course builder v1 (sections and lessons, drag and drop).
-- Lesson player with mark complete and next lesson (Interactivity API); free enrolment; student dashboard v1.
-- Course grid as the `publiclms/course-query` Query Loop variation.
-- Plugin-registered templates and patterns per `CONTRACTS.md`; bindings source `publiclms/course-field`.
-- AccessPolicy: enrolment and preview rules.
-- Action Scheduler bundled; object cache for structure and progress.
+- ✓ Post types, taxonomies, tables and migrations, capabilities and roles (scaffolded in phase 0).
+- ✓ Repository implementations for enrolments and progress, with object caching; plus course structure
+  (ADR-028) and the event log.
+- ✓ REST for courses (curriculum), sections, lessons, enrolments and progress, per the matrix in
+  `ARCHITECTURE.md` §4; plus students and settings.
+- ✓ Admin app shell with DataViews lists; course builder v1 (sections and lessons, drag and drop with
+  keyboard support).
+- ✓ Lesson player with mark complete and next lesson (Interactivity API); free enrolment; student
+  dashboard v1 (tabs: in progress, completed).
+- ✓ Course grid as the `publiclms/course-query` Query Loop variation (inserter title "Course Grid").
+- ✓ Plugin-registered templates and patterns per `CONTRACTS.md` (four templates, twelve patterns; contract
+  1.1.0); bindings source `publiclms/course-field`; classic theme fallback (planned for phase 2, done now).
+- ✓ AccessPolicy: enrolment and preview rules; drip and prerequisites are documented no-ops.
+- ✓ Object cache for structure and progress. Action Scheduler is bundled through Composer; nothing in phase 1
+  schedules jobs yet.
+- Moved to phase 2: the `publiclms/video` block with completion tracking.
 
 **Theme (CampusInterface)**
 - Generator scaffold modernised to theme.json v3, tokens, fonts, 8 templates, header and footer parts
@@ -110,12 +120,16 @@ Goal: a course can be built, sold for free and taken, end to end, on the CampusI
   dashboard template overrides once the plugin's templates land.
 
 **Quality**
-- PHPUnit on repositories and the access policy; Playwright on build, enrol, complete a lesson.
-- PHPCS and PHPStan in CI; Theme Check and an accessibility smoke test.
-- Matrix: WordPress 6.7, 7.1 and 7.2 on PHP 7.4 and 8.3 (8.4 when wp-env images are stable).
+- ✓ PHPUnit on repositories, the access policy, REST permissions, block rendering, templates (92 tests).
+- ✓ Playwright on build, enrol, complete a lesson, see progress on the dashboard (one journey, plus keyboard
+  checks of the dashboard tabs); a timing check on the lesson page (`bin/timing-check.sh`).
+- ✓ PHPCS and PHPStan level 6 clean; ESLint and Stylelint clean. Theme Check belongs to the theme session.
+- Matrix: CI runs PHPUnit on WordPress 6.7 and latest with PHP 7.4 and 8.3, and Playwright on latest.
+  Locally verified on WordPress 7.1.4 with PHP 8.x; 6.7 and PHP 7.4 rely on CI.
 
 **Gate:** internal alpha with 10 real courses imported from a competitor export; a learner can enrol and
-complete; the theme runs the alpha with no plugin CSS overrides.
+complete; the theme runs the alpha with no plugin CSS overrides. Plugin side met (see status above); the
+theme half is the theme session's.
 
 **Out of phase 1:** quizzes, assignments, checkout, certificates, reports, email, importers (phase 2).
 

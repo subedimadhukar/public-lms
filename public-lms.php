@@ -3,7 +3,7 @@
  * Plugin Name:       Public LMS
  * Plugin URI:        https://wpinterface.com/plugins/public-lms/
  * Description:       A block-native learning management system for any block theme: courses, lessons, quizzes, assignments, gradebook and certificates.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 6.7
  * Requires PHP:      7.4
  * Author:            WPInterface
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PUBLICLMS_VERSION', '0.1.0' );
+define( 'PUBLICLMS_VERSION', '0.2.0' );
 define( 'PUBLICLMS_FILE', __FILE__ );
 define( 'PUBLICLMS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'PUBLICLMS_URL', plugin_dir_url( __FILE__ ) );

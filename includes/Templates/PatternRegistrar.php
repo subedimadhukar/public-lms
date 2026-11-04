@@ -105,11 +105,11 @@ final class PatternRegistrar {
 			return null;
 		}
 
+		$labels  = self::labels()[ $headers['slug'] ] ?? array();
 		$pattern = array(
 			'slug'        => $headers['slug'],
-			// Header text is translated the way core translates theme pattern headers; make-pot extracts it.
-			'title'       => translate_with_gettext_context( $headers['title'], 'Pattern title', 'public-lms' ), // phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- Variable header text, as core does for patterns.
-			'description' => translate_with_gettext_context( $headers['description'], 'Pattern description', 'public-lms' ), // phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- Variable header text, as core does for patterns.
+			'title'       => $labels['title'] ?? $headers['title'],
+			'description' => $labels['description'] ?? $headers['description'],
 			'inserter'    => ! in_array( strtolower( $headers['inserter'] ), array( 'no', 'false' ), true ),
 		);
 		foreach ( array( 'categories', 'keywords', 'blockTypes', 'postTypes' ) as $list ) {
@@ -129,5 +129,66 @@ final class PatternRegistrar {
 			$pattern['content'] = (string) ob_get_clean();
 		}
 		return $pattern;
+	}
+	/**
+	 * Returns the translated title and description of each pattern.
+	 *
+	 * WP-CLI's make-pot extracts pattern headers only from themes, so the
+	 * strings live here as well, where it finds them. The file headers stay
+	 * the source for everything else.
+	 *
+	 * @return array<string, array{title: string, description: string}>
+	 */
+	public static function labels(): array {
+		return array(
+			'publiclms/course-archive-header' => array(
+				'title'       => _x( 'Course archive header', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'The catalogue or category title and its description.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/course-curriculum'     => array(
+				'title'       => _x( 'Course curriculum', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'The course\'s sections and lessons, with completion and lock states.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/course-details'        => array(
+				'title'       => _x( 'Course details', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'Duration, lessons, level and last update of the course, from the course-field bindings source.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/course-enroll-card'    => array(
+				'title'       => _x( 'Course enrol card', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'Price, enrol button and what the course includes, sticky on wide screens.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/course-grid'           => array(
+				'title'       => _x( 'Course grid', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'A grid of course cards: image, level, title, short description and price, with pagination.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/course-hero'           => array(
+				'title'       => _x( 'Course hero', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'Course title, short description and featured image, with level, instructor and the enrol button.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/course-instructor'     => array(
+				'title'       => _x( 'Course instructor', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'The instructor\'s avatar, name and biography.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/lesson-content'        => array(
+				'title'       => _x( 'Lesson content', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'The lesson, shown to learners who can open it, and the mark complete button.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/lesson-header'         => array(
+				'title'       => _x( 'Lesson header', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'Link back to the course, the section name, the lesson title and the learner\'s progress.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/lesson-navigation'     => array(
+				'title'       => _x( 'Lesson navigation', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'Links to the previous and next lessons in the course.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/lesson-sidebar'        => array(
+				'title'       => _x( 'Lesson sidebar', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'The course curriculum beside a lesson, with the current lesson highlighted.', 'Pattern description', 'public-lms' ),
+			),
+			'publiclms/student-dashboard'     => array(
+				'title'       => _x( 'Student dashboard', 'Pattern title', 'public-lms' ),
+				'description' => _x( 'The learner\'s courses with progress, in tabs.', 'Pattern description', 'public-lms' ),
+			),
+		);
 	}
 }

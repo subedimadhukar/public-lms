@@ -45,4 +45,17 @@ class EventRepositoryTest extends TestCase {
 		$this->assertNull( $events[1]['course_id'] );
 		$this->assertSame( array( $second ), wp_list_pluck( $repo->since( $first ), 'id' ) );
 	}
+
+	/**
+	 * @covers ::delete_for_user
+	 */
+	public function test_delete_for_user_removes_only_that_users_events() {
+		$repo  = publiclms()->container()->get( EventRepositoryInterface::class );
+		$start = $repo->record( 'test.start' );
+		$repo->record( 'item.completed', array( 'user_id' => 7 ) );
+		$kept = $repo->record( 'item.completed', array( 'user_id' => 8 ) );
+
+		$this->assertSame( 1, $repo->delete_for_user( 7 ) );
+		$this->assertSame( array( $kept ), wp_list_pluck( $repo->since( $start ), 'id' ) );
+	}
 }
