@@ -173,6 +173,8 @@ final class Blocks {
 	 */
 	public function register_blocks(): void {
 		wp_register_style( self::TOKENS, PUBLICLMS_URL . 'assets/css/tokens.css', array(), PUBLICLMS_VERSION );
+		// `npm run build` writes tokens-rtl.css with rtlcss (bin/build-rtl.js).
+		wp_style_add_data( self::TOKENS, 'rtl', 'replace' );
 
 		$module_asset = PUBLICLMS_PATH . 'build/interactivity/learning.asset.php';
 		if ( function_exists( 'wp_register_script_module' ) && is_readable( $module_asset ) ) {

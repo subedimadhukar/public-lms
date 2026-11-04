@@ -109,7 +109,8 @@
 
 :where(.wp-block-publiclms-student-dashboard) .wp-block-publiclms-course-progress__fill {
 	position: absolute;
-	inset: 0 auto 0 0;
+	inset-block: 0;
+	inset-inline-start: 0;
 	width: var(--publiclms-progress);
 	background: var(--publiclms-color-primary);
 }

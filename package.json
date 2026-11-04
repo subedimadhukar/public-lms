@@ -25,6 +25,7 @@
 		"npm": ">=10.8.0"
 	},
 	"files": [
+		"assets",
 		"build",
 		"includes",
 		"languages",
@@ -65,7 +66,8 @@
 		"@wordpress/url": "^5.1.0"
 	},
 	"scripts": {
-		"build": "wp-scripts build --experimental-modules",
+		"build": "wp-scripts build --experimental-modules && node bin/build-rtl.js",
+		"check:rtl": "node bin/check-rtl.js",
 		"start": "wp-scripts start --experimental-modules",
 		"format": "wp-scripts format",
 		"lint:js": "wp-scripts lint-js",

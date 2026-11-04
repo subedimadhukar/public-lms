@@ -2,6 +2,7 @@
 /vendor/
 /node_modules/
 /build/
+/assets/css/*-rtl.css
 
 # Local tooling
 /.wp-env.override.json

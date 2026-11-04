@@ -355,6 +355,10 @@ class BlocksTest extends TestCase {
 		unset( $third );
 	}
 
+	public function test_token_stylesheet_has_a_right_to_left_copy() {
+		$this->assertSame( 'replace', wp_styles()->get_data( 'publiclms-tokens', 'rtl' ), 'RTL sites load tokens-rtl.css (finding 4).' );
+	}
+
 	public function test_video_tracks_completion_only_for_enrolled_learners_on_items() {
 		$lesson = $this->fixture['lessons'][1];
 		$markup = '<!-- wp:publiclms/video {"src":"https://youtu.be/dQw4w9WgXcQ","title":"Reading a balance sheet","requiredPercent":80} /-->';
