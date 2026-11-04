@@ -33,6 +33,8 @@ class TemplatesTest extends TestCase {
 			'publiclms/lesson-navigation',
 			'publiclms/lesson-sidebar',
 			'publiclms/student-dashboard',
+			'publiclms/quiz-header',
+			'publiclms/quiz-runner',
 		);
 		$registry = WP_Block_Patterns_Registry::get_instance();
 		foreach ( $expected as $slug ) {
@@ -55,12 +57,12 @@ class TemplatesTest extends TestCase {
 		rmdir( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Test cleanup.
 	}
 
-	public function test_the_four_phase_1_templates_are_registered() {
+	public function test_the_plugin_templates_are_registered() {
 		$slugs = wp_list_pluck( get_block_templates( array(), 'wp_template' ), 'slug' );
-		foreach ( array( 'single-plms_course', 'archive-plms_course', 'single-plms_lesson', 'plms-dashboard' ) as $slug ) {
+		foreach ( array( 'single-plms_course', 'archive-plms_course', 'single-plms_lesson', 'single-plms_quiz', 'plms-dashboard' ) as $slug ) {
 			$this->assertContains( $slug, $slugs );
 		}
-		$this->assertNotContains( 'single-plms_quiz', $slugs, 'Quiz templates arrive with quizzes in phase 2.' );
+		$this->assertNotContains( 'plms-instructor', $slugs, 'The instructor dashboard arrives in part B of phase 2.' );
 	}
 
 	public function test_classic_themes_get_the_plugin_wrapper_for_plugin_requests() {

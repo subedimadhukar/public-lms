@@ -284,7 +284,7 @@ test.describe( 'Phase 1 learning journey', () => {
 		await expect(
 			page.getByRole( 'heading', { level: 3, name: COURSE } )
 		).toBeVisible();
-		await expect( page.getByText( '1 of 3 lessons · 33%' ) ).toBeVisible();
+		await expect( page.getByText( '1 of 3 steps · 33%' ) ).toBeVisible();
 		await expect(
 			page.getByRole( 'progressbar', { name: `Progress in ${ COURSE }` } )
 		).toHaveAttribute( 'aria-valuenow', '33' );

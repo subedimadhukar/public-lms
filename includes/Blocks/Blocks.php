@@ -53,6 +53,7 @@ final class Blocks {
 		'lesson-content',
 		'lesson-navigation',
 		'mark-complete',
+		'quiz',
 		'student-dashboard',
 		'video',
 	);
@@ -332,7 +333,58 @@ final class Blocks {
 			return '' !== $tab && ( $context['selected'] ?? '' ) === $tab;
 		};
 
+		$quiz  = static function (): array {
+			$state   = wp_interactivity_state( self::STORE );
+			$context = wp_interactivity_get_context( self::STORE );
+			return (array) ( $state['quiz'][ (string) ( $context['quizId'] ?? '' ) ] ?? array() );
+		};
+		$phase = static function () use ( $quiz ): string {
+			return (string) ( $quiz()['phase'] ?? 'intro' );
+		};
+
 		return array(
+			'quizIsIntro'        => static function () use ( $phase ): bool {
+				return 'intro' === $phase();
+			},
+			'quizIsRunning'      => static function () use ( $phase ): bool {
+				return 'running' === $phase();
+			},
+			'quizIsDone'         => static function () use ( $phase ): bool {
+				return 'done' === $phase();
+			},
+			'quizIsBusy'         => static function () use ( $quiz ): bool {
+				return ! empty( $quiz()['busy'] );
+			},
+			'quizQuestions'      => static function () use ( $quiz ): array {
+				return (array) ( $quiz()['questions'] ?? array() );
+			},
+			'quizMessage'        => static function () use ( $quiz ): string {
+				return (string) ( $quiz()['message'] ?? '' );
+			},
+			'quizNotice'         => static function () use ( $quiz ): string {
+				return (string) ( $quiz()['notice'] ?? '' );
+			},
+			'quizVerdict'        => static function () use ( $quiz ): string {
+				return (string) ( $quiz()['verdict'] ?? '' );
+			},
+			'quizScore'          => static function () use ( $quiz ): string {
+				return (string) ( $quiz()['score'] ?? '' );
+			},
+			'quizPassed'         => static function () use ( $quiz ): bool {
+				return ! empty( $quiz()['passed'] );
+			},
+			'quizCanRetake'      => static function () use ( $quiz ): bool {
+				return ! empty( $quiz()['canRetake'] );
+			},
+			'quizHasTimer'       => static function () use ( $quiz, $phase ): bool {
+				return 'running' === $phase() && is_int( $quiz()['timeLeft'] ?? null );
+			},
+			'quizTimeText'       => static function (): string {
+				return '';
+			},
+			'quizSubmitLabel'    => static function (): string {
+				return __( 'Submit answers', 'public-lms' );
+			},
 			'percent'            => static function () use ( $course ): int {
 				return $course()['percent'];
 			},

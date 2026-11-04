@@ -243,7 +243,7 @@ function ItemRow( {
 				) }
 			</span>
 			{ renderActions && renderActions( item ) }
-			{ item.edit_url && (
+			{ item.edit_url && item.type === 'lesson' && (
 				<Button
 					variant="tertiary"
 					size="compact"

@@ -1,12 +1,31 @@
 # Public LMS ↔ theme contracts
 
-**Contract version:** 1.2.0 (phase 1; additive changes only, listed under "Changes" below)
+**Contract version:** 1.3.0 (phase 2; additive changes only, listed under "Changes" below)
 **Applies to:** Public LMS ≥ 0.1.0 and any block theme that styles it, CampusInterface first.
 **Change rule:** a change to either contract is a pull request on both repositories, and bumps this version:
 removing or renaming anything is a major bump; adding a slug, pattern, key or token is a minor bump; wording
 fixes are a patch. The plugin lands contract changes two to three weeks before the theme consumes them.
 **Changes before the gate:** 2026-11-04, template slugs switched from `single-course` and friends to the
 post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the version stayed 1.0.0.
+
+**Changes in 1.3.0 (phase 2 part A, minor):**
+1. A1: `single-plms_quiz` is registered (quiz-header, quiz-runner, plus the lesson template's navigation and
+   sidebar patterns, in the same columns as `single-plms_lesson`).
+2. A6: patterns `publiclms/quiz-header` and `publiclms/quiz-runner` are registered. `quiz-runner` holds the
+   gated quiz introduction (`publiclms/lesson-content`) and `publiclms/quiz` with `showFacts:false`, because
+   the header shows the facts.
+3. A7: four keys, resolved from the quiz on screen and empty elsewhere: `quiz_question_count` ("6
+   questions"), `quiz_time_limit` ("Time limit: 15 minutes" or "No time limit"), `quiz_pass_mark` ("Pass mark:
+   70%"), `quiz_attempts_left` ("Attempts left: 2 of 3" or "Unlimited attempts").
+4. A6: `publiclms/lesson-content` lists the lesson's files under the content ("Lesson files", for learners
+   who can open the lesson); block attribute `showAttachments` turns it off.
+5. A6: `publiclms/student-dashboard` gains the tab `quiz-results` (a table: quiz, course, best score, result,
+   attempts, last attempt). The block's default tabs are now in-progress, completed, quiz-results and
+   certificates; a saved block with its own `tabs` keeps them.
+6. Two new blocks for themes to style: `publiclms/video` (YouTube, Vimeo, Bunny Stream, self-hosted) and `publiclms/quiz`.
+   They read only B1 to B4 tokens; the quiz uses `success` and `danger` for results and `3xl` for the score.
+7. A6: curriculum items carry `is-type-lesson`, `is-type-quiz` or `is-type-assignment`, and dripped items
+   show "Opens {date}"; section counts read "3 lessons, 1 quiz".
 
 **Changes in 1.2.0 (phase 1, minor), answering the theme's nine open items (theme `docs/CONTRACTS.md`,
 "Open items for the plugin"):**
@@ -67,7 +86,7 @@ ordinary page (ADR-023).
 | `publiclms//single-plms_course` | `single-plms_course` | Single Course | A single `plms_course` | `publiclms/course-hero`, `publiclms/course-details`, `publiclms/course-curriculum`, `publiclms/course-instructor`, `publiclms/course-reviews`, `publiclms/course-enroll-card` |
 | `publiclms//archive-plms_course` | `archive-plms_course` | Course Archive | The `plms_course` archive (`/courses/`) and the `plms_course_category`, `plms_course_tag` and `plms_level` term archives | `publiclms/course-archive-header`, `publiclms/course-grid` |
 | `publiclms//single-plms_lesson` | `single-plms_lesson` | Single Lesson | A single `plms_lesson` | `publiclms/lesson-header`, `publiclms/lesson-content`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
-| `publiclms//single-plms_quiz` | `single-plms_quiz` | Single Quiz | A single `plms_quiz` | `publiclms/quiz-header`, `publiclms/quiz-runner` |
+| `publiclms//single-plms_quiz` | `single-plms_quiz` | Single Quiz | A single `plms_quiz` | `publiclms/quiz-header`, `publiclms/quiz-runner`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
 | `publiclms//plms-dashboard` | `plms-dashboard` | Student Dashboard | The page saved in option `publiclms_dashboard_page_id`, or any page whose editor picks this template | `publiclms/student-dashboard` |
 | `publiclms//plms-instructor` | `plms-instructor` | Instructor Dashboard | The page saved in option `publiclms_instructor_page_id`, or any page whose editor picks this template | `publiclms/instructor-dashboard` |
 
@@ -75,8 +94,8 @@ No other templates are registered. There is no separate template for course term
 `archive-plms_course` (see A2).
 
 **Phase availability.** Phase 1 registers `single-plms_course`, `archive-plms_course`, `single-plms_lesson`
-and `plms-dashboard`. `single-plms_quiz` and `plms-instructor` are registered from phase 2, with the quiz
-runner and instructor dashboard; until then WordPress's own hierarchy applies to quizzes. The plugin
+and `plms-dashboard`. Phase 2 part A adds `single-plms_quiz` (1.3.0); `plms-instructor` follows with the
+instructor dashboard in part B. The plugin
 registers a slug only when its template file ships, so a theme may already ship all six.
 
 `plms-dashboard` and `plms-instructor` are registered with `post_types: [ "page" ]`, so they appear in the
@@ -188,13 +207,12 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 | `publiclms/lesson-content` | single-plms_lesson | `publiclms/lesson-content` block (the gated lesson; attachments join in phase 2), `publiclms/mark-complete` |
 | `publiclms/lesson-navigation` | single-plms_lesson | Previous and next item links (`publiclms/lesson-navigation` block) |
 | `publiclms/lesson-sidebar` | single-plms_lesson | Collapsible curriculum for the current course |
-| `publiclms/quiz-header` | single-plms_quiz | Quiz title, attempts left, time limit, pass mark (phase 2) |
-| `publiclms/quiz-runner` | single-plms_quiz | `publiclms/quiz` block (Interactivity API runner, server-graded) (phase 2) |
+| `publiclms/quiz-header` | single-plms_quiz | Course link, section name, quiz title, and question count, time limit, pass mark and attempts left (A7 quiz keys); course progress (1.3.0) |
+| `publiclms/quiz-runner` | single-plms_quiz | The quiz introduction (`publiclms/lesson-content`) and `publiclms/quiz` (Interactivity API runner, server-graded) (1.3.0) |
 | `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block; phase 1 tabs: in progress, completed; quiz results, certificates and orders join in phase 2 |
 | `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports (phase 2) |
 
-**Not registered yet (phase 2):** `publiclms/course-reviews`, `publiclms/quiz-header`, `publiclms/quiz-runner`
-and `publiclms/instructor-dashboard`. A template that references them renders nothing in their place until
+**Not registered yet (part B of phase 2):** `publiclms/course-reviews` and `publiclms/instructor-dashboard`. A template that references them renders nothing in their place until
 the plugin version that ships them, so a theme should leave those areas out of its templates or hide them
 for now. The same goes for the planned `publiclms/course-filters` block (level, price, duration filters for a
 `publiclms/course-query`, see ARCHITECTURE §5): it arrives in phase 2, the plugin never injects into a theme's
@@ -225,6 +243,10 @@ lesson or quiz template the course is taken from context.
 | `course_url` | Course permalink (1.1.0) | Button `url` |
 | `section_title` | Title of the section the lesson is in, or empty on a course (1.1.0) | Paragraph `content` |
 | `updated` | Course last-modified date in the site's date format (1.1.0) | Paragraph `content` |
+| `quiz_question_count` | Questions an attempt shows, e.g. "6 questions"; empty off quizzes (1.3.0) | Paragraph `content` |
+| `quiz_time_limit` | "Time limit: 15 minutes" or "No time limit" (1.3.0) | Paragraph `content` |
+| `quiz_pass_mark` | "Pass mark: 70%" (1.3.0) | Paragraph `content` |
+| `quiz_attempts_left` | "Attempts left: 2 of 3" for the current user, or "Unlimited attempts" (1.3.0) | Paragraph `content` |
 
 Values are escaped by the source: text with `esc_html()` (core inserts bound rich text as HTML), URLs with
 `esc_url_raw()` (core escapes attribute values itself, so a second encoding would break query strings). An

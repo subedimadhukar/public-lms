@@ -89,8 +89,10 @@ final class ClassicTemplates {
 		if ( is_singular( PostTypes::COURSE ) ) {
 			return 'single-' . PostTypes::COURSE;
 		}
-		if ( is_singular( PostTypes::LESSON ) ) {
-			return 'single-' . PostTypes::LESSON;
+		foreach ( array( PostTypes::LESSON, PostTypes::QUIZ, PostTypes::ASSIGNMENT ) as $item_type ) {
+			if ( is_singular( $item_type ) ) {
+				return 'single-' . $item_type;
+			}
 		}
 		if ( is_post_type_archive( PostTypes::COURSE ) || is_tax( Taxonomies::KEYS ) ) {
 			return TemplateRegistrar::COURSE_ARCHIVE;

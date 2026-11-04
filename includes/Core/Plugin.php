@@ -28,10 +28,14 @@ use PublicLMS\Repositories\EnrollmentRepository;
 use PublicLMS\Repositories\EventRepository;
 use PublicLMS\Repositories\EventRepositoryInterface;
 use PublicLMS\Repositories\ProgressRepository;
+use PublicLMS\Repositories\QuizAttemptRepository;
+use PublicLMS\Repositories\QuizAttemptRepositoryInterface;
+use PublicLMS\Quizzes\QuestionBank;
 use PublicLMS\Rest\Api;
 use PublicLMS\Rest\PostFields;
 use PublicLMS\Services\EnrollmentService;
 use PublicLMS\Services\ProgressService;
+use PublicLMS\Services\QuizService;
 use PublicLMS\Taxonomies\Taxonomies;
 use PublicLMS\Templates\ClassicTemplates;
 use PublicLMS\Templates\PatternRegistrar;
@@ -223,7 +227,47 @@ final class Plugin {
 				return new AccessPolicy(
 					$container->get( CourseStructureRepositoryInterface::class ),
 					$container->get( EnrollmentRepository::class ),
-					$container->get( ProgressRepository::class )
+					$container->get( ProgressRepository::class ),
+					$container->get( QuizAttemptRepository::class )
+				);
+			}
+		);
+		$c->set(
+			QuizAttemptRepository::class,
+			static function () {
+				global $wpdb;
+				return new QuizAttemptRepository( $wpdb );
+			}
+		);
+		$c->set(
+			QuizAttemptRepositoryInterface::class,
+			static function ( Container $container ) {
+				return $container->get( QuizAttemptRepository::class );
+			}
+		);
+		$c->set(
+			QuestionBank::class,
+			static function () {
+				return new QuestionBank();
+			}
+		);
+		$c->set(
+			RateLimiter::class,
+			static function () {
+				return new RateLimiter();
+			}
+		);
+		$c->set(
+			QuizService::class,
+			static function ( Container $container ) {
+				return new QuizService(
+					$container->get( QuizAttemptRepository::class ),
+					$container->get( QuestionBank::class ),
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( ProgressService::class ),
+					$container->get( EventRepositoryInterface::class ),
+					$container->get( AccessPolicy::class ),
+					$container->get( RateLimiter::class )
 				);
 			}
 		);
@@ -258,7 +302,8 @@ final class Plugin {
 					$container->get( CourseStructureRepositoryInterface::class ),
 					$container->get( EnrollmentRepository::class ),
 					$container->get( ProgressService::class ),
-					$container->get( AccessPolicy::class )
+					$container->get( AccessPolicy::class ),
+					$container->get( QuizService::class )
 				);
 			}
 		);

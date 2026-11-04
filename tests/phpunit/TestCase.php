@@ -106,4 +106,111 @@ abstract class TestCase extends WP_UnitTestCase {
 			'lessons'  => $lessons,
 		);
 	}
+
+	/**
+	 * Creates a quiz in a section.
+	 *
+	 * @param int                  $section_id Section ID.
+	 * @param int                  $order      Menu order.
+	 * @param array<string, mixed> $args       Extra post arguments.
+	 * @return int
+	 */
+	protected function create_quiz( int $section_id, int $order = 10, array $args = array() ): int {
+		return (int) self::factory()->post->create(
+			array_merge(
+				array(
+					'post_type'   => PostTypes::QUIZ,
+					'post_title'  => 'Check your understanding',
+					'post_status' => 'publish',
+					'post_parent' => $section_id,
+					'menu_order'  => $order,
+				),
+				$args
+			)
+		);
+	}
+
+	/**
+	 * Creates a question in the bank from editor input.
+	 *
+	 * @param array<string, mixed> $input     Fields for QuestionBank::sanitize().
+	 * @param int                  $author_id Author.
+	 * @return int
+	 */
+	protected function create_question( array $input, int $author_id = 0 ): int {
+		$bank  = publiclms()->container()->get( \PublicLMS\Quizzes\QuestionBank::class );
+		$clean = $bank->sanitize( $input );
+		$this->assertIsArray( $clean, is_wp_error( $clean ) ? $clean->get_error_message() : '' );
+		$id = $bank->save( $clean, 0, $author_id );
+		$this->assertIsInt( $id );
+		return (int) $id;
+	}
+
+	/**
+	 * Returns one question of each type, as editor input.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	protected function sample_questions(): array {
+		return array(
+			'single'       => array(
+				'type'    => 'single',
+				'text'    => 'Which statement shows profit for a month?',
+				'options' => array(
+					array(
+						'text'    => 'Profit and loss',
+						'correct' => true,
+					),
+					array( 'text' => 'Balance sheet' ),
+					array( 'text' => 'Bank statement' ),
+				),
+			),
+			'multiple'     => array(
+				'type'    => 'multiple',
+				'text'    => 'Which are expenses?',
+				'points'  => 2,
+				'options' => array(
+					array(
+						'text'    => 'Rent',
+						'correct' => true,
+					),
+					array(
+						'text'    => 'Wages',
+						'correct' => true,
+					),
+					array( 'text' => 'Sales' ),
+				),
+			),
+			'true_false'   => array(
+				'type'   => 'true_false',
+				'text'   => 'Cash accounting records money when it moves.',
+				'answer' => true,
+			),
+			'fill_blank'   => array(
+				'type'     => 'fill_blank',
+				'text'     => 'Complete the sentence.',
+				'template' => 'A {{chart of accounts|COA}} lists every {{category}}.',
+				'points'   => 2,
+			),
+			'short_answer' => array(
+				'type'     => 'short_answer',
+				'text'     => 'What do you call matching your books to the bank statement?',
+				'accepted' => array( 'Reconciliation', 'reconciling' ),
+			),
+			'matching'     => array(
+				'type'  => 'matching',
+				'text'  => 'Match each term to its meaning.',
+				'pairs' => array(
+					array(
+						'prompt' => 'Asset',
+						'match'  => 'Something the business owns',
+					),
+					array(
+						'prompt' => 'Liability',
+						'match'  => 'Something the business owes',
+					),
+				),
+			),
+		);
+	}
 }

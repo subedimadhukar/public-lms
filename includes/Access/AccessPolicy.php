@@ -12,7 +12,9 @@ use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
 use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Quizzes\QuizSettings;
 use PublicLMS\Repositories\ProgressRepository;
+use PublicLMS\Repositories\QuizAttemptRepository;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -68,16 +70,25 @@ class AccessPolicy {
 	private $progress;
 
 	/**
+	 * Quiz attempts, for the attempts limit.
+	 *
+	 * @var QuizAttemptRepository|null
+	 */
+	private $attempts;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param CourseStructureRepositoryInterface $structure   Course structure.
 	 * @param EnrollmentRepository               $enrollments Enrolments.
 	 * @param ProgressRepository|null            $progress    Progress; without it item prerequisites never block.
+	 * @param QuizAttemptRepository|null         $attempts    Quiz attempts; without it the attempts limit never blocks.
 	 */
-	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentRepository $enrollments, ?ProgressRepository $progress = null ) {
+	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentRepository $enrollments, ?ProgressRepository $progress = null, ?QuizAttemptRepository $attempts = null ) {
 		$this->structure   = $structure;
 		$this->enrollments = $enrollments;
 		$this->progress    = $progress;
+		$this->attempts    = $attempts;
 	}
 
 	/**
@@ -168,18 +179,36 @@ class AccessPolicy {
 	}
 
 	/**
-	 * Whether a user can start or submit an attempt at a quiz.
+	 * Whether a user can start a new attempt at a quiz.
 	 *
-	 * Phase 1 applies can_access_item(); phase 2 adds the attempts limit and
-	 * retake cool-down.
+	 * Applies can_access_item(), then the quiz's attempts limit: once the
+	 * learner has submitted `max_attempts` attempts, a new one is refused
+	 * (attempts_limit). An attempt already in progress can always be finished.
+	 * Teachers are not limited.
 	 *
 	 * @param int $quiz_id Quiz ID.
 	 * @param int $user_id User ID; 0 for the current user.
 	 * @return AccessDecision
 	 */
 	public function can_attempt_quiz( int $quiz_id, int $user_id = 0 ): AccessDecision {
-		$user_id = $this->resolve_user( $user_id );
-		return $this->filter( $this->item_decision( $quiz_id, $user_id ), 'attempt_quiz', $quiz_id, $user_id );
+		$user_id  = $this->resolve_user( $user_id );
+		$decision = PostTypes::QUIZ === get_post_type( $quiz_id )
+			? $this->item_decision( $quiz_id, $user_id )
+			: AccessDecision::deny( AccessDecision::REASON_NOT_PUBLISHED );
+		if ( $decision->is_allowed() && $user_id <= 0 ) {
+			$decision = AccessDecision::deny( AccessDecision::REASON_LOGGED_OUT );
+		}
+		if ( $decision->is_allowed() && null !== $this->attempts ) {
+			$course_id = $this->structure->course_id_for( $quiz_id );
+			$max       = QuizSettings::get( $quiz_id )['max_attempts'];
+			if ( $max > 0
+				&& ! $this->can_edit_course( $course_id, $user_id )
+				&& null === $this->attempts->in_progress( $user_id, $quiz_id )
+				&& $this->attempts->count_finished( $user_id, $quiz_id ) >= $max ) {
+				$decision = AccessDecision::deny( AccessDecision::REASON_ATTEMPTS_LIMIT );
+			}
+		}
+		return $this->filter( $decision, 'attempt_quiz', $quiz_id, $user_id );
 	}
 
 	/**

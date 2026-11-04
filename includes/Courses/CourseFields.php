@@ -12,7 +12,9 @@ use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
 use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Quizzes\QuizSettings;
 use PublicLMS\Services\ProgressService;
+use PublicLMS\Services\QuizService;
 use PublicLMS\Taxonomies\Taxonomies;
 use WP_Post;
 
@@ -50,6 +52,10 @@ class CourseFields {
 		'course_url',
 		'section_title',
 		'updated',
+		'quiz_question_count',
+		'quiz_time_limit',
+		'quiz_pass_mark',
+		'quiz_attempts_left',
 	);
 
 	/**
@@ -100,18 +106,27 @@ class CourseFields {
 	private $policy;
 
 	/**
+	 * Quiz service, for the quiz keys.
+	 *
+	 * @var QuizService|null
+	 */
+	private $quizzes;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param CourseStructureRepositoryInterface $structure   Course structure.
 	 * @param EnrollmentRepository               $enrollments Enrolments.
 	 * @param ProgressService                    $progress    Progress.
 	 * @param AccessPolicy                       $policy      Access policy.
+	 * @param QuizService|null                   $quizzes     Quiz service; without it the quiz keys are empty.
 	 */
-	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentRepository $enrollments, ProgressService $progress, AccessPolicy $policy ) {
+	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentRepository $enrollments, ProgressService $progress, AccessPolicy $policy, ?QuizService $quizzes = null ) {
 		$this->structure   = $structure;
 		$this->enrollments = $enrollments;
 		$this->progress    = $progress;
 		$this->policy      = $policy;
+		$this->quizzes     = $quizzes;
 	}
 
 	/**
@@ -190,6 +205,48 @@ class CourseFields {
 			case 'section_title':
 				$section_id = $post_id > 0 ? $this->structure->section_id_for( $post_id ) : 0;
 				return $section_id > 0 ? wp_strip_all_tags( get_the_title( $section_id ) ) : '';
+			case 'quiz_question_count':
+			case 'quiz_time_limit':
+			case 'quiz_pass_mark':
+			case 'quiz_attempts_left':
+				return $this->quiz_value( $key, $post_id, $user_id );
+		}
+		return '';
+	}
+
+	/**
+	 * Returns a quiz key's value for the quiz on screen, or '' elsewhere.
+	 *
+	 * @param string $key     Quiz key.
+	 * @param int    $quiz_id The post the value is shown for.
+	 * @param int    $user_id User, for attempts left.
+	 * @return string
+	 */
+	private function quiz_value( string $key, int $quiz_id, int $user_id ): string {
+		if ( $quiz_id <= 0 || PostTypes::QUIZ !== get_post_type( $quiz_id ) || null === $this->quizzes ) {
+			return '';
+		}
+		$settings = QuizSettings::get( $quiz_id );
+		switch ( $key ) {
+			case 'quiz_question_count':
+				$count = $this->quizzes->question_total( $quiz_id );
+				/* translators: %s: number of questions. */
+				return sprintf( _n( '%s question', '%s questions', $count, 'public-lms' ), number_format_i18n( $count ) );
+			case 'quiz_time_limit':
+				return $settings['time_limit'] > 0
+					/* translators: %d: minutes. */
+					? sprintf( _n( 'Time limit: %d minute', 'Time limit: %d minutes', $settings['time_limit'], 'public-lms' ), $settings['time_limit'] )
+					: __( 'No time limit', 'public-lms' );
+			case 'quiz_pass_mark':
+				/* translators: %d: pass mark as a percentage. */
+				return sprintf( __( 'Pass mark: %d%%', 'public-lms' ), $settings['pass_mark'] );
+			case 'quiz_attempts_left':
+				if ( $settings['max_attempts'] <= 0 ) {
+					return __( 'Unlimited attempts', 'public-lms' );
+				}
+				$left = $this->quizzes->learner_summary( $user_id, $quiz_id )['attempts_left'];
+				/* translators: 1: attempts left, 2: attempts allowed. */
+				return sprintf( __( 'Attempts left: %1$d of %2$d', 'public-lms' ), (int) $left, $settings['max_attempts'] );
 		}
 		return '';
 	}

@@ -113,3 +113,48 @@
 	width: var(--publiclms-progress);
 	background: var(--publiclms-color-primary);
 }
+
+// Tables for quiz results and certificates (phase 2).
+:where(.wp-block-publiclms-student-dashboard__table) {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--publiclms-font-size-sm);
+
+	th,
+	td {
+		padding: var(--publiclms-space-30);
+		border-bottom: 1px solid var(--publiclms-color-line);
+		text-align: start;
+		vertical-align: top;
+	}
+
+	thead th {
+		font-size: var(--publiclms-font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+}
+
+:where(.wp-block-publiclms-student-dashboard__badge) {
+	display: inline-block;
+	padding: 0 var(--publiclms-space-20);
+	border: 1px solid currentcolor;
+	border-radius: var(--publiclms-radius-pill);
+	font-size: var(--publiclms-font-size-xs);
+}
+
+:where(.wp-block-publiclms-student-dashboard__badge.is-passed) {
+	color: var(--publiclms-color-success);
+}
+
+:where(.wp-block-publiclms-student-dashboard__badge.is-failed) {
+	color: var(--publiclms-color-danger);
+}
+
+@media (max-width: 600px) {
+
+	:where(.wp-block-publiclms-student-dashboard__table) {
+		display: block;
+		overflow-x: auto;
+	}
+}

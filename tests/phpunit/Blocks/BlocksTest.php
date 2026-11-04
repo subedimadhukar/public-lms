@@ -167,10 +167,10 @@ class BlocksTest extends TestCase {
 		wp_set_current_user( $this->learner );
 		$html = $this->render( '<!-- wp:publiclms/student-dashboard /-->', $this->fixture['course'] );
 		$this->assertStringContainsString( 'role="tablist"', $html );
-		$this->assertSame( 2, substr_count( $html, 'role="tabpanel"' ) );
+		$this->assertSame( 3, substr_count( $html, 'role="tabpanel"' ) );
 		$this->assertStringContainsString( 'Welcome back, Maya Lama', $html );
 		$this->assertStringContainsString( 'Introduction to Statistics', $html );
-		$this->assertStringContainsString( '0 of 4 lessons', $html );
+		$this->assertStringContainsString( '0 of 4 steps', $html );
 	}
 
 	public function test_course_meta_lists_course_facts() {
@@ -362,5 +362,56 @@ class BlocksTest extends TestCase {
 		$html = $this->render( '<!-- wp:publiclms/curriculum /-->', $this->fixture['course'] );
 		$this->assertStringContainsString( 'Opens ' . wp_date( (string) get_option( 'date_format' ), time() + 5 * DAY_IN_SECONDS ), $html );
 		$this->assertStringContainsString( 'Complete earlier steps first', $html );
+	}
+
+	public function test_quiz_runner_shows_the_start_panel_without_answer_keys() {
+		$quiz     = $this->create_quiz( $this->fixture['sections'][0] );
+		$question = $this->create_question( $this->sample_questions()['short_answer'] );
+		\PublicLMS\Quizzes\QuizSettings::set_question_ids( $quiz, array( $question ) );
+		\PublicLMS\Quizzes\QuizSettings::update(
+			$quiz,
+			array(
+				'time_limit'   => 20,
+				'max_attempts' => 3,
+			)
+		);
+
+		$locked = $this->render( '<!-- wp:publiclms/quiz /-->', $quiz );
+		$this->assertStringContainsString( 'publiclms-locked-notice', $locked );
+		$this->assertStringNotContainsString( 'actions.startQuiz', $locked );
+
+		wp_set_current_user( $this->learner );
+		$html = $this->render( '<!-- wp:publiclms/quiz /-->', $quiz );
+		$this->assertStringContainsString( 'data-wp-on--click="actions.startQuiz"', $html );
+		$this->assertStringContainsString( 'Start quiz', $html );
+		$this->assertStringContainsString( '20 minutes', $html );
+		$this->assertStringContainsString( '3 of 3 left', $html );
+		$this->assertStringContainsString( 'data-wp-each--question="state.quizQuestions"', $html );
+		$this->assertStringNotContainsString( 'Reconciliation', $html );
+		$this->assertStringNotContainsString( 'wp-block-publiclms-quiz__facts', $this->render( '<!-- wp:publiclms/quiz {"showFacts":false} /-->', $quiz ) );
+
+		$fields = publiclms()->container()->get( \PublicLMS\Courses\CourseFields::class );
+		$this->assertSame( 'Time limit: 20 minutes', $fields->get( $this->fixture['course'], 'quiz_time_limit', 0, $quiz ) );
+		$this->assertSame( 'Pass mark: 70%', $fields->get( $this->fixture['course'], 'quiz_pass_mark', 0, $quiz ) );
+		$this->assertSame( 'Attempts left: 3 of 3', $fields->get( $this->fixture['course'], 'quiz_attempts_left', 0, $quiz ) );
+		$this->assertSame( '1 question', $fields->get( $this->fixture['course'], 'quiz_question_count', 0, $quiz ) );
+		$this->assertSame( '', $fields->get( $this->fixture['course'], 'quiz_pass_mark', 0, $this->fixture['lessons'][0] ), 'Quiz keys are empty off quizzes.' );
+	}
+
+	public function test_dashboard_lists_quiz_results() {
+		$quiz     = $this->create_quiz( $this->fixture['sections'][0], 10, array( 'post_title' => 'Ledger check' ) );
+		$question = $this->create_question( $this->sample_questions()['true_false'] );
+		\PublicLMS\Quizzes\QuizSettings::set_question_ids( $quiz, array( $question ) );
+		$service = publiclms()->container()->get( \PublicLMS\Services\QuizService::class );
+		$attempt = $service->start( $this->learner, $quiz );
+		$this->assertIsArray( $attempt );
+		$service->submit( $this->learner, (int) $attempt['attempt']['id'], array( (string) $question => true ) );
+
+		wp_set_current_user( $this->learner );
+		$html = $this->render( '<!-- wp:publiclms/student-dashboard /-->', $this->fixture['course'] );
+		$this->assertStringContainsString( 'Quiz results', $html );
+		$this->assertStringContainsString( 'Ledger check', $html );
+		$this->assertStringContainsString( '100%', $html );
+		$this->assertStringContainsString( 'is-passed', $html );
 	}
 }

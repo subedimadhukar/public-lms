@@ -27,6 +27,10 @@ const KEYS = {
 	course_url: __( 'Course URL', 'public-lms' ),
 	section_title: __( 'Section title', 'public-lms' ),
 	updated: __( 'Last updated', 'public-lms' ),
+	quiz_question_count: __( 'Quiz question count', 'public-lms' ),
+	quiz_time_limit: __( 'Quiz time limit', 'public-lms' ),
+	quiz_pass_mark: __( 'Quiz pass mark', 'public-lms' ),
+	quiz_attempts_left: __( 'Quiz attempts left', 'public-lms' ),
 };
 
 const COURSE_TYPES = [

@@ -47,7 +47,7 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Templates | `Templates\TemplateRegistrar`, `PatternRegistrar`, `ClassicTemplates` | Phase 1: four templates, twelve patterns, classic theme fallback | ADR-037. |
 | Licensing | `Licensing\LicenseProvider`, `NullLicenseProvider`, `LicenseStatus` | Done | Pro binds the EDD provider. |
 | Admin | One React app on `@wordpress/components`, `@wordpress/data` stores per domain, DataViews | Phase 1: "Public LMS" menu with Courses (DataViews list and course builder), Students (DataViews) and Settings | ADR-033, ADR-034. |
-| Front end | Dynamic blocks with block supports; Interactivity API for player, quiz runner, curriculum, dashboard | Phase 1: eight blocks, one shared store module | ADR-035. |
+| Front end | Dynamic blocks with block supports; Interactivity API for player, quiz runner, curriculum, dashboard | Phase 2: video and quiz blocks join; one shared store module split into source files (`api.js`, `quiz.js`) | ADR-035. |
 | Bindings | `publiclms/course-field` source in PHP and JS | Phase 1: every A7 key; `rating` is empty until reviews (phase 2) | ADR-010. |
 | Payments | `Gateway` interface; hosted or redirect flows only | Not started | Phase 2. |
 | Jobs | Action Scheduler ^4.1 via Composer | Loaded when installed | Emails, PDFs, drip, aggregates, renewals, imports. |
@@ -157,9 +157,11 @@ header while more rows exist.
 | `lessons` | `GET`, `PATCH`, `DELETE /lessons/{id}`, `POST /lessons` (1) | `can_view_course` on its course; `content` only when `can_access_item` allows | `publiclms_edit_course` on its course, and on the target course of a move |
 | `courses/{id}/enrollments` | `GET`, `POST`, `DELETE /{user_id}` (1) | `publiclms_view_course_reports` (meta) | `publiclms_enroll_student` (meta) |
 | `enrollments/me` | `GET`, `POST` (free enrol) (1) | logged in | logged in + AccessPolicy `can_enroll` |
-| `progress` | `GET /courses/{id}/progress/me`, `POST /progress` `{item_id, status}` (1) | logged in + enrolled (or can edit the course) | logged in + AccessPolicy `can_access_item` + active enrolment |
+| `progress` | `GET /courses/{id}/progress/me`, `POST /progress` `{item_id, status}` (1) | logged in + enrolled (or can edit the course) | logged in + AccessPolicy `can_access_item` + active enrolment; lessons only from phase 2 (quizzes and assignments: 409) |
 | `students` | `GET /students`, `GET /students/{id}` (1) | `publiclms_view_reports`; all courses with `publiclms_manage_courses`, otherwise the courses the user teaches; `course` filter needs `publiclms_view_course_reports` on it | none |
-| `quizzes/{id}/attempts` | `POST` start, `POST /{attempt}/answers`, `POST /{attempt}/submit` (2) | own attempts; others need `publiclms_view_course_reports` | AccessPolicy `can_attempt_quiz`; rate-limited |
+| `quizzes` | `POST`, `GET`, `PATCH`, `DELETE /quizzes/{id}` (2 ✓) | as lessons; editors get the question list, learners their own standing | as lessons, plus `edit_post` on any question added |
+| `questions` | `GET`, `POST`, `GET`, `PATCH`, `DELETE /questions/{id}` (2 ✓) | `publiclms_edit_own_course`; own questions unless `publiclms_manage_courses`; single: `edit_post` | create: the question type's `create_posts`; edit: `edit_post`; delete: `delete_post` |
+| `quizzes/{id}/attempts` | `GET`, `POST` start or resume, `GET /{attempt}`, `POST /{attempt}/answers`, `POST /{attempt}/submit` (2 ✓) | own attempts; others need `publiclms_view_course_reports` | AccessPolicy `can_attempt_quiz` (attempts limit); rate-limited (429 with `Retry-After`) |
 | `assignments/{id}/submissions` | `GET`, `POST`, `PUT /{id}/grade` (2) | own; others need `publiclms_view_course_reports` | submit: `can_submit_assignment`; grade: `publiclms_edit_course` |
 | `orders` | `GET`, `GET /{id}`, `POST /checkout`, `POST /{id}/refund` (2) | own orders; all need `publiclms_manage_orders` | checkout: logged in or guest with email; refund: `publiclms_manage_order` |
 | `webhooks/{gateway}` | `POST` (2) | none | signature verified server-side; no cookie auth |
@@ -211,9 +213,9 @@ phase 0 draft named one store per block).
 | `publiclms/lesson-navigation` | `showTitles`, `previousLabel` (content), `nextLabel` (content) | yes (next link follows completion) | 1 ✓ |
 | `publiclms/lesson-content` | `lockedMessage` (content), `showAttachments` | no (gated by the access policy; lists the lesson's files, phase 2) | 1 ✓ (added in phase 1) |
 | `publiclms/course-meta` | `courseId`, `fields`, `showLabels`, `layout` | no | 1 ✓ (added in phase 1) |
-| `publiclms/student-dashboard` | `tabs`, `defaultTab` | yes (WAI-ARIA tabs) | 1 ✓ (tabs: in progress, completed) |
+| `publiclms/student-dashboard` | `tabs`, `defaultTab` | yes (WAI-ARIA tabs) | 1 ✓ (tabs: in progress, completed; phase 2 adds quiz results and certificates) |
 | `publiclms/video` | `provider`, `src`, `mediaId`, `captions`, `title`, `caption`, `trackCompletion`, `requiredPercent` | yes (watch tracking, ADR-041) | 2 ✓ |
-| `publiclms/quiz` | `quizId` | yes (runner) | 2 |
+| `publiclms/quiz` | `quizId`, `showFacts` | yes (runner, ADR-042) | 2 ✓ |
 | `publiclms/assignment` | `assignmentId`, `allowedTypes`, `maxFileSize` | yes | 2 |
 | `publiclms/instructor-dashboard` | `tabs` | yes | 2 |
 | `publiclms/course-reviews` | `courseId`, `perPage`, `showForm` | yes | 2 |
@@ -641,4 +643,43 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   protocol is the one its own iframe API uses but is not formally documented; if it changes, tracking
   stops silently and the lesson can still be completed by hand. Lesson files stay in the media library,
   so their URLs are public once known; private files are what assignment uploads are for (ADR-043).
+
+### ADR-042 Quizzes: a reusable bank, attempts graded on the server
+- **Context.** PRD §3 puts six question types, a question bank, timer, attempts, randomisation and a pass
+  mark in free; ADR-016 requires server grading. The brief adds: never send correct answers to the browser,
+  nonce in state, rate limit on submit, quizzes count toward progress.
+- **Decision.** Questions are `plms_question` posts: the text is the post content (through
+  `wp_kses_post`), and type, points, explanation and answer key sit together in the protected meta
+  `_plms_question_data`, which is not registered for REST; the question post type is taken off `wp/v2`
+  and out of wp-admin (`show_in_rest` and `show_ui` false), so the only way to a key is
+  `publiclms/v1/questions`, which needs `edit_post` on the question. A quiz lists question IDs in order in
+  `_plms_quiz_questions`, so one question serves many quizzes; settings live in `_plms_quiz_*` meta through
+  `Quizzes\QuizSettings` (time limit, attempts, pass mark 70 by default, questions drawn per attempt,
+  shuffle questions, shuffle answers, show results). Option and pair IDs are random strings, and prompt and
+  match IDs are independent, so the learner's view (`QuestionBank::public_view()`) reveals no pairing.
+  `Services\QuizService` starts or resumes an attempt (one in progress at a time), saves answers ungraded,
+  and on submit grades every question with `Quizzes\Grader` (single, true/false and short answer all or
+  nothing; multiple needs the exact set; fill blank and matching give partial credit; text compared without
+  case or spacing). Results say right or wrong per question with the author's explanation, never the key.
+  An attempt past its time limit plus 60 seconds is graded with the answers saved before the deadline. A
+  passed attempt completes the quiz in progress; `POST /progress` refuses quizzes and assignments.
+  `AccessPolicy::can_attempt_quiz()` adds the attempts limit (`attempts_limit`), which teachers skip.
+  Starts are limited to 20 an hour per learner and quiz, submissions to 6 a minute per learner, answer
+  saves to 120 a minute, through the reusable `Core\RateLimiter` (transients; `publiclms_rate_limit`
+  filter). Hooks: `publiclms_quiz_graded`, `publiclms_quiz_passed`; events `quiz.started`, `quiz.graded`.
+- **Front end.** `publiclms/quiz` renders the start panel on the server and the questions from the attempt
+  response through `data-wp-each`: one fieldset per question, native radios, checkboxes, text inputs and
+  selects, autosave, a timer that warns at five minutes and one and submits at zero, and focus moved to
+  the result heading. Question HTML (already through `wp_kses_post`) is written with a `data-wp-watch`
+  callback, because the Interactivity API has no HTML directive. The store module is split into
+  `interactivity/api.js`, `quiz.js` and `learning.js`, still one script module. The template
+  `single-plms_quiz` uses the new patterns `quiz-header` (course link, section, title and quiz facts through
+  the new binding keys) and `quiz-runner` (the gated introduction and the runner).
+- **Admin.** A quiz editor in the course builder (`?course={id}&quiz={id}`) holds the settings and the
+  question list (new question, add from bank, reorder, remove), and a "Questions" screen lists the bank.
+- **Consequences.** Quiz-to-question links are post meta holding IDs, so WordPress's XML exporter carries
+  them with the old IDs (ADR-028's concern); course cloning and CSV import, both on the roadmap, remap
+  them. Questions drawn per attempt are fixed at start in `question_ids`, so editing a quiz never changes
+  an attempt in progress; editing a question's key does change how a later submission of an attempt in
+  progress is graded. Pro's manually graded types use the attempt status `pending`.
 

@@ -67,6 +67,10 @@ final class AdminApp {
 		if ( false !== $courses ) {
 			$this->screens[ $courses ] = 'courses';
 		}
+		$questions = add_submenu_page( self::SLUG, __( 'Question Bank', 'public-lms' ), __( 'Questions', 'public-lms' ), Capabilities::EDIT_OWN_COURSE, self::SLUG . '-questions', array( $this, 'render' ) );
+		if ( false !== $questions ) {
+			$this->screens[ $questions ] = 'questions';
+		}
 		$students = add_submenu_page( self::SLUG, __( 'Students', 'public-lms' ), __( 'Students', 'public-lms' ), Capabilities::VIEW_REPORTS, self::SLUG . '-students', array( $this, 'render' ) );
 		if ( false !== $students ) {
 			$this->screens[ $students ] = 'students';

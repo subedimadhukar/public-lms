@@ -243,6 +243,9 @@ final class PostTypes {
 					'description'  => __( 'A reusable question in the question bank.', 'public-lms' ),
 					'supports'     => array( 'title', 'editor', 'author', 'revisions', 'custom-fields' ),
 					'capabilities' => self::capabilities( 'content' ),
+					// Edited in the admin app over publiclms/v1 only, so wp/v2 never lists question text (ADR-042).
+					'show_in_rest' => false,
+					'show_ui'      => false,
 				)
 			),
 			self::ASSIGNMENT  => array_merge(

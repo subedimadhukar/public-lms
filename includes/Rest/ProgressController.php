@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * - GET  /courses/{id}/progress/me   The current user's progress. Logged in and enrolled (or able to
  *                                    edit the course, who get an empty summary).
- * - POST /progress                   Mark an item complete or incomplete. Logged in, enrolled, and
+ * - POST /progress                   Mark a lesson complete or incomplete. Logged in, enrolled, and
  *                                    AccessPolicy::can_access_item; the lesson player posts here with
  *                                    the REST nonce from Interactivity state.
  */
@@ -154,7 +154,8 @@ final class ProgressController extends AbstractController {
 	}
 
 	/**
-	 * Logged in, and the item is a lesson, quiz or assignment the user can open.
+	 * Logged in, and the item is a lesson the user can open. Quizzes and
+	 * assignments complete through their own routes (409 here).
 	 *
 	 * Enrolment is checked in the service, which also refuses editors who are
 	 * previewing a course they are not enrolled in.
@@ -169,6 +170,16 @@ final class ProgressController extends AbstractController {
 		$item_id = (int) $request['item_id'];
 		if ( ! in_array( get_post_type( $item_id ), array( PostTypes::LESSON, PostTypes::QUIZ, PostTypes::ASSIGNMENT ), true ) ) {
 			return $this->not_found();
+		}
+		if ( PostTypes::LESSON !== get_post_type( $item_id ) ) {
+			// Quizzes complete when passed and assignments when submitted or graded (ADR-042, ADR-043).
+			return new WP_Error(
+				'publiclms_rest_not_manual',
+				PostTypes::QUIZ === get_post_type( $item_id )
+					? __( 'A quiz is complete once you pass it.', 'public-lms' )
+					: __( 'An assignment is complete once you hand it in.', 'public-lms' ),
+				array( 'status' => 409 )
+			);
 		}
 		$decision = $this->policy->can_access_item( $item_id );
 		return $decision->is_allowed() ? true : $this->denied( $decision );

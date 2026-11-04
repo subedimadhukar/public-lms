@@ -13,7 +13,10 @@ use PublicLMS\Courses\CourseFields;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
 use PublicLMS\Repositories\EnrollmentRepository;
 use PublicLMS\Services\EnrollmentService;
+use PublicLMS\Quizzes\QuestionBank;
+use PublicLMS\Repositories\QuizAttemptRepository;
 use PublicLMS\Services\ProgressService;
+use PublicLMS\Services\QuizService;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -76,6 +79,9 @@ final class Api {
 			new CoursesController( $structure, $enrollments, $policy, $progress, $fields ),
 			new SectionsController( $structure ),
 			new LessonsController( $structure, $policy, $progress ),
+			new QuizzesController( $structure, $policy, $progress, $c->get( QuestionBank::class ), $c->get( QuizService::class ) ),
+			new QuestionsController( $c->get( QuestionBank::class ) ),
+			new QuizAttemptsController( $c->get( QuizService::class ), $c->get( QuizAttemptRepository::class ), $structure ),
 			new EnrollmentsController( $enrollments, $c->get( EnrollmentService::class ), $progress, $fields ),
 			new ProgressController( $progress, $enrollments, $policy ),
 			new StudentsController( $enrollments, $progress ),

@@ -1,0 +1,229 @@
+// Quiz runner. Colours come from the token aliases;
+// states use success and danger.
+
+// Parts switch with the `hidden` attribute; keep it stronger
+// than the display rules below.
+.wp-block-publiclms-quiz [hidden] {
+	display: none !important;
+}
+
+:where(.wp-block-publiclms-quiz) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-50);
+}
+
+:where(.wp-block-publiclms-quiz__facts) {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+	gap: var(--publiclms-space-30);
+	margin: 0 0 var(--publiclms-space-40);
+}
+
+:where(.wp-block-publiclms-quiz__fact) {
+	padding: var(--publiclms-space-30) var(--publiclms-space-40);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-md);
+	background: var(--publiclms-color-surface);
+
+	dt {
+		font-size: var(--publiclms-font-size-xs);
+	}
+
+	dd {
+		margin: 0;
+		font-size: var(--publiclms-font-size-lg);
+		font-weight: 600;
+	}
+}
+
+:where(.wp-block-publiclms-quiz__best.is-passed) {
+	color: var(--publiclms-color-success);
+}
+
+:where(.wp-block-publiclms-quiz__form-title, .wp-block-publiclms-quiz__results-title) {
+	margin: 0 0 var(--publiclms-space-30);
+	font-size: var(--publiclms-font-size-xl);
+}
+
+.wp-block-publiclms-quiz__form-title:focus,
+.wp-block-publiclms-quiz__results-title:focus {
+	outline: none;
+}
+
+:where(.wp-block-publiclms-quiz__timer) {
+	position: sticky;
+	top: var(--publiclms-space-20);
+	z-index: 1;
+	display: inline-block;
+	margin: 0 0 var(--publiclms-space-40);
+	padding: var(--publiclms-space-20) var(--publiclms-space-40);
+	border-radius: var(--publiclms-radius-pill);
+	background: var(--publiclms-color-primary-soft);
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+}
+
+:where(.wp-block-publiclms-quiz__questions) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-40);
+	margin: 0 0 var(--publiclms-space-40);
+	padding: 0;
+	list-style: none;
+}
+
+:where(.wp-block-publiclms-quiz__question) {
+	padding: var(--publiclms-space-40) var(--publiclms-space-50);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-md);
+	background: var(--publiclms-color-base);
+}
+
+.wp-block-publiclms-quiz__question.is-correct {
+	border-color: var(--publiclms-color-success);
+}
+
+.wp-block-publiclms-quiz__question.is-wrong {
+	border-color: var(--publiclms-color-danger);
+}
+
+:where(.wp-block-publiclms-quiz__fieldset) {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	min-width: 0;
+}
+
+:where(.wp-block-publiclms-quiz__legend) {
+	padding: 0;
+	font-size: var(--publiclms-font-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+:where(.wp-block-publiclms-quiz__text) {
+	margin: var(--publiclms-space-20) 0 var(--publiclms-space-30);
+	font-size: var(--publiclms-font-size-lg);
+}
+
+:where(.wp-block-publiclms-quiz__options) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-20);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+:where(.wp-block-publiclms-quiz__option) {
+	display: flex;
+	gap: var(--publiclms-space-30);
+	align-items: center;
+	padding: var(--publiclms-space-30) var(--publiclms-space-40);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-md);
+	font-size: var(--publiclms-font-size-base);
+	cursor: pointer;
+}
+
+.wp-block-publiclms-quiz__option:has(input:checked) {
+	border-color: var(--publiclms-color-primary);
+	background: var(--publiclms-color-primary-soft);
+}
+
+.wp-block-publiclms-quiz__option:has(input:focus-visible) {
+	outline: 2px solid var(--publiclms-color-primary);
+	outline-offset: 2px;
+}
+
+:where(.wp-block-publiclms-quiz__sentence) {
+	line-height: 2.2;
+}
+
+:where(.wp-block-publiclms-quiz__blank) {
+	width: 10em;
+	margin: 0 var(--publiclms-space-20);
+	padding: 0.2em 0.4em;
+	border: 1px solid;
+	border-radius: var(--publiclms-radius-sm);
+}
+
+:where(.wp-block-publiclms-quiz__short) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-20);
+
+	input {
+		max-width: 28rem;
+		padding: 0.5em;
+		border: 1px solid;
+		border-radius: var(--publiclms-radius-sm);
+	}
+}
+
+:where(.wp-block-publiclms-quiz__pairs) {
+	display: grid;
+	gap: var(--publiclms-space-30);
+}
+
+:where(.wp-block-publiclms-quiz__pair) {
+	display: grid;
+	grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 2fr);
+	gap: var(--publiclms-space-30);
+	align-items: center;
+
+	select {
+		padding: 0.4em;
+		border: 1px solid;
+		border-radius: var(--publiclms-radius-sm);
+	}
+}
+
+:where(.wp-block-publiclms-quiz__feedback) {
+	margin-top: var(--publiclms-space-30);
+	font-size: var(--publiclms-font-size-sm);
+}
+
+.wp-block-publiclms-quiz__question.is-correct .wp-block-publiclms-quiz__verdict-line strong {
+	color: var(--publiclms-color-success);
+}
+
+.wp-block-publiclms-quiz__question.is-wrong .wp-block-publiclms-quiz__verdict-line strong {
+	color: var(--publiclms-color-danger);
+}
+
+:where(.wp-block-publiclms-quiz__results) {
+	padding: var(--publiclms-space-50);
+	border-radius: var(--publiclms-radius-lg);
+	background: var(--publiclms-color-surface);
+}
+
+:where(.wp-block-publiclms-quiz__score) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-3-xl);
+	font-weight: 700;
+	color: var(--publiclms-color-danger);
+}
+
+:where(.wp-block-publiclms-quiz__results.is-passed .wp-block-publiclms-quiz__score) {
+	color: var(--publiclms-color-success);
+}
+
+:where(.wp-block-publiclms-quiz__actions) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--publiclms-space-30);
+	align-items: center;
+}
+
+:where(.wp-block-publiclms-quiz__notice, .wp-block-publiclms-quiz__message):empty {
+	display: none;
+}
+
+@media (max-width: 600px) {
+
+	:where(.wp-block-publiclms-quiz__pair) {
+		grid-template-columns: 1fr;
+	}
+}

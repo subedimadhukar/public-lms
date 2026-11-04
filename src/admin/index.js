@@ -15,6 +15,8 @@ import { boot } from './boot';
 import { Notices } from './components/notices';
 import CourseBuilder from './courses/course-builder';
 import CourseList from './courses/course-list';
+import QuestionBankScreen from './quizzes/question-bank';
+import QuizEditor from './quizzes/quiz-editor';
 import SettingsScreen from './settings/settings-screen';
 import StudentList from './students/student-list';
 
@@ -23,11 +25,16 @@ import './style.scss';
 function App() {
 	const courseId =
 		Number( getQueryArg( window.location.href, 'course' ) ) || 0;
+	const quizId = Number( getQueryArg( window.location.href, 'quiz' ) ) || 0;
 	let screen;
 	if ( boot.screen === 'students' ) {
 		screen = <StudentList />;
 	} else if ( boot.screen === 'settings' ) {
 		screen = <SettingsScreen />;
+	} else if ( boot.screen === 'questions' ) {
+		screen = <QuestionBankScreen />;
+	} else if ( courseId > 0 && quizId > 0 ) {
+		screen = <QuizEditor courseId={ courseId } quizId={ quizId } />;
 	} else if ( courseId > 0 ) {
 		screen = <CourseBuilder courseId={ courseId } />;
 	} else {

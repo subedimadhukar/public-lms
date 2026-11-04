@@ -20,6 +20,9 @@
  */
 import { getContext, getElement, store } from '@wordpress/interactivity';
 
+import { post } from './api';
+import './quiz';
+
 const EMPTY = { percent: 0, done: 0, total: 0, completed: false, items: {} };
 
 /**
@@ -429,27 +432,3 @@ const { state } = store( 'publiclms/learning', {
 		},
 	},
 } );
-
-/**
- * Posts JSON to a publiclms/v1 route with the REST nonce.
- *
- * @param {string} path Route under publiclms/v1.
- * @param {Object} body Request body.
- * @return {Promise<Object>} Response data.
- */
-async function post( path, body ) {
-	const response = await fetch( state.restUrl + path, {
-		method: 'POST',
-		credentials: 'same-origin',
-		headers: {
-			'Content-Type': 'application/json',
-			'X-WP-Nonce': state.nonce,
-		},
-		body: JSON.stringify( body ),
-	} );
-	const data = await response.json().catch( () => ( {} ) );
-	if ( ! response.ok ) {
-		throw new Error( data.message || state.i18n.error );
-	}
-	return data;
-}

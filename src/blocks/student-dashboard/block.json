@@ -21,7 +21,9 @@
 			},
 			"default": [
 				"in-progress",
-				"completed"
+				"completed",
+				"quiz-results",
+				"certificates"
 			]
 		},
 		"defaultTab": {

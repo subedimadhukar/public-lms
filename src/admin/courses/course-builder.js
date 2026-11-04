@@ -6,6 +6,7 @@ import { useSelect } from '@wordpress/data';
 import { decodeEntities } from '@wordpress/html-entities';
 import { __ } from '@wordpress/i18n';
 import { arrowLeft, external } from '@wordpress/icons';
+import { addQueryArgs } from '@wordpress/url';
 
 import { STORE_NAME } from '../../store/courses';
 import { boot } from '../boot';
@@ -110,6 +111,21 @@ export default function CourseBuilder( { courseId } ) {
 					<CurriculumTree
 						courseId={ courseId }
 						curriculum={ curriculum }
+						itemTypes={ [ 'lesson', 'quiz' ] }
+						renderItemActions={ ( item ) =>
+							item.type === 'quiz' ? (
+								<Button
+									variant="secondary"
+									size="compact"
+									href={ addQueryArgs( boot.appUrl, {
+										course: courseId,
+										quiz: item.id,
+									} ) }
+								>
+									{ __( 'Edit quiz', 'public-lms' ) }
+								</Button>
+							) : null
+						}
 					/>
 				</section>
 				<aside className="publiclms-builder__aside">

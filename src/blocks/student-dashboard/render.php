@@ -6,8 +6,8 @@
  * the WAI-ARIA tabs pattern (arrow keys, Home and End move between tabs).
  * Without JavaScript every panel is shown under its own heading.
  *
- * Phase 1 tabs: in-progress and completed. Quiz results, certificates and
- * orders join in phase 2.
+ * Tabs: in-progress, completed, quiz-results (best score per quiz, phase 2)
+ * and certificates (phase 2). Orders join with checkout.
  *
  * @package PublicLMS
  *
@@ -18,6 +18,7 @@
 
 use PublicLMS\Blocks\Blocks;
 use PublicLMS\PostTypes\PostTypes;
+use PublicLMS\Repositories\QuizAttemptRepository;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,17 +37,22 @@ if ( ! is_user_logged_in() ) {
 
 $publiclms_user      = get_current_user_id();
 $publiclms_available = array(
-	'in-progress' => __( 'In progress', 'public-lms' ),
-	'completed'   => __( 'Completed', 'public-lms' ),
+	'in-progress'  => __( 'In progress', 'public-lms' ),
+	'completed'    => __( 'Completed', 'public-lms' ),
+	'quiz-results' => __( 'Quiz results', 'public-lms' ),
 );
+/**
+ * Filters the dashboard tabs a site offers. Certificates add theirs here.
+ *
+ * @param array<string, string> $publiclms_available Tab labels keyed by slug.
+ * @param int                   $user_id             The learner.
+ */
+$publiclms_available = (array) apply_filters( 'publiclms_dashboard_tabs', $publiclms_available, get_current_user_id() );
 $publiclms_tabs      = array_values( array_intersect( array_map( 'strval', (array) ( $attributes['tabs'] ?? array() ) ), array_keys( $publiclms_available ) ) );
 $publiclms_tabs      = empty( $publiclms_tabs ) ? array_keys( $publiclms_available ) : $publiclms_tabs;
 $publiclms_default   = in_array( $attributes['defaultTab'] ?? '', $publiclms_tabs, true ) ? (string) $attributes['defaultTab'] : $publiclms_tabs[0];
 
-$publiclms_courses = array(
-	'in-progress' => array(),
-	'completed'   => array(),
-);
+$publiclms_courses = array_fill_keys( array_keys( $publiclms_available ), array() );
 foreach ( $publiclms_blocks->enrollments->find_by_user( $publiclms_user, 'active' ) as $publiclms_row ) {
 	$publiclms_course_id = (int) $publiclms_row['course_id'];
 	if ( PostTypes::COURSE !== get_post_type( $publiclms_course_id ) || 'publish' !== get_post_status( $publiclms_course_id ) ) {
@@ -61,6 +67,45 @@ foreach ( $publiclms_blocks->enrollments->find_by_user( $publiclms_user, 'active
 		'label'   => $publiclms_state['label'],
 	);
 }
+
+// Quiz results: one row per quiz, best attempt first.
+if ( in_array( 'quiz-results', $publiclms_tabs, true ) ) {
+	$publiclms_attempts = publiclms()->container()->get( QuizAttemptRepository::class )->recent_for_user( $publiclms_user );
+	$publiclms_quizzes  = array();
+	foreach ( $publiclms_attempts as $publiclms_attempt ) {
+		$publiclms_quiz_id = (int) $publiclms_attempt['quiz_id'];
+		if ( 'publish' !== get_post_status( $publiclms_quiz_id ) ) {
+			continue;
+		}
+		if ( ! isset( $publiclms_quizzes[ $publiclms_quiz_id ] ) ) {
+			$publiclms_quizzes[ $publiclms_quiz_id ] = array(
+				'id'       => $publiclms_quiz_id,
+				'course'   => (int) $publiclms_attempt['course_id'],
+				'best'     => null,
+				'passed'   => false,
+				'attempts' => 0,
+				'last'     => (string) ( $publiclms_attempt['submitted_at'] ?? '' ),
+			);
+		}
+		$publiclms_row = &$publiclms_quizzes[ $publiclms_quiz_id ];
+		++$publiclms_row['attempts'];
+		$publiclms_row['passed'] = $publiclms_row['passed'] || ! empty( $publiclms_attempt['passed'] );
+		if ( null !== $publiclms_attempt['percent'] && ( null === $publiclms_row['best'] || (float) $publiclms_attempt['percent'] > $publiclms_row['best'] ) ) {
+			$publiclms_row['best'] = (float) $publiclms_attempt['percent'];
+		}
+		unset( $publiclms_row );
+	}
+	$publiclms_courses['quiz-results'] = array_values( $publiclms_quizzes );
+}
+
+/**
+ * Lets other tabs (certificates, Pro's orders) supply their rows: an array per tab slug.
+ *
+ * @param array<string, array<int, mixed>> $publiclms_courses Rows keyed by tab slug.
+ * @param int                              $user_id           The learner.
+ * @param array<int, string>               $tabs              Tabs shown.
+ */
+$publiclms_courses = (array) apply_filters( 'publiclms_dashboard_rows', $publiclms_courses, $publiclms_user, $publiclms_tabs );
 
 wp_interactivity_state( Blocks::STORE, Blocks::derived_state() );
 
@@ -120,16 +165,54 @@ $publiclms_heading = sprintf(
 			<?php if ( empty( $publiclms_courses[ $publiclms_tab ] ) ) : ?>
 				<p class="wp-block-publiclms-student-dashboard__empty">
 					<?php
-					echo esc_html(
-						'completed' === $publiclms_tab
-							? __( 'Courses you finish appear here.', 'public-lms' )
-							: __( 'You are not taking any courses yet.', 'public-lms' )
+					$publiclms_empty = array(
+						'completed'    => __( 'Courses you finish appear here.', 'public-lms' ),
+						'quiz-results' => __( 'Your quiz scores appear here after your first quiz.', 'public-lms' ),
+						'certificates' => __( 'Certificates you earn by completing courses appear here.', 'public-lms' ),
 					);
+					echo esc_html( $publiclms_empty[ $publiclms_tab ] ?? __( 'You are not taking any courses yet.', 'public-lms' ) );
 					?>
 					<?php if ( 'in-progress' === $publiclms_tab && $publiclms_catalog ) : ?>
 						<a href="<?php echo esc_url( $publiclms_catalog ); ?>"><?php esc_html_e( 'Browse courses', 'public-lms' ); ?></a>
 					<?php endif; ?>
 				</p>
+			<?php elseif ( 'quiz-results' === $publiclms_tab ) : ?>
+				<table class="wp-block-publiclms-student-dashboard__table">
+					<caption class="publiclms-visually-hidden"><?php esc_html_e( 'Your quiz results', 'public-lms' ); ?></caption>
+					<thead>
+						<tr>
+							<th scope="col"><?php esc_html_e( 'Quiz', 'public-lms' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Course', 'public-lms' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Best score', 'public-lms' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Result', 'public-lms' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Attempts', 'public-lms' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Last attempt', 'public-lms' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $publiclms_courses['quiz-results'] as $publiclms_result ) : ?>
+							<tr>
+								<th scope="row"><a href="<?php echo esc_url( (string) get_permalink( $publiclms_result['id'] ) ); ?>"><?php echo esc_html( wp_strip_all_tags( get_the_title( $publiclms_result['id'] ) ) ); ?></a></th>
+								<td><?php echo esc_html( $publiclms_result['course'] > 0 ? wp_strip_all_tags( get_the_title( $publiclms_result['course'] ) ) : '—' ); ?></td>
+								<td><?php echo esc_html( null === $publiclms_result['best'] ? '—' : number_format_i18n( $publiclms_result['best'], 0 ) . '%' ); ?></td>
+								<td><span class="wp-block-publiclms-student-dashboard__badge <?php echo $publiclms_result['passed'] ? 'is-passed' : 'is-failed'; ?>"><?php echo esc_html( $publiclms_result['passed'] ? __( 'Passed', 'public-lms' ) : __( 'Not passed', 'public-lms' ) ); ?></span></td>
+								<td><?php echo esc_html( number_format_i18n( $publiclms_result['attempts'] ) ); ?></td>
+								<td><?php echo esc_html( '' === $publiclms_result['last'] ? '—' : wp_date( (string) get_option( 'date_format' ), (int) strtotime( $publiclms_result['last'] . ' UTC' ) ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php elseif ( ! in_array( $publiclms_tab, array( 'in-progress', 'completed' ), true ) ) : ?>
+				<?php
+				/**
+				 * Prints a dashboard tab panel added through `publiclms_dashboard_tabs`.
+				 *
+				 * @param string             $tab  Tab slug.
+				 * @param array<int, mixed>  $rows Rows for the tab from `publiclms_dashboard_rows`.
+				 * @param int                $user The learner.
+				 */
+				do_action( 'publiclms_dashboard_panel', $publiclms_tab, $publiclms_courses[ $publiclms_tab ], $publiclms_user );
+				?>
 			<?php else : ?>
 				<ul class="wp-block-publiclms-student-dashboard__courses">
 					<?php foreach ( $publiclms_courses[ $publiclms_tab ] as $publiclms_course ) : ?>
@@ -168,8 +251,8 @@ $publiclms_heading = sprintf(
 										<?php
 										echo esc_html(
 											sprintf(
-												/* translators: 1: lessons completed, 2: lessons in the course, 3: percentage. */
-												__( '%1$d of %2$d lessons · %3$d%%', 'public-lms' ),
+												/* translators: 1: lessons, quizzes and assignments completed, 2: all of them in the course, 3: percentage. */
+												__( '%1$d of %2$d steps · %3$d%%', 'public-lms' ),
 												$publiclms_course['summary']['items_completed'],
 												$publiclms_course['summary']['items_total'],
 												$publiclms_percent

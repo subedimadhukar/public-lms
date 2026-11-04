@@ -17,6 +17,7 @@
 
 :where(.wp-block-publiclms-curriculum__summary) {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--publiclms-space-30);
@@ -32,6 +33,7 @@
 }
 
 :where(.wp-block-publiclms-curriculum__section-title) {
+	flex: 1 1 8em;
 	margin: 0;
 	font-size: inherit;
 	font-weight: 600;
