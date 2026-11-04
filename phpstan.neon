@@ -10,6 +10,7 @@ parameters:
 		- includes/
 	bootstrapFiles:
 		- tests/phpstan/bootstrap.php
+		- vendor-prefixed/autoload.php
 		- tests/phpstan/wp-cli-stubs.php
 	treatPhpDocTypesAsCertain: false
 	ignoreErrors:

@@ -16,6 +16,8 @@ use PublicLMS\Services\EnrollmentService;
 use PublicLMS\Quizzes\QuestionBank;
 use PublicLMS\Repositories\QuizAttemptRepository;
 use PublicLMS\Repositories\SubmissionRepository;
+use PublicLMS\Certificates\CertificateRenderer;
+use PublicLMS\Certificates\CertificateService;
 use PublicLMS\Services\AssignmentService;
 use PublicLMS\Services\Gradebook;
 use PublicLMS\Services\ProgressService;
@@ -89,6 +91,7 @@ final class Api {
 			new AssignmentsController( $structure, $policy, $progress, $c->get( AssignmentService::class ), $c->get( SubmissionRepository::class ) ),
 			new SubmissionsController( $c->get( AssignmentService::class ), $c->get( SubmissionRepository::class ), $structure ),
 			new GradebookController( $c->get( Gradebook::class ) ),
+			new CertificatesController( $c->get( CertificateService::class ), $c->get( CertificateRenderer::class ), $policy ),
 			new EnrollmentsController( $enrollments, $c->get( EnrollmentService::class ), $progress, $fields ),
 			new ProgressController( $progress, $enrollments, $policy ),
 			new StudentsController( $enrollments, $progress ),

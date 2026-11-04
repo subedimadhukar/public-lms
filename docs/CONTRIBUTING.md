@@ -19,6 +19,11 @@ WP_BASE_URL=http://localhost:8889 npm run test:e2e  # Playwright against the wp-
 bin/timing-check.sh http://localhost:8888/lessons/<slug>/  # time to first byte, median and slowest
 ```
 
+Dompdf (certificates) ships prefixed in the committed `vendor-prefixed/` folder. To update it, change the
+version in `tools/prefix/composer.json` and run `bin/prefix-vendor.sh` (needs PHP 8 and Composer 2); it
+installs Strauss in `tools/strauss`, rebuilds the folder and applies two small patches (ADR-044). Then render
+a certificate to check it.
+
 Seeded users share the password `public-lms-demo` unless you pass `--password` or set
 `PUBLICLMS_SEED_PASSWORD`. The e2e spec activates the plugin and Twenty Twenty-Five on the tests site and
 creates its own users. Blocks must be built before `npm run test:php`; the block render tests skip

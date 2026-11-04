@@ -8,6 +8,8 @@
 namespace PublicLMS\Admin;
 
 use PublicLMS\Capabilities\Capabilities;
+use PublicLMS\Certificates\CertificateRenderer;
+use PublicLMS\Certificates\CertificateTemplate;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Taxonomies\Taxonomies;
 
@@ -85,6 +87,7 @@ final class AdminApp {
 		}
 		add_submenu_page( self::SLUG, __( 'Course Categories', 'public-lms' ), __( 'Categories', 'public-lms' ), Capabilities::MANAGE_COURSES, 'edit-tags.php?taxonomy=' . Taxonomies::COURSE_CATEGORY . '&post_type=' . PostTypes::COURSE );
 		add_submenu_page( self::SLUG, __( 'Levels', 'public-lms' ), __( 'Levels', 'public-lms' ), Capabilities::MANAGE_COURSES, 'edit-tags.php?taxonomy=' . Taxonomies::LEVEL . '&post_type=' . PostTypes::COURSE );
+		add_submenu_page( self::SLUG, __( 'Certificate', 'public-lms' ), __( 'Certificate', 'public-lms' ), Capabilities::MANAGE_COURSES, self::SLUG . '-certificate', array( $this, 'render_certificate' ) );
 		$settings = add_submenu_page( self::SLUG, __( 'Settings', 'public-lms' ), __( 'Settings', 'public-lms' ), Capabilities::MANAGE_COURSES, self::SLUG . '-settings', array( $this, 'render' ) );
 		if ( false !== $settings ) {
 			$this->screens[ $settings ] = 'settings';
@@ -101,6 +104,32 @@ final class AdminApp {
 		echo '<div id="publiclms-admin-root"><p class="publiclms-admin__loading">' . esc_html__( 'Loading…', 'public-lms' ) . '</p></div>';
 		echo '<noscript><div class="notice notice-error"><p>' . esc_html__( 'Public LMS needs JavaScript to manage courses.', 'public-lms' ) . '</p></div></noscript>';
 		echo '</div>';
+	}
+
+	/**
+	 * Prints the Certificate screen: what the certificate is, and links to edit and preview it.
+	 *
+	 * @return void
+	 */
+	public function render_certificate(): void {
+		$template = publiclms()->container()->get( CertificateTemplate::class );
+		$id       = $template->id();
+		$edit     = (string) get_edit_post_link( $id, 'raw' );
+		$preview  = add_query_arg( '_wpnonce', wp_create_nonce( 'wp_rest' ), rest_url( 'publiclms/v1/certificates/preview' ) );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Certificate', 'public-lms' ); ?></h1>
+			<p><?php esc_html_e( 'Learners receive a certificate when they complete a course, and download it as a PDF from their dashboard. Edit the template in the block editor: paragraphs and headings bound to certificate fields fill in the learner, course, completion date and certificate ID.', 'public-lms' ); ?></p>
+			<p><?php esc_html_e( 'Courses can switch certificates off in their settings in the course builder.', 'public-lms' ); ?></p>
+			<?php if ( ! CertificateRenderer::available() ) : ?>
+				<div class="notice notice-error inline"><p><?php esc_html_e( 'The PDF library is missing from this copy of Public LMS. Reinstall the plugin to create certificates.', 'public-lms' ); ?></p></div>
+			<?php endif; ?>
+			<p>
+				<a class="button button-primary" href="<?php echo esc_url( $edit ); ?>"><?php esc_html_e( 'Edit the certificate', 'public-lms' ); ?></a>
+				<a class="button" href="<?php echo esc_url( $preview ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Preview PDF', 'public-lms' ); ?></a>
+			</p>
+		</div>
+		<?php
 	}
 
 	/**

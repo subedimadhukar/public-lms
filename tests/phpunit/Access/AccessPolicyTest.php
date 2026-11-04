@@ -300,9 +300,20 @@ class AccessPolicyTest extends TestCase {
 	/**
 	 * @covers ::can_view_certificate
 	 */
-	public function test_certificates_are_for_report_viewers_until_phase_2() {
-		$this->assertFalse( $this->policy->can_view_certificate( $this->fixture['course'], self::factory()->user->create() )->is_allowed() );
-		$this->assertTrue( $this->policy->can_view_certificate( $this->fixture['course'], $this->instructor )->is_allowed() );
+	public function test_certificates_are_for_learners_who_completed_and_report_viewers() {
+		$student = self::factory()->user->create();
+		$this->assertFalse( $this->policy->can_view_certificate( $this->fixture['course'], $student )->is_allowed() );
+		$this->enrollments->enroll( $student, $this->fixture['course'] );
+		$this->assertFalse( $this->policy->can_view_certificate( $this->fixture['course'], $student )->is_allowed() );
+		$this->enrollments->set_completed( $student, $this->fixture['course'], gmdate( 'Y-m-d H:i:s' ) );
+		$this->assertTrue( $this->policy->can_view_certificate( $this->fixture['course'], $student )->is_allowed() );
+		update_post_meta( $this->fixture['course'], Meta::CERTIFICATE, '0' );
+		$this->assertFalse( $this->policy->can_view_certificate( $this->fixture['course'], $student )->is_allowed(), 'Courses can switch certificates off.' );
+		update_post_meta( $this->fixture['course'], Meta::CERTIFICATE, '1' );
+
+		$other = self::factory()->user->create();
+		$this->assertFalse( $this->policy->can_view_certificate( $this->fixture['course'], $other, $student )->is_allowed() );
+		$this->assertTrue( $this->policy->can_view_certificate( $this->fixture['course'], $this->instructor, $student )->is_allowed() );
 	}
 
 	/**

@@ -1,0 +1,54 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/certificate-button",
+	"version": "0.3.0",
+	"title": "Certificate Button",
+	"category": "publiclms",
+	"icon": "awards",
+	"description": "Lets a learner who completed the course download their certificate. Shows nothing to anyone else.",
+	"keywords": [
+		"certificate",
+		"download",
+		"completion"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"courseId": {
+			"type": "integer",
+			"default": 0
+		},
+		"label": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true
+		},
+		"typography": {
+			"fontSize": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens"
+	],
+	"render": "file:./render.php"
+}

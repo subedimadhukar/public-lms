@@ -3,7 +3,7 @@
  * Title: Course enrol card
  * Slug: publiclms/course-enroll-card
  * Categories: publiclms
- * Description: Price, enrol button and what the course includes, sticky on wide screens.
+ * Description: Price, enrol button, progress, the certificate download once earned, and what the course includes; sticky on wide screens.
  * Keywords: enrol, enroll, price, card
  * Post Types: plms_course
  * Inserter: yes
@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="wp-block-group publiclms-course-enroll-card">
 	<!-- wp:publiclms/enroll-button {"showPrice":true} /-->
 	<!-- wp:publiclms/course-progress /-->
+	<!-- wp:publiclms/certificate-button /-->
 	<!-- wp:heading {"level":3,"fontSize":"lg"} -->
 	<h3 class="wp-block-heading has-lg-font-size"><?php esc_html_e( 'This course includes', 'public-lms' ); ?></h3>
 	<!-- /wp:heading -->

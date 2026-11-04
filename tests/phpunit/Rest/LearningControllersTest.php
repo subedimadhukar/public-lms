@@ -159,7 +159,7 @@ class LearningControllersTest extends RestTestCase {
 		$mine = $this->request( 'GET', '/enrollments/me', array(), $this->subscriber )->get_data();
 		$this->assertNotNull( $mine[0]['completed_at'] );
 		$types = wp_list_pluck( $events->since( $before ), 'event_type' );
-		$this->assertSame( array( 'enrollment.created', 'item.completed', 'item.completed', 'item.completed', 'item.completed', 'course.completed' ), $types );
+		$this->assertSame( array( 'enrollment.created', 'item.completed', 'item.completed', 'item.completed', 'item.completed', 'course.completed', 'certificate.issued' ), $types );
 	}
 
 	public function test_students_list_is_scoped_paginated_and_searchable() {

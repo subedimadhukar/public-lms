@@ -1,0 +1,6 @@
+# Third-party code: Dompdf (prefixed) and the prefixing tools.
+vendor-prefixed/
+tools/
+build/
+vendor/
+node_modules/

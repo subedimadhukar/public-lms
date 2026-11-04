@@ -24,7 +24,7 @@ final class Installer {
 	/**
 	 * Current schema version. Bump on every change to schema().
 	 */
-	const DB_VERSION = '2';
+	const DB_VERSION = '3';
 
 	/**
 	 * Option holding the installed schema version.
@@ -58,6 +58,7 @@ final class Installer {
 		'plms_notifications',
 		'plms_report_daily',
 		'plms_assignment_submissions',
+		'plms_certificates',
 	);
 
 	/**
@@ -462,6 +463,23 @@ CREATE TABLE {$t['plms_assignment_submissions']} (
   KEY assignment_status (assignment_id,status),
   KEY course_status (course_id,status),
   KEY submitted_at (submitted_at)
+) $collate;
+CREATE TABLE {$t['plms_certificates']} (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  certificate_key varchar(32) NOT NULL,
+  user_id bigint(20) unsigned NOT NULL,
+  course_id bigint(20) unsigned NOT NULL,
+  template_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  learner_name varchar(255) NOT NULL DEFAULT '',
+  course_title text DEFAULT NULL,
+  completed_at datetime NOT NULL,
+  issued_at datetime NOT NULL,
+  revoked_at datetime DEFAULT NULL,
+  data longtext DEFAULT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY certificate_key (certificate_key),
+  UNIQUE KEY user_course (user_id,course_id),
+  KEY course_id (course_id)
 ) $collate;";
 	}
 

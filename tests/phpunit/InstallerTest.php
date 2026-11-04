@@ -61,6 +61,7 @@ class InstallerTest extends WP_UnitTestCase {
 			'plms_notifications',
 			'plms_report_daily',
 			'plms_assignment_submissions',
+			'plms_certificates',
 		);
 
 		$this->assertSame( $expected, Installer::TABLES );

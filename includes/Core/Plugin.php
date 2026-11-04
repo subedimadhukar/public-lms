@@ -34,6 +34,14 @@ use PublicLMS\Repositories\SubmissionRepository;
 use PublicLMS\Files\PrivateFiles;
 use PublicLMS\Services\AssignmentService;
 use PublicLMS\Services\Gradebook;
+use PublicLMS\Certificates\CertificateFields;
+use PublicLMS\Certificates\CertificateRenderer;
+use PublicLMS\Certificates\CertificateService;
+use PublicLMS\Certificates\CertificateTemplate;
+use PublicLMS\Certificates\DashboardTab;
+use PublicLMS\Privacy\PersonalData;
+use PublicLMS\Repositories\CertificateRepository;
+use PublicLMS\Repositories\PersonalDataRepository;
 use PublicLMS\Quizzes\QuestionBank;
 use PublicLMS\Rest\Api;
 use PublicLMS\Rest\PostFields;
@@ -132,6 +140,10 @@ final class Plugin {
 		$this->container->get( Blocks::class )->register();
 		$this->container->get( BindingsSource::class )->register();
 		$this->container->get( CourseQuery::class )->register();
+		$this->container->get( CertificateService::class )->register();
+		$this->container->get( CertificateFields::class )->register();
+		$this->container->get( DashboardTab::class )->register();
+		$this->container->get( PersonalData::class )->register();
 		if ( is_admin() ) {
 			$this->container->get( AdminApp::class )->register();
 		}
@@ -259,6 +271,70 @@ final class Plugin {
 			RateLimiter::class,
 			static function () {
 				return new RateLimiter();
+			}
+		);
+		$c->set(
+			CertificateRepository::class,
+			static function () {
+				global $wpdb;
+				return new CertificateRepository( $wpdb );
+			}
+		);
+		$c->set(
+			CertificateTemplate::class,
+			static function () {
+				return new CertificateTemplate();
+			}
+		);
+		$c->set(
+			CertificateRenderer::class,
+			static function ( Container $container ) {
+				return new CertificateRenderer( $container->get( CertificateTemplate::class ) );
+			}
+		);
+		$c->set(
+			CertificateService::class,
+			static function ( Container $container ) {
+				return new CertificateService(
+					$container->get( CertificateRepository::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( EventRepositoryInterface::class ),
+					$container->get( CertificateTemplate::class )
+				);
+			}
+		);
+		$c->set(
+			CertificateFields::class,
+			static function () {
+				return new CertificateFields();
+			}
+		);
+		$c->set(
+			DashboardTab::class,
+			static function ( Container $container ) {
+				return new DashboardTab( $container->get( CertificateService::class ) );
+			}
+		);
+		$c->set(
+			PersonalDataRepository::class,
+			static function () {
+				global $wpdb;
+				return new PersonalDataRepository( $wpdb );
+			}
+		);
+		$c->set(
+			PersonalData::class,
+			static function ( Container $container ) {
+				return new PersonalData(
+					$container->get( PersonalDataRepository::class ),
+					$container->get( ProgressRepository::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( QuizAttemptRepository::class ),
+					$container->get( SubmissionRepository::class ),
+					$container->get( AssignmentService::class ),
+					$container->get( CertificateRepository::class ),
+					$container->get( EventRepositoryInterface::class )
+				);
 			}
 		);
 		$c->set(

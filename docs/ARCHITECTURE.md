@@ -51,7 +51,8 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Bindings | `publiclms/course-field` source in PHP and JS | Phase 1: every A7 key; `rating` is empty until reviews (phase 2) | ADR-010. |
 | Payments | `Gateway` interface; hosted or redirect flows only | Not started | Phase 2. |
 | Jobs | Action Scheduler ^4.1 via Composer | Loaded when installed | Emails, PDFs, drip, aggregates, renewals, imports. |
-| Certificates | Block-built template rendered to PDF with Dompdf, prefixed with PHP-Scoper | Not started | Phase 2. |
+| Certificates | Block-built template rendered to PDF with Dompdf 3.1, prefixed with Strauss into `vendor-prefixed/` | Phase 2: one template, issue on completion, PDF download, dashboard tab (ADR-044) | Multiple templates and the public verification page are Pro. |
+| Privacy | `Privacy\PersonalData` | Phase 2: exporters and erasers for every learner table (ADR-044) | Orders are kept with personal details removed. |
 
 ### Folder layout
 
@@ -67,7 +68,8 @@ public-lms/
 │             blocks/<name>/{block.json, index.js, edit.js, render.php, style.scss}
 │             interactivity/learning.js (the shared store module)
 ├─ patterns/   templates/   assets/css/tokens.css
-├─ build/      (gitignored)    languages/   docs/   bin/timing-check.sh
+├─ build/      (gitignored)    languages/   docs/   bin/timing-check.sh   bin/prefix-vendor.sh
+├─ vendor-prefixed/  Dompdf under PublicLMS\Vendor (committed, ADR-044)   tools/  (Strauss and its input)
 ├─ tests/      phpunit/  phpstan/  e2e/
 └─ .github/workflows/  lint.yml  tests.yml (PHPUnit matrix, Playwright)  build.yml
 ```
@@ -137,8 +139,9 @@ at most 191 characters (ADR-026).
 | `plms_notifications` | user_id, event_id, channel, type, title, message, link, status, read_at, sent_at | (user_id, status); (channel, status); created_at | In-app and email queue |
 | `plms_report_daily` | report_date, course_id (0 = site), enrollments, completions, active_learners, lessons_completed, quiz_attempts, quiz_passes, revenue, refunds | **UNIQUE (report_date, course_id)**; (course_id, report_date) | Dashboards read only aggregates |
 | `plms_assignment_submissions` | user_id, assignment_id, course_id, attempt, status, content, files (JSON), grade, max_grade, passed, feedback, submitted_at, graded_at, graded_by | (user_id, assignment_id); (assignment_id, status); (course_id, status); submitted_at | Phase 2 (schema 2); files live in the private folder, never in the media library (ADR-043) |
+| `plms_certificates` | certificate_key, user_id, course_id, template_id, learner_name, course_title, completed_at, issued_at, revoked_at, data (JSON) | **UNIQUE certificate_key**; **UNIQUE (user_id, course_id)**; course_id | Phase 2 (schema 3); what the certificate says, fixed at issue (ADR-044) |
 
-Schema version: `Installer::DB_VERSION` (currently `2`), stored in option `publiclms_db_version`; the plugin
+Schema version: `Installer::DB_VERSION` (currently `3`), stored in option `publiclms_db_version`; the plugin
 version in `publiclms_version`. `Installer::maybe_upgrade()` runs `dbDelta()` when either is out of date.
 
 ## 4. REST resources and permission matrix
@@ -170,7 +173,7 @@ header while more rows exist.
 | `orders` | `GET`, `GET /{id}`, `POST /checkout`, `POST /{id}/refund` (2) | own orders; all need `publiclms_manage_orders` | checkout: logged in or guest with email; refund: `publiclms_manage_order` |
 | `webhooks/{gateway}` | `POST` (2) | none | signature verified server-side; no cookie auth |
 | `reports` | `GET /courses/{id}`, `GET /site` (2) | `publiclms_view_course_reports` (meta; site-wide needs `publiclms_manage_courses` too) | none |
-| `certificates/{course_id}` | `GET` PDF (2) | AccessPolicy `can_view_certificate` | none |
+| `certificates` | `GET /certificates/me`, `GET /certificates/{course_id}` PDF (`user_id` for report viewers), `GET /certificates/preview` (2 ✓) | me: logged in; PDF: AccessPolicy `can_view_certificate`; preview: `publiclms_manage_courses` | none |
 
 The phase 0 draft named the completion route `POST /items/{id}/complete`; phase 1 ships `POST /progress` with
 `status` `completed` or `incomplete`, so undoing a completion needs no second route.
@@ -225,7 +228,7 @@ phase 0 draft named one store per block).
 | `publiclms/course-reviews` | `courseId`, `perPage`, `showForm` | yes | 2 |
 | `publiclms/course-qa` | `courseId`, `perPage` | yes | 2 |
 | `publiclms/announcements` | `courseId`, `perPage` | no | 2 |
-| `publiclms/certificate-button` | `courseId`, `label` (content) | no | 2 |
+| `publiclms/certificate-button` | `courseId`, `label` (content) | no | 2 ✓ (in `course-enroll-card`) |
 | `publiclms/checkout` | `showCoupon`, `gateways` | yes | 2 |
 | `publiclms/course-filters` | `taxonomies`, `showSearch` | yes (filters a `publiclms/course-query`) | 2 |
 | `publiclms/login-form` | `redirect`, `showRegister` | no | 2 |
@@ -719,4 +722,40 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   `publiclms-private`. Handing in needs JavaScript (multipart to REST). The gradebook reads each learner's
   progress summary, one cached query per learner per page. Replaced hand-ins keep their files until the
   learner's data is erased.
+
+### ADR-044 Certificates with a prefixed Dompdf, and personal data tools
+- **Context.** PRD §3: one block-built certificate template rendered to PDF in free; multiple templates
+  and a public verification page are Pro. ADR-013 planned Dompdf behind PHP-Scoper. PRD §6 and ADR-001
+  require GDPR export and erase for every learner table.
+- **Decision (certificates).** Completing a course (`publiclms_course_completed`) issues one row in the new
+  `plms_certificates` table (schema 3) with a random public key (`PLMS-XXXX-XXXX-XXXX`, no look-alike
+  characters) and what the certificate says, fixed at issue; courses can switch certificates off
+  (`_plms_certificate`). Learners who completed before certificates existed get theirs on first request.
+  The template is one `plms_certificate` post (`publiclms_certificate_template`), created with a default of
+  headings, paragraphs and a separator bound to the new `publiclms/certificate-field` source (learner name,
+  course title, completion date, certificate ID, instructor, site name), and edited in the block editor
+  with a "Preview PDF" panel. The PDF is rendered on download (no stored files): the template's blocks
+  with the certificate bound in, a print stylesheet (A4 landscape, a double frame, DejaVu Serif and Sans,
+  the theme's colour and font-size presets written as plain values), and Dompdf with remote loading, PHP
+  and JavaScript off and a chroot of uploads and the plugin; media library images are read from disk.
+  `AccessPolicy::can_view_certificate()` now allows the learner who completed the course and report
+  viewers (with `user_id`). The dashboard gains a Certificates tab through new hooks
+  (`publiclms_dashboard_tabs`, `publiclms_dashboard_rows`, `publiclms_dashboard_panel`), and
+  `publiclms/certificate-button` joins the course enrol card. Hook: `publiclms_certificate_issued`.
+- **Decision (prefixing).** Strauss instead of PHP-Scoper (the brief allows either): it rewrites only the
+  listed packages and their dependencies, including namespace strings, and prefixes Composer's own class
+  loader. Both Strauss and Dompdf live in `tools/` (Strauss needs PHP 8; the plugin's Composer platform is
+  7.4), and `bin/prefix-vendor.sh` builds `vendor-prefixed/`, patches the two class names php-font-lib
+  builds at run time, and drops the monospace fonts. `vendor-prefixed/` (9 MB, mostly fonts) is committed,
+  so release zips, Playground and source checkouts get it without a build step; it is loaded only when a
+  PDF is rendered.
+- **Decision (privacy).** `Privacy\PersonalData` registers eight exporters (enrolments with course
+  progress, step progress, quiz attempts with answers, hand-ins with file names, certificates, activity
+  log, notifications, orders by user or billing email) and two erasers: learning records (rows and hand-in
+  files) are deleted; orders and transactions are kept with name, email, IP, meta and gateway payloads
+  removed, and the erasure report says so. Subscriptions of the user are deleted.
+- **Consequences.** DejaVu covers Latin, Greek and Cyrillic but not Devanagari or other Indic scripts, so a
+  Nepali learner name prints as boxes until a font is added through `publiclms_certificate_css` (open
+  question for the owner). Dompdf ignores flexbox, so side-by-side columns in a template stack. Rendering
+  takes about half a second per certificate; Pro's bulk downloads should queue them on Action Scheduler.
 

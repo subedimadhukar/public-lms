@@ -19,3 +19,8 @@ Thumbs.db
 
 # Playwright
 /artifacts/
+
+# Prefixing tools (bin/prefix-vendor.sh); vendor-prefixed/ itself is committed
+/tools/strauss/vendor/
+/tools/prefix/packages/
+/tools/prefix/vendor-prefixed/

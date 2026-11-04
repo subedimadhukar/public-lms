@@ -230,21 +230,33 @@ class AccessPolicy {
 	}
 
 	/**
-	 * Whether a user can download the certificate for a completed course.
+	 * Whether a user can download a learner's certificate for a course.
 	 *
-	 * Phase 2: the learner who completed the course, or anyone who can view
-	 * the course's reports. Until certificates exist this denies everyone but
-	 * report viewers.
+	 * The learner who completed the course (when the course gives
+	 * certificates), or anyone who can view the course's reports.
 	 *
 	 * @param int $course_id Course ID.
-	 * @param int $user_id   User ID; 0 for the current user.
+	 * @param int $user_id   User asking; 0 for the current user.
+	 * @param int $owner_id  Learner whose certificate it is; 0 for the user asking.
 	 * @return AccessDecision
 	 */
-	public function can_view_certificate( int $course_id, int $user_id = 0 ): AccessDecision {
+	public function can_view_certificate( int $course_id, int $user_id = 0, int $owner_id = 0 ): AccessDecision {
 		$user_id  = $this->resolve_user( $user_id );
-		$decision = $user_id > 0 && user_can( $user_id, Capabilities::META_VIEW_COURSE_REPORTS, $course_id )
-			? AccessDecision::allow()
-			: AccessDecision::deny( AccessDecision::REASON_NOT_PUBLISHED );
+		$owner_id = $owner_id > 0 ? $owner_id : $user_id;
+		if ( $user_id <= 0 ) {
+			$decision = AccessDecision::deny( AccessDecision::REASON_LOGGED_OUT );
+		} elseif ( null === $this->course( $course_id ) ) {
+			$decision = AccessDecision::deny( AccessDecision::REASON_NOT_PUBLISHED );
+		} elseif ( $owner_id !== $user_id ) {
+			$decision = user_can( $user_id, Capabilities::META_VIEW_COURSE_REPORTS, $course_id )
+				? AccessDecision::allow()
+				: AccessDecision::deny( AccessDecision::REASON_NOT_PUBLISHED );
+		} else {
+			$row      = $this->enrollments->find_by_user_and_course( $owner_id, $course_id );
+			$decision = null !== $row && ! empty( $row['completed_at'] ) && Meta::issues_certificate( $course_id )
+				? AccessDecision::allow()
+				: AccessDecision::deny( AccessDecision::REASON_NOT_ENROLLED );
+		}
 		return $this->filter( $decision, 'view_certificate', $course_id, $user_id );
 	}
 

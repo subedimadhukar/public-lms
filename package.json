@@ -31,6 +31,7 @@
 		"patterns",
 		"templates",
 		"vendor",
+		"vendor-prefixed",
 		"public-lms.php",
 		"uninstall.php",
 		"readme.txt"

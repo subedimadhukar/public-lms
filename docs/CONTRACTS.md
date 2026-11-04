@@ -31,6 +31,11 @@ post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the
 9. A6: pattern `publiclms/assignment-submission`: the brief (`publiclms/lesson-content`) and
    `publiclms/assignment` (hand-in form, status, grade and feedback). B1: the block uses `warning` for
    "Waiting for a grade", and `success` and `danger` for the grade.
+10. A6: `publiclms/student-dashboard` gains the tab `certificates` (course, completion date, certificate ID,
+    "Download PDF" button). `publiclms/course-enroll-card` gains `publiclms/certificate-button`, which shows
+    only to a learner who completed the course.
+11. Certificates are a PDF made from the plugin's certificate template, not a theme template; themes have
+    nothing to override there.
 
 **Changes in 1.2.0 (phase 1, minor), answering the theme's nine open items (theme `docs/CONTRACTS.md`,
 "Open items for the plugin"):**
@@ -207,7 +212,7 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 | `publiclms/course-curriculum` | single-plms_course, lesson-sidebar | `publiclms/curriculum` block (sections and items, lock and completion states) |
 | `publiclms/course-instructor` | single-plms_course | Instructor avatar, name and bio |
 | `publiclms/course-reviews` | single-plms_course | `publiclms/course-reviews` block (phase 2; not registered in phase 1) |
-| `publiclms/course-enroll-card` | single-plms_course | Price and `publiclms/enroll-button`, `publiclms/course-progress`, "this course includes" (`publiclms/course-meta`); sticky |
+| `publiclms/course-enroll-card` | single-plms_course | Price and `publiclms/enroll-button`, `publiclms/course-progress`, `publiclms/certificate-button` (1.3.0), "this course includes" (`publiclms/course-meta`); sticky |
 | `publiclms/course-archive-header` | archive-plms_course | Archive title and description |
 | `publiclms/course-grid` | archive-plms_course | Query Loop over `plms_course` (`inherit: true` on archives), Post Template grid of course cards, pagination, no-results message |
 | `publiclms/lesson-header` | single-plms_lesson | Course link (Button bound to `course_title` and `course_url`), section name (`section_title`), lesson title, `publiclms/course-progress` |
@@ -217,7 +222,7 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 | `publiclms/quiz-header` | single-plms_quiz | Course link, section name, quiz title, and question count, time limit, pass mark and attempts left (A7 quiz keys); course progress (1.3.0) |
 | `publiclms/quiz-runner` | single-plms_quiz | The quiz introduction (`publiclms/lesson-content`) and `publiclms/quiz` (Interactivity API runner, server-graded) (1.3.0) |
 | `publiclms/assignment-submission` | single-plms_assignment | The assignment brief (`publiclms/lesson-content`) and `publiclms/assignment`: hand-in form, status, grade and feedback (1.3.0) |
-| `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block; phase 1 tabs: in progress, completed; quiz results, certificates and orders join in phase 2 |
+| `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block; tabs: in progress, completed, quiz results and certificates (1.3.0); orders join with checkout |
 | `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports (phase 2) |
 
 **Not registered yet (part B of phase 2):** `publiclms/course-reviews` and `publiclms/instructor-dashboard`. A template that references them renders nothing in their place until

@@ -167,7 +167,7 @@ class BlocksTest extends TestCase {
 		wp_set_current_user( $this->learner );
 		$html = $this->render( '<!-- wp:publiclms/student-dashboard /-->', $this->fixture['course'] );
 		$this->assertStringContainsString( 'role="tablist"', $html );
-		$this->assertSame( 3, substr_count( $html, 'role="tabpanel"' ) );
+		$this->assertSame( 4, substr_count( $html, 'role="tabpanel"' ) );
 		$this->assertStringContainsString( 'Welcome back, Maya Lama', $html );
 		$this->assertStringContainsString( 'Introduction to Statistics', $html );
 		$this->assertStringContainsString( '0 of 4 steps', $html );

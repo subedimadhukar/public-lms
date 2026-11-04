@@ -6,3 +6,4 @@ import './bindings';
 import './course-panel';
 import './lesson-files';
 import './course-query';
+import './certificate';

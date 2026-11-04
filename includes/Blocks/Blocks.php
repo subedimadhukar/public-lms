@@ -46,6 +46,7 @@ final class Blocks {
 	 * Block directories under build/blocks/.
 	 */
 	const BLOCKS = array(
+		'certificate-button',
 		'course-meta',
 		'course-progress',
 		'curriculum',

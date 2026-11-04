@@ -1,0 +1,11 @@
+{
+	"name": "wpinterface/public-lms-strauss",
+	"description": "Strauss, installed apart from the plugin because it needs PHP 8. Used by bin/prefix-vendor.sh.",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"brianhenryie/strauss": "^0.31"
+	},
+	"config": {
+		"sort-packages": true
+	}
+}
