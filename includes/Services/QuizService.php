@@ -180,9 +180,9 @@ class QuizService {
 	/**
 	 * Saves answers to an attempt in progress without grading them.
 	 *
-	 * @param int                  $user_id    User ID.
-	 * @param int                  $attempt_id Attempt ID.
-	 * @param array<string, mixed> $answers    Answers keyed by question ID.
+	 * @param int                      $user_id    User ID.
+	 * @param int                      $attempt_id Attempt ID.
+	 * @param array<int|string, mixed> $answers Answers keyed by question ID.
 	 * @return array<string, mixed>|WP_Error The attempt.
 	 */
 	public function save_answers( int $user_id, int $attempt_id, array $answers ) {
@@ -205,9 +205,9 @@ class QuizService {
 	/**
 	 * Submits and grades an attempt.
 	 *
-	 * @param int                       $user_id    User ID.
-	 * @param int                       $attempt_id Attempt ID.
-	 * @param array<string, mixed>|null $answers    Final answers keyed by question ID, or null to grade the saved ones.
+	 * @param int                           $user_id    User ID.
+	 * @param int                           $attempt_id Attempt ID.
+	 * @param array<int|string, mixed>|null $answers Final answers keyed by question ID, or null to grade the saved ones.
 	 * @return array<string, mixed>|WP_Error The graded attempt.
 	 */
 	public function submit( int $user_id, int $attempt_id, ?array $answers ) {
@@ -469,8 +469,8 @@ class QuizService {
 	/**
 	 * Saves answers that belong to the attempt's questions, ungraded.
 	 *
-	 * @param array<string, mixed> $attempt Attempt row.
-	 * @param array<string, mixed> $answers Answers keyed by question ID.
+	 * @param array<string, mixed>     $attempt Attempt row.
+	 * @param array<int|string, mixed> $answers Answers keyed by question ID.
 	 * @return void
 	 */
 	private function store_answers( array $attempt, array $answers ): void {

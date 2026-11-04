@@ -257,4 +257,200 @@ final class SeedData {
 			),
 		);
 	}
+
+	/**
+	 * One quiz per course, keyed by course title: four questions in editor form
+	 * (QuestionBank::sanitize()), mixing the six types.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	public static function quizzes(): array {
+		$choice = static function ( string $text, string $right, array $wrong, string $why = '' ): array {
+			$options = array(
+				array(
+					'text'    => $right,
+					'correct' => true,
+				),
+			);
+			foreach ( $wrong as $option ) {
+				$options[] = array( 'text' => $option );
+			}
+			return array(
+				'type'        => 'single',
+				'text'        => $text,
+				'options'     => $options,
+				'explanation' => $why,
+			);
+		};
+		$truth  = static function ( string $text, bool $answer, string $why = '' ): array {
+			return array(
+				'type'        => 'true_false',
+				'text'        => $text,
+				'answer'      => $answer,
+				'explanation' => $why,
+			);
+		};
+		$short  = static function ( string $text, array $accepted, string $why = '' ): array {
+			return array(
+				'type'        => 'short_answer',
+				'text'        => $text,
+				'accepted'    => $accepted,
+				'explanation' => $why,
+			);
+		};
+		$blank  = static function ( string $template, string $why = '' ): array {
+			return array(
+				'type'        => 'fill_blank',
+				'text'        => 'Fill in the missing words.',
+				'template'    => $template,
+				'points'      => 2,
+				'explanation' => $why,
+			);
+		};
+		$many   = static function ( string $text, array $right, array $wrong, string $why = '' ): array {
+			$options = array();
+			foreach ( $right as $option ) {
+				$options[] = array(
+					'text'    => $option,
+					'correct' => true,
+				);
+			}
+			foreach ( $wrong as $option ) {
+				$options[] = array( 'text' => $option );
+			}
+			return array(
+				'type'        => 'multiple',
+				'text'        => $text,
+				'options'     => $options,
+				'points'      => 2,
+				'explanation' => $why,
+			);
+		};
+		$match  = static function ( string $text, array $pairs ): array {
+			$list = array();
+			foreach ( $pairs as $prompt => $answer ) {
+				$list[] = array(
+					'prompt' => $prompt,
+					'match'  => $answer,
+				);
+			}
+			return array(
+				'type'   => 'matching',
+				'text'   => $text,
+				'pairs'  => $list,
+				'points' => 2,
+			);
+		};
+
+		return array(
+			'Bookkeeping Basics for Small Businesses'     => array(
+				$choice( 'Which method records money when it actually moves in or out of the bank?', 'Cash accounting', array( 'Accrual accounting', 'Double-entry accounting' ), 'Cash accounting matches the bank statement, which is why most small businesses start with it.' ),
+				$truth( 'A chart of accounts should start with as many categories as possible.', false, 'Start with fewer categories than you think you need; you can split them later.' ),
+				$many( 'Which of these are usually expenses?', array( 'Rent', 'Wages' ), array( 'Sales', 'Owner capital' ) ),
+				$short( 'What do you call matching every line of the bank statement with a line in your books?', array( 'Reconciliation', 'Reconciling', 'Bank reconciliation' ) ),
+			),
+			'Introduction to Python Programming'          => array(
+				$choice( 'What does "2" + "2" give in Python?', '"22"', array( '4', 'An error' ), 'Adding two strings joins them.' ),
+				$blank( 'A {{function}} packages steps under a name, and should {{return}} its result rather than print it.' ),
+				$truth( 'Python uses indentation to show which lines belong to an if statement.', true ),
+				$match(
+					'Match each idea to what it does.',
+					array(
+						'for loop' => 'Visits each item of a list in turn',
+						'if'       => 'Runs code only when a condition is true',
+						'list'     => 'Holds many values in order',
+					)
+				),
+			),
+			'Conversational Nepali for Travellers'        => array(
+				$choice( 'What do you say when you have had enough dal bhat?', 'Pugyo', array( 'Namaste', 'Kaha chha?' ), 'Pugyo means "that is enough".' ),
+				$truth( 'Namaste works at any time of day.', true ),
+				$short( 'Which word do you use for an older woman, instead of her name?', array( 'Didi' ) ),
+				$match(
+					'Match the Nepali to its meaning.',
+					array(
+						'Kaha chha?' => 'Where is it?',
+						'Ek'         => 'One',
+						'Dai'        => 'Older brother',
+					)
+				),
+			),
+			'Digital Photography: Light and Composition'  => array(
+				$many( 'Which settings decide how much light reaches the sensor?', array( 'Aperture', 'Shutter speed', 'ISO' ), array( 'White balance' ) ),
+				$truth( 'Highlights lost against the right edge of the histogram can be recovered in editing.', false, 'Clipped highlights hold no detail to recover.' ),
+				$choice( 'Which light flatters faces most?', 'Soft light from a window or an overcast sky', array( 'Hard midday sun', 'A bare flash pointed straight on' ) ),
+				$blank( 'Placing the subject on a {{third}} line usually feels balanced; centre it for {{symmetry|a symmetrical look}}.' ),
+			),
+			'Teaching Online: Designing Engaging Lessons' => array(
+				$truth( 'Every lesson should start from what learners will be able to do at the end.', true ),
+				$choice( 'What keeps learners engaged in a long video lesson?', 'Short segments with a task between them', array( 'One uninterrupted recording', 'More slides per minute' ) ),
+				$short( 'What do we call a short check of understanding during a lesson?', array( 'Formative assessment', 'Check for understanding', 'Quiz' ) ),
+				$many( 'Which make online lessons more accessible?', array( 'Captions on videos', 'Clear headings' ), array( 'Text inside images only' ) ),
+			),
+			'Personal Finance Fundamentals'               => array(
+				$choice( 'What should you build before investing?', 'An emergency fund', array( 'A second credit card', 'A larger car loan' ) ),
+				$truth( 'Tracking spending for a month shows where your money really goes.', true ),
+				$blank( 'Pay yourself {{first}}: move savings out on {{payday}}.' ),
+				$match(
+					'Match each term to its meaning.',
+					array(
+						'Budget'   => 'A plan for income and spending',
+						'Interest' => 'The cost of borrowing money',
+						'Asset'    => 'Something you own that has value',
+					)
+				),
+			),
+			'Web Accessibility Essentials'                => array(
+				$choice( 'What is the minimum contrast for normal text under WCAG AA?', '4.5:1', array( '3:1', '2:1' ) ),
+				$truth( 'A button must be reachable and usable with the keyboard alone.', true ),
+				$short( 'Which HTML attribute gives an image its text alternative?', array( 'alt' ) ),
+				$many( 'Which help screen reader users find their way?', array( 'Headings in order', 'Landmarks such as main and nav' ), array( 'Text set in light grey' ) ),
+			),
+			'Climate Science for Everyone'                => array(
+				$choice( 'Which gas from burning fossil fuels drives most of the recent warming?', 'Carbon dioxide', array( 'Oxygen', 'Nitrogen' ) ),
+				$truth( 'Weather is the long-term average of climate.', false, 'It is the other way round: climate is the long-term average of weather.' ),
+				$blank( 'The {{greenhouse}} effect keeps Earth warm enough for life.' ),
+				$short( 'What do we call cutting emissions to limit warming?', array( 'Mitigation', 'Climate mitigation' ) ),
+			),
+			'Public Speaking with Confidence'             => array(
+				$truth( 'Knowing your first two minutes by heart helps with nerves.', true ),
+				$choice( 'What should a talk end with?', 'One clear thing to remember or do', array( 'A list of every point again', 'An apology for running over' ) ),
+				$many( 'Which help an audience follow you?', array( 'Signposting what comes next', 'Pausing after key points' ), array( 'Reading every slide aloud' ) ),
+				$short( 'What do you call the short practice talk you give before the real one?', array( 'Rehearsal', 'Dry run', 'Run-through' ) ),
+			),
+			'Introduction to Statistics'                  => array(
+				$choice( 'Which average is least affected by a few very large values?', 'The median', array( 'The mean', 'The total' ) ),
+				$truth( 'Correlation shows that one thing causes another.', false, 'Correlation is not causation.' ),
+				$blank( 'The {{mean}} adds all values and divides by how many there are.' ),
+				$match(
+					'Match each term to its meaning.',
+					array(
+						'Sample'     => 'The people or things you measured',
+						'Population' => 'Everyone the question is about',
+						'Outlier'    => 'A value far from the rest',
+					)
+				),
+			),
+		);
+	}
+
+	/**
+	 * One assignment brief per course, keyed by course title: [ title, brief ].
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function assignments(): array {
+		return array(
+			'Bookkeeping Basics for Small Businesses'     => array( 'Close your first month', 'Record one month of income and expenses, reconcile the bank account and upload your profit and loss statement as a PDF or spreadsheet.' ),
+			'Introduction to Python Programming'          => array( 'Your expense summary program', 'Write a program that reads a file of expenses and prints a total per category. Upload the .py file as a .txt or zip, with a sample input file.' ),
+			'Conversational Nepali for Travellers'        => array( 'Record a market conversation', 'Write a short dialogue at a market stall: greet the seller, ask a price, agree on it and say thank you. Type it below or upload a recording.' ),
+			'Digital Photography: Light and Composition'  => array( 'One scene, two ways', 'Photograph the same scene twice: once following the rule of thirds and once breaking it on purpose. Upload both photos and say which works better.' ),
+			'Teaching Online: Designing Engaging Lessons' => array( 'Plan a twenty-minute lesson', 'Write the outcome, three segments and one check for understanding for a lesson you will teach. Upload it as a PDF or document.' ),
+			'Personal Finance Fundamentals'               => array( 'Your one-month budget', 'Track your spending for a week, then write a budget for next month with a savings line. Upload a spreadsheet or type it below.' ),
+			'Web Accessibility Essentials'                => array( 'Audit one page', 'Test one web page with the keyboard only and a contrast checker. List three problems and how to fix each.' ),
+			'Climate Science for Everyone'                => array( 'Your household footprint', 'Estimate your household\'s yearly emissions with any calculator and name two changes you could make this year.' ),
+			'Public Speaking with Confidence'             => array( 'A two-minute talk', 'Prepare a two-minute talk on something you know well. Upload your outline, and a recording if you made one.' ),
+			'Introduction to Statistics'                  => array( 'Describe a data set', 'Pick any small data set, give its mean, median and range, and say what they tell you. Upload a spreadsheet or type your answer.' ),
+		);
+	}
 }

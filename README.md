@@ -4,12 +4,13 @@ A block-native learning management system for WordPress: courses, lessons, quizz
 drip, prerequisites and certificates, with native Stripe, PayPal and offline checkout, all in the free plugin.
 Pro (a separate plugin) adds what schools, marketplaces and businesses need at scale.
 
-Status: **phase 1 internal alpha** (0.2.0). A course can be built in the admin, enrolled in for free and taken
-lesson by lesson with progress saved: repositories with object caching, the `publiclms/v1` REST API, the
-"Public LMS" admin app (DataViews lists and a drag-and-drop course builder), eight dynamic blocks with an
-Interactivity API lesson player, the `publiclms/course-field` bindings source, plugin templates and patterns
-(with a classic theme fallback), and `wp publiclms seed`. Quizzes, assignments, checkout and certificates
-arrive in phase 2.
+Status: **phase 2, part A: the teaching stack** (0.3.0). On top of the phase 1 alpha (course builder, free
+enrolment, lesson player, student dashboard, templates and patterns), the free teaching stack is in: drip by
+days or date and prerequisites, a lesson video block (YouTube, Vimeo, Bunny Stream, self-hosted) that completes
+the lesson once watched, lesson files, quizzes with six question types from a reusable bank graded on the
+server, assignments with private file uploads and grading, a gradebook with CSV export, a block-built
+certificate rendered to PDF, and personal data export and erasure. Community features, instructors, checkout,
+importers and beta hardening are part B of phase 2.
 
 ## Try the alpha
 
@@ -19,9 +20,11 @@ npm run env:start
 npx wp-env run cli wp publiclms seed --courses=10
 ```
 
-Then open the course catalogue at `/courses/`, the admin app under **Public LMS**, and log in as a seeded
-learner (`sita.gurung`) or instructor (`anita.shrestha`) with the seed password (`public-lms-demo` unless you
-set `PUBLICLMS_SEED_PASSWORD` or `--password`). `wp publiclms reset --yes` removes everything the seed made.
+Then open the course catalogue at `/courses/`, the admin app under **Public LMS** (Courses, Questions,
+Submissions, Gradebook, Certificate), and log in as a seeded learner (`sita.gurung`, who has finished a course
+and has its certificate) or instructor (`anita.shrestha`) with the seed password (`public-lms-demo` unless you
+set `PUBLICLMS_SEED_PASSWORD` or `--password`). Every seeded course has a quiz and an assignment.
+`wp publiclms reset --yes` removes everything the seed made.
 
 - Product requirements: [docs/PRD.md](docs/PRD.md)
 - Architecture and decision records: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)

@@ -1,8 +1,13 @@
 /**
- * The phase 1 alpha journey, end to end:
- * an instructor builds a course with two sections and three lessons in the
- * admin app, a student enrols for free, completes a lesson in the player and
- * sees the progress on the dashboard.
+ * The learning journey, end to end.
+ *
+ * Phase 1: an instructor builds a course with two sections and three lessons
+ * in the admin app, a student enrols for free, completes a lesson in the
+ * player and sees the progress on the dashboard.
+ *
+ * Phase 2: a student completes a lesson, passes a server-graded quiz in the
+ * Interactivity runner (which completes the course), and downloads the
+ * certificate PDF from the dashboard.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
@@ -141,15 +146,16 @@ async function addLesson( page, section, title ) {
 	await expect( card.getByText( title, { exact: true } ) ).toBeVisible();
 }
 
-test.describe( 'Phase 1 learning journey', () => {
+test.describe( 'Learning journey', () => {
 	let dashboardUrl = '';
+	let studentId = 0;
 
 	test.beforeAll( async ( { requestUtils } ) => {
 		await requestUtils.activatePlugin( 'public-lms' );
 		await requestUtils.activateTheme( THEME );
 		await requestUtils.deleteAllUsers();
 		await requestUtils.createUser( INSTRUCTOR );
-		await requestUtils.createUser( STUDENT );
+		studentId = ( await requestUtils.createUser( STUDENT ) ).id;
 		const settings = await requestUtils.rest( {
 			method: 'POST',
 			path: '/publiclms/v1/settings/dashboard-page',
@@ -298,6 +304,143 @@ test.describe( 'Phase 1 learning journey', () => {
 		await expect(
 			page.getByRole( 'tab', { name: /Completed/ } )
 		).toHaveAttribute( 'aria-selected', 'true' );
+		await studentContext.close();
+	} );
+
+	test( 'a student passes a quiz graded on the server and downloads the certificate', async ( {
+		browser,
+		requestUtils,
+	} ) => {
+		const api = ( method, path, data ) =>
+			requestUtils.rest( {
+				method,
+				path: `/publiclms/v1${ path }`,
+				data,
+			} );
+
+		// A small course: one lesson and a three-question quiz.
+		const course = await api( 'POST', '/courses', {
+			title: 'Kitchen Garden Basics',
+			status: 'publish',
+			access_mode: 'closed',
+		} );
+		const section = await api( 'POST', '/sections', {
+			course_id: course.id,
+			title: 'Start here',
+		} );
+		const lesson = await api( 'POST', '/lessons', {
+			section_id: section.id,
+			title: 'Pick a sunny spot',
+		} );
+		const quiz = await api( 'POST', '/quizzes', {
+			section_id: section.id,
+			title: 'Garden check',
+			pass_mark: 60,
+			max_attempts: 2,
+		} );
+		await api( 'POST', '/questions', {
+			quiz_id: quiz.id,
+			type: 'single',
+			text: 'How many hours of sun do most vegetables need?',
+			options: [
+				{ text: 'Six or more', correct: true },
+				{ text: 'One or two', correct: false },
+			],
+			explanation: 'Fruiting vegetables need full sun.',
+		} );
+		await api( 'POST', '/questions', {
+			quiz_id: quiz.id,
+			type: 'true_false',
+			text: 'Compost improves most soils.',
+			answer: true,
+		} );
+		await api( 'POST', '/questions', {
+			quiz_id: quiz.id,
+			type: 'short_answer',
+			text: 'What do you call a plant that comes back every year?',
+			accepted: [ 'Perennial' ],
+		} );
+		await api( 'POST', `/courses/${ course.id }/enrollments`, {
+			user_id: studentId,
+		} );
+
+		const studentContext = await browser.newContext( {
+			storageState: { cookies: [], origins: [] },
+		} );
+		const page = await studentContext.newPage();
+		await logIn( page, STUDENT );
+
+		await page.goto( lesson.link );
+		await page.getByRole( 'button', { name: 'Mark as complete' } ).click();
+		await expect(
+			page
+				.getByRole( 'status' )
+				.filter( { hasText: 'Course progress 50%' } )
+		).toBeVisible();
+
+		// The quiz runner: questions arrive without answer keys.
+		await page.goto( quiz.link );
+		await expect(
+			page.getByRole( 'heading', { level: 1, name: 'Garden check' } )
+		).toBeVisible();
+		const attemptResponse = page.waitForResponse(
+			( response ) =>
+				response.url().includes( `quizzes/${ quiz.id }/attempts` ) &&
+				response.request().method() === 'POST'
+		);
+		await page.getByRole( 'button', { name: 'Start quiz' } ).click();
+		const attemptBody = await ( await attemptResponse ).text();
+		expect( attemptBody ).not.toContain( '"correct"' );
+		expect( attemptBody ).not.toContain( 'Perennial' );
+
+		await expect(
+			page.getByRole( 'heading', { level: 2, name: 'Questions' } )
+		).toBeFocused();
+		await page.getByRole( 'radio', { name: 'Six or more' } ).check();
+		await page
+			.getByRole( 'group', { name: 'Question 2 of 3' } )
+			.getByRole( 'radio', { name: 'True' } )
+			.check();
+		await page
+			.getByRole( 'group', { name: 'Question 3 of 3' } )
+			.getByRole( 'textbox', { name: 'Your answer' } )
+			.fill( 'perennial' );
+		await page.getByRole( 'button', { name: 'Submit answers' } ).click();
+
+		const results = page.getByRole( 'heading', {
+			level: 2,
+			name: 'Your result',
+		} );
+		await expect( results ).toBeFocused();
+		await expect( page.getByText( 'You passed with 100%.' ) ).toBeVisible();
+		await expect(
+			page.getByText( 'Fruiting vegetables need full sun.' )
+		).toBeVisible();
+		await expect(
+			page.getByRole( 'progressbar', { name: 'Course progress' } )
+		).toHaveAttribute( 'aria-valuenow', '100' );
+
+		// The dashboard: quiz results, then the certificate download.
+		await page.goto( dashboardUrl );
+		await page.getByRole( 'tab', { name: /Quiz results/ } ).click();
+		await expect(
+			page.getByRole( 'row', { name: /Garden check.*100%.*Passed/ } )
+		).toBeVisible();
+		await page.getByRole( 'tab', { name: /Certificates/ } ).click();
+		const download = page.getByRole( 'link', {
+			name: /Download PDF\s*: Kitchen Garden Basics/,
+		} );
+		await expect( download ).toBeVisible();
+		const pdf = await page.request.get(
+			await download.getAttribute( 'href' )
+		);
+		expect( pdf.status() ).toBe( 200 );
+		expect( pdf.headers()[ 'content-type' ] ).toContain(
+			'application/pdf'
+		);
+		expect( ( await pdf.body() ).subarray( 0, 5 ).toString() ).toBe(
+			'%PDF-'
+		);
 		await studentContext.close();
 	} );
 } );

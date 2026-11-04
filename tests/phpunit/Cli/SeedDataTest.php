@@ -38,4 +38,18 @@ class SeedDataTest extends TestCase {
 			$this->assertStringNotContainsString( $placeholder, $text );
 		}
 	}
+
+	public function test_every_course_has_a_valid_quiz_and_an_assignment() {
+		$bank = publiclms()->container()->get( \PublicLMS\Quizzes\QuestionBank::class );
+		foreach ( SeedData::courses() as $course ) {
+			$quiz = SeedData::quizzes()[ $course['title'] ] ?? array();
+			$this->assertCount( 4, $quiz, $course['title'] );
+			foreach ( $quiz as $question ) {
+				$clean = $bank->sanitize( $question );
+				$this->assertIsArray( $clean, $course['title'] . ': ' . ( is_wp_error( $clean ) ? $clean->get_error_message() : '' ) );
+			}
+			$this->assertGreaterThan( 2, count( array_unique( wp_list_pluck( $quiz, 'type' ) ) ), 'Quizzes mix question types.' );
+			$this->assertArrayHasKey( $course['title'], SeedData::assignments() );
+		}
+	}
 }

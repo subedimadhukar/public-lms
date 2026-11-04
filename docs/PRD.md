@@ -133,6 +133,26 @@ theme half is the theme session's.
 
 **Out of phase 1:** quizzes, assignments, checkout, certificates, reports, email, importers (phase 2).
 
+## 7a. Phase 2 scope: teaching stack and theme completion, ending in a public beta
+
+**Status (2026-11-04): part A, the teaching stack, is done (0.3.0, contract 1.3.0).** Part B (community and
+instructors, commerce, catalogue and migration, beta hardening) has not started.
+
+**Part A (plugin)**
+- ✓ Drip (days after enrolment, or a date) on sections and items, and prerequisites (course needs course,
+  step needs step) in `AccessPolicy`, in the course builder and over REST (ADR-040).
+- ✓ `publiclms/video` for YouTube, Vimeo, Bunny Stream and self-hosted files with completion tracking, and
+  lesson files under `publiclms/lesson-content` (ADR-041).
+- ✓ Quizzes with the six free question types, a reusable question bank, time limit, attempts, random draw,
+  shuffling and pass mark, graded only on the server; the Interactivity runner; quizzes in the builder and in
+  progress; `single-plms_quiz` with `quiz-header` and `quiz-runner`; a Quiz results dashboard tab (ADR-042).
+- ✓ Assignments with private file uploads served only through a permission-checked route, grading with
+  feedback, and the free gradebook with CSV export; `single-plms_assignment` (ADR-043).
+- ✓ One block-built certificate template rendered to PDF with a prefixed Dompdf, issued on completion, with a
+  Certificates dashboard tab; personal data export and erase for every learner table (ADR-044).
+- ✓ Seed courses include quizzes, an assignment and a certificate; PHPUnit for grading, access rules, upload
+  permissions and certificate issue; the Playwright journey covers a quiz attempt and a certificate download.
+
 ## 8. Decisions applied since the strategy document
 
 | Decision | Effect on this PRD |

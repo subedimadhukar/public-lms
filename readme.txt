@@ -4,7 +4,7 @@ Tags: lms, courses, e-learning, quiz, certificates
 Requires at least: 6.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,7 +36,7 @@ There is no locked code in the free plugin. Public LMS Pro, sold separately, add
 * Front end built with blocks and the Interactivity API, with no jQuery
 * Every access check goes through one access policy; quizzes are graded on the server
 
-This is an internal alpha (0.2.0). It covers building a course, free enrolment and taking lessons with saved progress. Quizzes, assignments, checkout, certificates and reports arrive in the releases that follow.
+This is a development release (0.3.0). It covers building a course, free enrolment, lessons with video and files, drip and prerequisites, quizzes, assignments, the gradebook and certificates. Checkout, reviews, Q&A, announcements, emails, instructor registration and reports arrive in the releases that follow.
 
 = What works in 0.2.0 =
 
@@ -77,6 +77,16 @@ Courses, enrolments and orders are kept. To remove everything, add `define( 'PUB
 
 == Changelog ==
 
+= 0.3.0 =
+* Drip by days after enrolment or on a date, for sections and items; prerequisite courses and steps.
+* Lesson Video block for YouTube, Vimeo, Bunny Stream and self-hosted video, completing the lesson once watched, with no provider scripts.
+* Lesson files listed under the lesson for learners who can open it.
+* Quizzes: six question types in a reusable question bank, time limit, attempts, random draw, shuffling and pass mark, graded on the server. Quiz runner block and Single Quiz template.
+* Assignments with private file uploads, grading with feedback, a Submissions screen and a Gradebook with CSV export. Single Assignment template.
+* Certificates designed in the block editor and downloaded as PDF; Certificates and Quiz results tabs on the student dashboard.
+* Personal data export and erasure for every learner table.
+* Seed data now includes a quiz and an assignment in every course.
+
 = 0.2.0 =
 * Internal alpha: course builder, free enrolment, lesson player with saved progress, student dashboard.
 * Enrolment, progress, event and course structure repositories with object caching.
@@ -90,6 +100,9 @@ Courses, enrolments and orders are kept. To remove everything, add `define( 'PUB
 * Initial development scaffold: post types, taxonomies, roles and capabilities, database tables, REST namespace with a health route, and the template contract.
 
 == Upgrade Notice ==
+
+= 0.3.0 =
+Development release. Adds two database tables (schema 3). Not for production sites.
 
 = 0.2.0 =
 Internal alpha. Not for production sites.

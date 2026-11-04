@@ -7,15 +7,24 @@
 
 namespace PublicLMS\Cli;
 
+use PublicLMS\Assignments\AssignmentSettings;
 use PublicLMS\Capabilities\Roles;
+use PublicLMS\Certificates\CertificateService;
+use PublicLMS\Core\Container;
 use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
 use PublicLMS\Repositories\EnrollmentRepository;
 use PublicLMS\Repositories\EventRepositoryInterface;
+use PublicLMS\Quizzes\QuestionBank;
+use PublicLMS\Quizzes\QuizSettings;
+use PublicLMS\Repositories\CertificateRepository;
 use PublicLMS\Repositories\ProgressRepository;
+use PublicLMS\Repositories\QuizAttemptRepository;
+use PublicLMS\Services\AssignmentService;
 use PublicLMS\Services\EnrollmentService;
 use PublicLMS\Services\ProgressService;
+use PublicLMS\Services\QuizService;
 use PublicLMS\Taxonomies\Taxonomies;
 use WP_CLI;
 
@@ -83,30 +92,42 @@ final class Command {
 	private $events;
 
 	/**
+	 * Service container, for the quiz, assignment and certificate services.
+	 *
+	 * @var Container|null
+	 */
+	private $container;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param CourseStructureRepositoryInterface $structure     Course structure.
 	 * @param EnrollmentService                  $enroll        Enrolment service.
 	 * @param ProgressService                    $progress      Progress service.
-	 * @param EnrollmentRepository               $enrollments   Enrolment rows.
+	 * @param EnrollmentRepository               $enrollments   Enrolments.
 	 * @param ProgressRepository                 $progress_rows Progress rows.
-	 * @param EventRepositoryInterface           $events        Event rows.
+	 * @param EventRepositoryInterface           $events        Event log.
+	 * @param Container|null                     $container     Service container; without it the seed has no quizzes, assignments or certificates.
 	 */
-	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentService $enroll, ProgressService $progress, EnrollmentRepository $enrollments, ProgressRepository $progress_rows, EventRepositoryInterface $events ) {
+	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentService $enroll, ProgressService $progress, EnrollmentRepository $enrollments, ProgressRepository $progress_rows, EventRepositoryInterface $events, ?Container $container = null ) {
 		$this->structure     = $structure;
 		$this->enroll        = $enroll;
 		$this->progress      = $progress;
 		$this->enrollments   = $enrollments;
 		$this->progress_rows = $progress_rows;
 		$this->events        = $events;
+		$this->container     = $container;
 	}
 
 	/**
 	 * Creates realistic courses, instructors and learners.
 	 *
 	 * Creates three instructors and up to six learners, then the courses with
-	 * two sections of three lessons each, categories and levels, free
-	 * enrolments with some progress, and a dashboard page if none is set.
+	 * two sections of three lessons each, a four-question quiz after the first
+	 * section and an assignment at the end, categories and levels, free
+	 * enrolments with some progress (quizzes taken, work handed in and graded,
+	 * one course completed with its certificate), and a dashboard page if none
+	 * is set.
 	 *
 	 * ## OPTIONS
 	 *
@@ -187,9 +208,9 @@ final class Command {
 				$this->enroll->enroll( $user_id, $course_id, 'free' );
 				++$enrolments;
 				$items = $this->structure->item_ids( $course_id );
-				$done  = 0 === $position && 0 === $k ? count( $items ) : ( $position + $k ) % 4;
+				$done  = 0 === $position && 0 === $k ? count( $items ) : ( $position + $k ) % 5;
 				foreach ( array_slice( $items, 0, $done ) as $item_id ) {
-					$this->progress->complete_item( $user_id, $item_id );
+					$this->complete_step( $user_id, $item_id, 1 === $position % 2 );
 				}
 			}
 			++$position;
@@ -210,7 +231,27 @@ final class Command {
 			update_option( 'publiclms_dashboard_page_id', $page_id );
 		}
 
-		WP_CLI::success( sprintf( 'Seeded %d courses with %d lessons, %d instructors, %d learners and %d enrolments.', count( $courses ), $lessons, count( $instructors ), count( $learners ), $enrolments ) );
+		// One hand-in waits for a grade, so the Submissions screen has work to show.
+		$waiting = array_values( $learners )[1] ?? 0;
+		if ( null !== $this->container && $waiting > 0 ) {
+			foreach ( $this->enrollments->find_by_user( $waiting ) as $enrolment ) {
+				foreach ( $this->structure->item_ids( (int) $enrolment['course_id'] ) as $item_id ) {
+					if ( PostTypes::ASSIGNMENT === get_post_type( $item_id ) ) {
+						$this->container->get( AssignmentService::class )->submit( $waiting, $item_id, '<p>My first draft. I was not sure about the last part, so I added a question for you at the end.</p>', array() );
+						break 2;
+					}
+				}
+			}
+		}
+
+		$certificates = 0;
+		if ( null !== $this->container ) {
+			foreach ( $learners as $user_id ) {
+				$certificates += count( $this->container->get( CertificateService::class )->for_user( $user_id ) );
+			}
+		}
+
+		WP_CLI::success( sprintf( 'Seeded %d courses with %d steps (lessons, quizzes, assignments), %d instructors, %d learners and %d enrolments; certificates issued: %d.', count( $courses ), $lessons, count( $instructors ), count( $learners ), $enrolments, $certificates ) );
 		WP_CLI::log( sprintf( 'Course catalogue: %s', (string) get_post_type_archive_link( PostTypes::COURSE ) ) );
 		WP_CLI::log( sprintf( 'Student dashboard: %s', (string) get_permalink( $page_id ) ) );
 		WP_CLI::log( sprintf( 'Log in as an instructor (%s) or a learner (%s) with the seed password.', implode( ', ', array_keys( $instructors ) ), implode( ', ', array_keys( $learners ) ) ) );
@@ -219,8 +260,10 @@ final class Command {
 	/**
 	 * Deletes everything `wp publiclms seed` created.
 	 *
-	 * Removes seeded courses, sections, lessons, terms, the seeded dashboard
-	 * page, and seeded users with their enrolments, progress and events.
+	 * Removes seeded courses, sections, lessons, quizzes, questions,
+	 * assignments, terms, the seeded dashboard page, and seeded users with
+	 * their enrolments, progress, quiz attempts, hand-ins (and files),
+	 * certificates and events.
 	 * Nothing without the seed flag is touched.
 	 *
 	 * ## OPTIONS
@@ -258,6 +301,11 @@ final class Command {
 		require_once ABSPATH . 'wp-admin/includes/user.php';
 		foreach ( $users as $user_id ) {
 			$user_id = (int) $user_id;
+			if ( null !== $this->container ) {
+				$this->container->get( QuizAttemptRepository::class )->delete_for_user( $user_id );
+				$this->container->get( AssignmentService::class )->delete_for_user( $user_id );
+				$this->container->get( CertificateRepository::class )->delete_for_user( $user_id );
+			}
 			$this->enrollments->delete_for_user( $user_id );
 			$this->progress_rows->delete_for_user( $user_id );
 			$this->events->delete_for_user( $user_id );
@@ -391,7 +439,8 @@ final class Command {
 		wp_set_object_terms( $course_id, array( $this->term( (string) $course['category'], Taxonomies::COURSE_CATEGORY ) ), Taxonomies::COURSE_CATEGORY );
 		wp_set_object_terms( $course_id, array( $this->term( (string) $course['level'], Taxonomies::LEVEL ) ), Taxonomies::LEVEL );
 
-		$first = true;
+		$first    = true;
+		$sections = array();
 		foreach ( (array) $course['sections'] as $section_title => $lessons ) {
 			$section_id = $this->structure->add_section( $course_id, (string) $section_title, $author_id );
 			update_post_meta( $section_id, self::FLAG, 1 );
@@ -410,9 +459,178 @@ final class Command {
 					$first = false;
 				}
 			}
+			$sections[] = $section_id;
+		}
+		if ( null !== $this->container && ! empty( $sections ) ) {
+			$this->quiz( (string) $course['title'], $sections[0], $author_id );
+			$this->assignment( (string) $course['title'], (int) end( $sections ), $author_id );
 		}
 		$this->structure->invalidate( $course_id );
 		return $course_id;
+	}
+
+	/**
+	 * Adds the course's quiz at the end of a section.
+	 *
+	 * @param string $course    Course title (the key in SeedData::quizzes()).
+	 * @param int    $section   Section ID.
+	 * @param int    $author_id Instructor.
+	 * @return void
+	 */
+	private function quiz( string $course, int $section, int $author_id ): void {
+		$questions = SeedData::quizzes()[ $course ] ?? array();
+		if ( empty( $questions ) || null === $this->container ) {
+			return;
+		}
+		$bank    = $this->container->get( QuestionBank::class );
+		$quiz_id = $this->structure->add_item( $section, 'quiz', 'Check your understanding', $author_id );
+		wp_update_post(
+			array(
+				'ID'           => $quiz_id,
+				'post_content' => '<!-- wp:paragraph --><p>Four quick questions on this section. You need 60% to pass, and you have three attempts.</p><!-- /wp:paragraph -->',
+			)
+		);
+		update_post_meta( $quiz_id, self::FLAG, 1 );
+		update_post_meta( $quiz_id, Meta::DURATION, 5 );
+		$ids = array();
+		foreach ( $questions as $input ) {
+			$clean = $bank->sanitize( $input );
+			if ( is_wp_error( $clean ) ) {
+				WP_CLI::log( 'Skipped a question: ' . $clean->get_error_message() );
+				continue;
+			}
+			$id = $bank->save( $clean, 0, $author_id );
+			if ( ! is_wp_error( $id ) ) {
+				update_post_meta( (int) $id, self::FLAG, 1 );
+				$ids[] = (int) $id;
+			}
+		}
+		QuizSettings::set_question_ids( $quiz_id, $ids );
+		QuizSettings::update(
+			$quiz_id,
+			array(
+				'pass_mark'       => 60,
+				'max_attempts'    => 3,
+				'shuffle_answers' => true,
+			)
+		);
+	}
+
+	/**
+	 * Adds the course's assignment at the end of a section.
+	 *
+	 * @param string $course    Course title (the key in SeedData::assignments()).
+	 * @param int    $section   Section ID.
+	 * @param int    $author_id Instructor.
+	 * @return void
+	 */
+	private function assignment( string $course, int $section, int $author_id ): void {
+		$data = SeedData::assignments()[ $course ] ?? null;
+		if ( null === $data ) {
+			return;
+		}
+		$id = $this->structure->add_item( $section, 'assignment', $data[0], $author_id );
+		wp_update_post(
+			array(
+				'ID'           => $id,
+				'post_content' => '<!-- wp:paragraph --><p>' . esc_html( $data[1] ) . '</p><!-- /wp:paragraph -->',
+			)
+		);
+		update_post_meta( $id, self::FLAG, 1 );
+		update_post_meta( $id, Meta::DURATION, 30 );
+		AssignmentSettings::update(
+			$id,
+			array(
+				'points'      => 10,
+				'pass_points' => 6,
+				'file_types'  => array( 'pdf', 'doc', 'docx', 'odt', 'txt', 'xlsx', 'ods', 'csv', 'jpg', 'jpeg', 'png', 'zip' ),
+			)
+		);
+	}
+
+	/**
+	 * Completes one step for a seeded learner the way a learner would: lessons
+	 * are marked complete, quizzes are taken (after a failed try when asked),
+	 * assignments are handed in and graded by the instructor.
+	 *
+	 * @param int  $user_id   Learner.
+	 * @param int  $item_id   Lesson, quiz or assignment.
+	 * @param bool $fail_once Whether to fail the quiz once before passing.
+	 * @return void
+	 */
+	private function complete_step( int $user_id, int $item_id, bool $fail_once ): void {
+		$type = get_post_type( $item_id );
+		if ( null === $this->container || PostTypes::LESSON === $type ) {
+			$this->progress->complete_item( $user_id, $item_id );
+			return;
+		}
+		if ( PostTypes::QUIZ === $type ) {
+			$quizzes = $this->container->get( QuizService::class );
+			if ( $fail_once ) {
+				$attempt = $quizzes->start( $user_id, $item_id );
+				if ( is_array( $attempt ) ) {
+					$quizzes->submit( $user_id, (int) $attempt['attempt']['id'], array() );
+				}
+			}
+			$attempt = $quizzes->start( $user_id, $item_id );
+			if ( is_array( $attempt ) ) {
+				$quizzes->submit( $user_id, (int) $attempt['attempt']['id'], $this->right_answers( (array) $attempt['attempt']['question_ids'] ) );
+			}
+			return;
+		}
+		$assignments = $this->container->get( AssignmentService::class );
+		$handin      = $assignments->submit( $user_id, $item_id, '<p>Here is my work for this assignment, with my notes on what I would do differently next time.</p>', array() );
+		if ( is_array( $handin ) ) {
+			$teacher = (int) get_post_field( 'post_author', $this->structure->course_id_for( $item_id ) );
+			$assignments->grade( (int) $handin['id'], 8, 'Clear and complete. Next time, add one example from your own work.', $teacher );
+		}
+	}
+
+	/**
+	 * Returns answers that get every listed question right, from the answer keys.
+	 *
+	 * @param array<int, int> $question_ids Questions.
+	 * @return array<int|string, mixed>
+	 */
+	private function right_answers( array $question_ids ): array {
+		$bank    = null === $this->container ? null : $this->container->get( QuestionBank::class );
+		$answers = array();
+		foreach ( $question_ids as $question_id ) {
+			$question = null === $bank ? null : $bank->get( (int) $question_id );
+			if ( null === $question ) {
+				continue;
+			}
+			switch ( $question['type'] ) {
+				case QuestionBank::SINGLE:
+				case QuestionBank::MULTIPLE:
+					$right = array();
+					foreach ( (array) $question['options'] as $option ) {
+						if ( ! empty( $option['correct'] ) ) {
+							$right[] = (string) $option['id'];
+						}
+					}
+					$answers[ (string) $question_id ] = QuestionBank::SINGLE === $question['type'] ? ( $right[0] ?? '' ) : $right;
+					break;
+				case QuestionBank::TRUE_FALSE:
+					$answers[ (string) $question_id ] = (bool) $question['answer'];
+					break;
+				case QuestionBank::FILL_BLANK:
+					$answers[ (string) $question_id ] = array_map(
+						static function ( $accepted ) {
+							return (string) ( (array) $accepted )[0];
+						},
+						(array) $question['blanks']
+					);
+					break;
+				case QuestionBank::SHORT_ANSWER:
+					$answers[ (string) $question_id ] = (string) ( (array) $question['accepted'] )[0];
+					break;
+				case QuestionBank::MATCHING:
+					$answers[ (string) $question_id ] = wp_list_pluck( (array) $question['pairs'], 'match_id', 'prompt_id' );
+					break;
+			}
+		}
+		return $answers;
 	}
 
 	/**

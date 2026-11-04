@@ -1,6 +1,6 @@
 {
 	"name": "public-lms",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"private": true,
 	"description": "Public LMS: a block-native learning management system for WordPress.",
 	"author": "WPInterface (https://wpinterface.com)",

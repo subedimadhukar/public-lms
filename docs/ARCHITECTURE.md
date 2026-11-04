@@ -1,6 +1,7 @@
 # Public LMS architecture
 
-Status: phase 1 (internal alpha, 0.2.0). Phase 0 decisions stand; phase 1 decisions are ADR-028 onwards. Source: the "LMS plugin architecture and complete ecosystem"
+Status: phase 2 part A (teaching stack, 0.3.0). Phase 0 decisions stand; phase 1 decisions are ADR-028 to
+ADR-039; phase 2 decisions are ADR-040 onwards. Source: the "LMS plugin architecture and complete ecosystem"
 section of the WPInterface strategy document (4 Nov 2026). Where that document and the phase 0 brief
 disagree, the brief wins; each such case is an ADR below marked **Deviation**.
 
@@ -85,6 +86,14 @@ public-lms/
 | `publiclms_user_teaches_course` | filter | Co-instructors (Pro) |
 | `publiclms_access_decision` | filter | Memberships and groups grant access (Pro) |
 | `publiclms_rest_controllers` | filter | Add REST controllers |
+| `publiclms_quiz_graded`, `publiclms_quiz_passed` | actions | After the server grades an attempt; the first pass (2) |
+| `publiclms_assignment_submitted`, `publiclms_assignment_graded` | actions | Hand-ins and grades, for emails in part B (2) |
+| `publiclms_certificate_issued` | action | After a certificate is issued (2) |
+| `publiclms_dashboard_tabs`, `publiclms_dashboard_rows`, `publiclms_dashboard_panel` | filters, action | Add a student dashboard tab (certificates use them; Pro's orders will) (2) |
+| `publiclms_rate_limit` | filter | Loosen or tighten a rate limit (quiz starts and submits, hand-ins) (2) |
+| `publiclms_private_dir` | filter | Move private uploads outside the web root (2) |
+| `publiclms_certificate_pdf_options`, `publiclms_certificate_css` | filters | Paper, fonts and styles of certificate PDFs (2) |
+| `publiclms_reported_courses` | filter | Courses whose hand-ins a user sees; Pro adds co-taught courses (2) |
 
 The add-on registry (`publiclms()->addons()->register()`) lands in 1.1, as the roadmap says.
 

@@ -101,10 +101,7 @@ final class DashboardTab {
 						<td><?php echo esc_html( false === $time ? '' : (string) wp_date( (string) get_option( 'date_format' ), $time ) ); ?></td>
 						<td><code><?php echo esc_html( (string) $row['certificate_key'] ); ?></code></td>
 						<td>
-							<a class="wp-element-button" href="<?php echo esc_url( CertificateService::download_url( (int) $row['course_id'] ) ); ?>">
-								<?php esc_html_e( 'Download PDF', 'public-lms' ); ?>
-								<span class="publiclms-visually-hidden"><?php echo esc_html( ': ' . (string) $row['course_title'] ); ?></span>
-							</a>
+							<a class="wp-element-button" href="<?php echo esc_url( CertificateService::download_url( (int) $row['course_id'] ) ); ?>"><?php esc_html_e( 'Download PDF', 'public-lms' ); ?><span class="publiclms-visually-hidden"><?php echo esc_html( ': ' . (string) $row['course_title'] ); ?></span></a>
 						</td>
 					</tr>
 				<?php endforeach; ?>

@@ -483,7 +483,8 @@ final class Plugin {
 					$container->get( ProgressService::class ),
 					$container->get( EnrollmentRepository::class ),
 					$container->get( ProgressRepository::class ),
-					$container->get( EventRepositoryInterface::class )
+					$container->get( EventRepositoryInterface::class ),
+					$container
 				);
 			}
 		);
