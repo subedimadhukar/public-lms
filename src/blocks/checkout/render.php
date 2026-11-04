@@ -284,7 +284,7 @@ $publiclms_context = array(
 				<label for="<?php echo esc_attr( $publiclms_uid . '-coupon' ); ?>"><?php esc_html_e( 'Coupon code', 'public-lms' ); ?></label>
 				<div class="wp-block-publiclms-checkout__coupon-row">
 					<input type="text" id="<?php echo esc_attr( $publiclms_uid . '-coupon' ); ?>" name="coupon" value="<?php echo esc_attr( $publiclms_quote['coupon'] ); ?>" autocomplete="off" aria-describedby="<?php echo esc_attr( $publiclms_uid . '-coupon-message' ); ?>" />
-					<button type="submit" name="apply_coupon" value="1" class="wp-block-publiclms-checkout__apply wp-element-button" data-wp-on--click="actions.applyCoupon" data-wp-bind--disabled="context.isBusy"><?php esc_html_e( 'Apply', 'public-lms' ); ?></button>
+					<button type="submit" name="apply_coupon" value="1" class="wp-block-publiclms-checkout__apply wp-element-button" data-wp-on--click="actions.applyCoupon" data-wp-bind--aria-disabled="context.isBusy"><?php esc_html_e( 'Apply', 'public-lms' ); ?></button>
 				</div>
 				<p id="<?php echo esc_attr( $publiclms_uid . '-coupon-message' ); ?>" class="wp-block-publiclms-checkout__hint" role="status" data-wp-text="context.couponMessage"><?php echo esc_html( $publiclms_coupon_error ); ?></p>
 			</div>
@@ -333,7 +333,7 @@ $publiclms_context = array(
 		<?php endif; ?>
 
 		<p class="wp-block-publiclms-checkout__actions">
-			<button type="submit" class="wp-block-publiclms-checkout__submit wp-element-button" data-wp-bind--disabled="context.isBusy" data-wp-bind--aria-busy="context.isBusy" <?php disabled( empty( $publiclms_gateways ) && $publiclms_needs_pay ); ?>><?php esc_html_e( 'Place order', 'public-lms' ); ?></button>
+			<button type="submit" class="wp-block-publiclms-checkout__submit wp-element-button" data-wp-bind--aria-disabled="context.isBusy" data-wp-bind--aria-busy="context.isBusy" <?php disabled( empty( $publiclms_gateways ) && $publiclms_needs_pay ); ?>><?php esc_html_e( 'Place order', 'public-lms' ); ?></button>
 		</p>
 		<p class="wp-block-publiclms-checkout__message" role="alert" data-wp-text="context.message"><?php echo esc_html( $publiclms_notice ); ?></p>
 	</form>

@@ -7,7 +7,9 @@
  * rendered on the server. The form posts the typed answer and files to
  * publiclms/v1/assignments/{id}/submissions with the REST nonce, then
  * reloads so the new status shows. Limits come from the assignment and are
- * enforced on the server; the form only describes them (ADR-043).
+ * enforced on the server; the form only describes them (ADR-043). After a
+ * hand-in the page reloads at #publiclms-handin-{id}, and focus moves to
+ * the "Your hand-in" heading there (finding 10).
  *
  * @package PublicLMS
  *
@@ -108,8 +110,8 @@ $publiclms_types = strtoupper( implode( ', ', $publiclms_settings['file_types'] 
 	?>
 >
 	<?php if ( null !== $publiclms_prepared ) : ?>
-		<section class="wp-block-publiclms-assignment__status <?php echo esc_attr( $publiclms_status ); ?>" aria-labelledby="<?php echo esc_attr( $publiclms_uid . '-status' ); ?>">
-			<h2 id="<?php echo esc_attr( $publiclms_uid . '-status' ); ?>" class="wp-block-publiclms-assignment__status-title"><?php esc_html_e( 'Your hand-in', 'public-lms' ); ?></h2>
+		<section class="wp-block-publiclms-assignment__status <?php echo esc_attr( $publiclms_status ); ?>" aria-labelledby="<?php echo esc_attr( 'publiclms-handin-' . $publiclms_assignment ); ?>">
+			<h2 id="<?php echo esc_attr( 'publiclms-handin-' . $publiclms_assignment ); ?>" class="wp-block-publiclms-assignment__status-title" tabindex="-1" data-wp-init="callbacks.focusHandIn"><?php esc_html_e( 'Your hand-in', 'public-lms' ); ?></h2>
 			<?php if ( SubmissionRepository::STATUS_GRADED === $publiclms_prepared['status'] ) : ?>
 				<p class="wp-block-publiclms-assignment__grade">
 					<?php
@@ -194,7 +196,7 @@ $publiclms_types = strtoupper( implode( ', ', $publiclms_settings['file_types'] 
 				</p>
 			<?php endif; ?>
 			<p>
-				<button type="submit" class="wp-element-button" data-wp-bind--disabled="context.isBusy" data-wp-bind--aria-busy="context.isBusy"><?php esc_html_e( 'Hand in', 'public-lms' ); ?></button>
+				<button type="submit" class="wp-element-button" data-wp-bind--aria-disabled="context.isBusy" data-wp-bind--aria-busy="context.isBusy"><?php esc_html_e( 'Hand in', 'public-lms' ); ?></button>
 			</p>
 			<p class="wp-block-publiclms-assignment__message" role="status" aria-live="polite" data-wp-text="context.message"></p>
 			<noscript><p><?php esc_html_e( 'Handing in needs JavaScript. Turn it on to upload your work.', 'public-lms' ); ?></p></noscript>

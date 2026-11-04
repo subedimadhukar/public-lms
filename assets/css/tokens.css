@@ -181,3 +181,13 @@
 ) {
 	font-size: var(--publiclms-font-size-2-xl);
 }
+
+/*
+ * Busy buttons stay focusable (aria-disabled, not disabled) so keyboard
+ * focus is not lost while a request runs; presses are ignored until it ends.
+ */
+:where([class*="publiclms-"]) :where(.wp-element-button[aria-disabled="true"]) {
+	cursor: progress;
+	opacity: 0.7;
+}
+

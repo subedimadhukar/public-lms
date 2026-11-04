@@ -62,7 +62,7 @@ $publiclms_context = array(
 			<button
 				type="submit"
 				class="wp-block-publiclms-enroll-button__button wp-element-button"
-				data-wp-bind--disabled="context.isBusy"
+				data-wp-bind--aria-disabled="context.isBusy"
 				data-wp-bind--aria-busy="context.isBusy"
 			><?php echo esc_html( $publiclms_label ); ?></button>
 		</form>

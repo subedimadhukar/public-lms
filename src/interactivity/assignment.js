@@ -3,12 +3,25 @@
  *
  * Sends the form (typed answer and files) as multipart data to
  * publiclms/v1/assignments/{id}/submissions with the REST nonce, then
- * reloads so the server renders the new status. Limits are checked on the
+ * reloads at the status heading, which takes focus. Limits are checked on the
  * server; its message is shown in the form's live region.
  */
 import { getContext, getElement, store } from '@wordpress/interactivity';
 
 const { state } = store( 'publiclms/learning', {
+	callbacks: {
+		/**
+		 * Moves focus to the "Your hand-in" heading when the page was
+		 * reloaded at it after a hand-in, so keyboard and screen reader
+		 * users start at the new status, not at the top of the page.
+		 */
+		focusHandIn() {
+			const heading = getElement().ref;
+			if ( heading && window.location.hash === `#${ heading.id }` ) {
+				heading.focus();
+			}
+		},
+	},
 	actions: {
 		/**
 		 * Hands in the assignment.
@@ -47,6 +60,8 @@ const { state } = store( 'publiclms/learning', {
 					throw new Error( body.message || state.i18n.error );
 				}
 				context.message = state.i18n.handedIn;
+				// Reload at the status heading; callbacks.focusHandIn moves focus there.
+				window.location.hash = `publiclms-handin-${ context.assignmentId }`;
 				window.location.reload();
 			} catch ( error ) {
 				context.message = error.message || state.i18n.error;

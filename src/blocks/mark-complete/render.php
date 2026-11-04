@@ -55,7 +55,7 @@ $publiclms_context = array(
 		class="wp-block-publiclms-mark-complete__button wp-element-button"
 		<?php echo $publiclms_completed ? 'aria-describedby="' . esc_attr( 'publiclms-undo-' . $publiclms_item ) . '"' : ''; ?>
 		data-wp-bind--aria-describedby="state.undoHintId"
-		data-wp-bind--disabled="context.isBusy"
+		data-wp-bind--aria-disabled="context.isBusy"
 		data-wp-bind--aria-busy="context.isBusy"
 		data-wp-on--click="actions.toggleComplete"
 	>

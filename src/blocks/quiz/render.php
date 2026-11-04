@@ -181,7 +181,7 @@ $publiclms_uid   = wp_unique_id( 'publiclms-quiz-' );
 		<?php elseif ( ! $publiclms_can ) : ?>
 			<p class="wp-block-publiclms-quiz__note"><?php echo esc_html( (string) $publiclms_summary['can_attempt']['message'] ); ?></p>
 		<?php else : ?>
-			<button type="button" class="wp-block-publiclms-quiz__start wp-element-button" data-wp-on--click="actions.startQuiz" data-wp-bind--disabled="state.quizIsBusy" data-wp-bind--aria-busy="state.quizIsBusy"><?php echo esc_html( $publiclms_start ); ?></button>
+			<button type="button" class="wp-block-publiclms-quiz__start wp-element-button" data-wp-on--click="actions.startQuiz" data-wp-bind--aria-disabled="state.quizIsBusy" data-wp-bind--aria-busy="state.quizIsBusy"><?php echo esc_html( $publiclms_start ); ?></button>
 			<noscript><p><?php esc_html_e( 'Quizzes need JavaScript. Turn it on to take this quiz.', 'public-lms' ); ?></p></noscript>
 		<?php endif; ?>
 	</div>
@@ -258,7 +258,7 @@ $publiclms_uid   = wp_unique_id( 'publiclms-quiz-' );
 			</template>
 		</ol>
 		<p class="wp-block-publiclms-quiz__notice" role="status" aria-live="polite" data-wp-text="state.quizNotice"></p>
-		<button type="submit" class="wp-block-publiclms-quiz__submit wp-element-button" data-wp-bind--hidden="!state.quizIsRunning" data-wp-bind--disabled="state.quizIsBusy" data-wp-bind--aria-busy="state.quizIsBusy" data-wp-text="state.quizSubmitLabel"><?php esc_html_e( 'Submit answers', 'public-lms' ); ?></button>
+		<button type="submit" class="wp-block-publiclms-quiz__submit wp-element-button" data-wp-bind--hidden="!state.quizIsRunning" data-wp-bind--aria-disabled="state.quizIsBusy" data-wp-bind--aria-busy="state.quizIsBusy" data-wp-text="state.quizSubmitLabel"><?php esc_html_e( 'Submit answers', 'public-lms' ); ?></button>
 	</form>
 	<p class="wp-block-publiclms-quiz__message" role="alert" data-wp-text="state.quizMessage"></p>
 </div>
