@@ -218,7 +218,18 @@ class AssignmentsTest extends RestTestCase {
 		$this->assertSame( 5.0, ( (array) $rows[ $this->subscriber ]['cells'] )[ (string) $this->assignment ]['grade'] );
 		$this->assertSame( 75.0, $rows[ $this->subscriber ]['average'] );
 		$this->assertSame( 'submitted', ( (array) $rows[ $this->classmate ]['cells'] )[ (string) $this->assignment ]['status'] );
-		$this->assertNull( $rows[ $this->classmate ]['average'] );
+		$this->assertNull( $rows[ $this->classmate ]['average'], 'Neither missing work nor work waiting for a grade counts in the average.' );
+		$this->assertSame( 'Not taken', ( (array) $rows[ $this->classmate ]['cells'] )[ (string) $quiz ]['label'] );
+		$this->assertSame( 'Waiting for a grade', ( (array) $rows[ $this->classmate ]['cells'] )[ (string) $this->assignment ]['label'] );
+		$this->assertSame(
+			array(
+				'not_handed_in' => 0,
+				'not_taken'     => 1,
+				'waiting'       => 1,
+			),
+			$rows[ $this->classmate ]['counts']
+		);
+		$this->assertSame( array_fill_keys( array( 'not_handed_in', 'not_taken', 'waiting' ), 0 ), $rows[ $this->subscriber ]['counts'] );
 
 		$csv = $this->request( 'GET', '/courses/' . $this->fixture['course'] . '/gradebook', array( 'format' => 'csv' ), $this->instructor );
 		$this->assertInstanceOf( FileResponse::class, $csv );
@@ -226,6 +237,8 @@ class AssignmentsTest extends RestTestCase {
 		$this->assertStringContainsString( '"Check your understanding (best %)"', $body );
 		$this->assertStringContainsString( '"Sita Gurung","', $body );
 		$this->assertStringContainsString( '"\'=HYPERLINK(""x"")"', $body, 'Formula-like cells are neutralised.' );
-		$this->assertStringContainsString( '"To grade"', $body );
+		$this->assertStringContainsString( '"Waiting for a grade"', $body );
+		$this->assertStringContainsString( '"Not taken"', $body );
+		$this->assertStringContainsString( '"Average (%)","Not handed in","Not taken","Waiting for a grade"', $body );
 	}
 }

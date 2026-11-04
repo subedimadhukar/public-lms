@@ -21,7 +21,10 @@ defined( 'ABSPATH' ) || exit;
  * order. A quiz cell is the learner's best graded attempt; an assignment cell
  * is the current hand-in, graded or waiting. The average is the plain mean of
  * the graded cells as percentages; missing work is left out rather than
- * counted as zero, and weighted grades are Pro.
+ * counted as zero, and weighted grades are Pro. Missing work is labelled
+ * and counted per learner instead: "Not handed in" (assignments) and "Not
+ * taken" (quizzes), kept apart from "Waiting for a grade"; none of the three
+ * counts in the average (decision 4 of phase 2).
  */
 class Gradebook {
 
@@ -145,12 +148,22 @@ class Gradebook {
 			$user    = get_userdata( $user_id );
 			$cells   = array();
 			$scores  = array();
+			$counts  = array(
+				'not_handed_in' => 0,
+				'not_taken'     => 0,
+				'waiting'       => 0,
+			);
 			foreach ( $columns as $column ) {
 				$cell = 'quiz' === $column['type']
 					? $this->quiz_cell( $best[ $user_id ][ $column['id'] ] ?? null )
 					: $this->assignment_cell( $handins[ $user_id ][ $column['id'] ] ?? null, $column['max'] );
 				if ( null !== $cell['percent'] ) {
 					$scores[] = $cell['percent'];
+				}
+				if ( 'none' === $cell['status'] ) {
+					++$counts[ 'quiz' === $column['type'] ? 'not_taken' : 'not_handed_in' ];
+				} elseif ( 'submitted' === $cell['status'] ) {
+					++$counts['waiting'];
 				}
 				$cells[ (string) $column['id'] ] = $cell;
 			}
@@ -162,6 +175,7 @@ class Gradebook {
 				'status'        => (string) $enrolment['status'],
 				'progress'      => $this->progress->summary( $user_id, $course_id )['percent'],
 				'cells'         => (object) $cells,
+				'counts'        => $counts,
 				'average'       => empty( $scores ) ? null : round( array_sum( $scores ) / count( $scores ), 1 ),
 			);
 		}
@@ -191,6 +205,9 @@ class Gradebook {
 				: sprintf( __( '%1$s (out of %2$s)', 'public-lms' ), $column['title'], self::number( $column['max'] ) );
 		}
 		$header[] = __( 'Average (%)', 'public-lms' );
+		$header[] = __( 'Not handed in', 'public-lms' );
+		$header[] = __( 'Not taken', 'public-lms' );
+		$header[] = __( 'Waiting for a grade', 'public-lms' );
 		$lines    = array( self::csv_line( $header ) );
 
 		$after = 0;
@@ -201,15 +218,18 @@ class Gradebook {
 				$cells = (array) $row['cells'];
 				foreach ( $columns as $column ) {
 					$cell = $cells[ (string) $column['id'] ];
-					if ( 'quiz' === $column['type'] ) {
-						$line[] = null === $cell['percent'] ? '' : self::number( (float) $cell['percent'] );
-					} elseif ( 'submitted' === $cell['status'] ) {
-						$line[] = __( 'To grade', 'public-lms' );
+					if ( 'none' === $cell['status'] || 'submitted' === $cell['status'] ) {
+						$line[] = (string) $cell['label'];
+					} elseif ( 'quiz' === $column['type'] ) {
+						$line[] = self::number( (float) $cell['percent'] );
 					} else {
 						$line[] = null === $cell['grade'] ? '' : self::number( (float) $cell['grade'] );
 					}
 				}
 				$line[]  = null === $row['average'] ? '' : self::number( (float) $row['average'] );
+				$line[]  = (string) $row['counts']['not_handed_in'];
+				$line[]  = (string) $row['counts']['not_taken'];
+				$line[]  = (string) $row['counts']['waiting'];
 				$lines[] = self::csv_line( $line );
 			}
 			$after = $page['next'];
@@ -228,6 +248,7 @@ class Gradebook {
 		if ( null === $best ) {
 			return array(
 				'status'   => 'none',
+				'label'    => __( 'Not taken', 'public-lms' ),
 				'percent'  => null,
 				'grade'    => null,
 				'passed'   => null,
@@ -236,6 +257,7 @@ class Gradebook {
 		}
 		return array(
 			'status'   => 'graded',
+			'label'    => '',
 			'percent'  => round( (float) $best['percent'], 1 ),
 			'grade'    => round( (float) $best['percent'], 1 ),
 			'passed'   => (bool) $best['passed'],
@@ -254,6 +276,7 @@ class Gradebook {
 		if ( null === $handin ) {
 			return array(
 				'status'        => 'none',
+				'label'         => __( 'Not handed in', 'public-lms' ),
 				'percent'       => null,
 				'grade'         => null,
 				'passed'        => null,
@@ -264,6 +287,7 @@ class Gradebook {
 		$graded = SubmissionRepository::STATUS_GRADED === $handin['status'] && null !== $handin['grade'];
 		return array(
 			'status'        => $graded ? 'graded' : 'submitted',
+			'label'         => $graded ? '' : __( 'Waiting for a grade', 'public-lms' ),
 			'percent'       => $graded && $out_of > 0 ? round( (float) $handin['grade'] / $out_of * 100, 1 ) : null,
 			'grade'         => $graded ? (float) $handin['grade'] : null,
 			'max'           => $out_of,

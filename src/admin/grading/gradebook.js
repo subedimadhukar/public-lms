@@ -7,7 +7,7 @@ import { Button, SelectControl, Spinner } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useCallback, useEffect, useState } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
-import { __, sprintf } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import { addQueryArgs, getQueryArg } from '@wordpress/url';
 
 import { STORE_NAME } from '../../store/courses';
@@ -24,6 +24,62 @@ const COURSES_QUERY = {
 };
 
 /**
+ * Lists a learner's work not done or not graded yet, by kind.
+ *
+ * @param {Object} counts Counts: not_handed_in, not_taken, waiting.
+ * @return {string} Text, or a dash when there is none.
+ */
+function openWork( counts ) {
+	if ( ! counts ) {
+		return '—';
+	}
+	const parts = [];
+	if ( counts.not_handed_in ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: number of assignments. */
+				_n(
+					'%d not handed in',
+					'%d not handed in',
+					counts.not_handed_in,
+					'public-lms'
+				),
+				counts.not_handed_in
+			)
+		);
+	}
+	if ( counts.not_taken ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: number of quizzes. */
+				_n(
+					'%d not taken',
+					'%d not taken',
+					counts.not_taken,
+					'public-lms'
+				),
+				counts.not_taken
+			)
+		);
+	}
+	if ( counts.waiting ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: number of hand-ins. */
+				_n(
+					'%d waiting for a grade',
+					'%d waiting for a grade',
+					counts.waiting,
+					'public-lms'
+				),
+				counts.waiting
+			)
+		);
+	}
+	return parts.length ? parts.join( ', ' ) : '—';
+}
+
+/**
  * Formats one gradebook cell.
  *
  * @param {Object} column Column.
@@ -31,14 +87,14 @@ const COURSES_QUERY = {
  * @return {string} Text.
  */
 function cellText( column, cell ) {
-	if ( ! cell || cell.status === 'none' ) {
+	if ( ! cell ) {
 		return '—';
+	}
+	if ( cell.status === 'none' || cell.status === 'submitted' ) {
+		return cell.label;
 	}
 	if ( column.type === 'quiz' ) {
 		return `${ Math.round( cell.percent ) }%`;
-	}
-	if ( cell.status === 'submitted' ) {
-		return __( 'To grade', 'public-lms' );
 	}
 	return `${ cell.grade } / ${ cell.max }`;
 }
@@ -181,6 +237,15 @@ export default function GradebookScreen() {
 								) ) }
 								<th scope="col">
 									{ __( 'Average', 'public-lms' ) }
+									<span className="publiclms-gradebook__kind">
+										{ __(
+											'Graded work only',
+											'public-lms'
+										) }
+									</span>
+								</th>
+								<th scope="col">
+									{ __( 'Open work', 'public-lms' ) }
 								</th>
 							</tr>
 						</thead>
@@ -228,6 +293,7 @@ export default function GradebookScreen() {
 											? '—'
 											: `${ row.average }%` }
 									</td>
+									<td>{ openWork( row.counts ) }</td>
 								</tr>
 							) ) }
 						</tbody>
