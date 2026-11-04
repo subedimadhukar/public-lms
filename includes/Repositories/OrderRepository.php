@@ -256,6 +256,33 @@ class OrderRepository extends AbstractRepository implements OrderRepositoryInter
 	}
 
 	/**
+	 * Finds the order a recorded payment belongs to, by the provider's payment ID.
+	 *
+	 * @param string $gateway    Gateway ID.
+	 * @param string $payment_id The provider's payment ID (for example a PaymentIntent or capture).
+	 * @return array<string, mixed>|null
+	 */
+	public function find_by_payment( string $gateway, string $payment_id ): ?array {
+		if ( '' === $payment_id ) {
+			return null;
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table; indexed lookup.
+		$order_id = $this->db->get_var( $this->db->prepare( 'SELECT order_id FROM %i WHERE gateway = %s AND gateway_transaction_id = %s AND type = %s ORDER BY id DESC LIMIT 1', $this->transactions_table(), $gateway, $payment_id, 'payment' ) );
+		return null === $order_id ? null : $this->find( (int) $order_id );
+	}
+
+	/**
+	 * Returns the sum of an order's refunds.
+	 *
+	 * @param int $order_id Order ID.
+	 * @return float
+	 */
+	public function refunded_total( int $order_id ): float {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table; small aggregate.
+		return (float) $this->db->get_var( $this->db->prepare( 'SELECT COALESCE(SUM(amount), 0) FROM %i WHERE order_id = %d AND type = %s', $this->transactions_table(), $order_id, 'refund' ) );
+	}
+
+	/**
 	 * Moves an order to a new status when its current status is one of $from.
 	 *
 	 * @param int                  $order_id Order ID.

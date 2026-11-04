@@ -434,7 +434,7 @@ class OrderService {
 							'gateway_transaction_id' => $txn_id,
 						)
 					);
-					if ( ! empty( $result['full'] ) ) {
+					if ( ! empty( $result['full'] ) || $this->orders->refunded_total( $order_id ) >= (float) $order['total'] - 0.0001 ) {
 						$this->mark_refunded( $order_id, '' === $result['message'] ? sprintf( /* translators: %s: payment method. */ __( 'Refunded through %s.', 'public-lms' ), $gateway->admin_title() ) : (string) $result['message'] );
 					} else {
 						$this->note( $order_id, sprintf( /* translators: %s: amount. */ __( 'Partly refunded: %s. Access stays open.', 'public-lms' ), Money::format( $amount, $order['currency'] ) ) );
@@ -844,6 +844,8 @@ class OrderService {
 			$order = $this->orders->find( (int) $result['order_id'] );
 		} elseif ( '' !== (string) $result['gateway_order_id'] ) {
 			$order = $this->orders->find_by_gateway_reference( $gateway->id(), (string) $result['gateway_order_id'] );
+		} elseif ( '' !== (string) ( $result['payment_id'] ?? '' ) ) {
+			$order = $this->orders->find_by_payment( $gateway->id(), (string) $result['payment_id'] );
 		} elseif ( null !== $known ) {
 			$order = $this->orders->find( (int) $known['id'] );
 		}

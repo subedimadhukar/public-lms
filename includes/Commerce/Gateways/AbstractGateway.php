@@ -249,7 +249,7 @@ abstract class AbstractGateway implements Gateway {
 	 * Builds a payment result.
 	 *
 	 * @param string               $event   paid, pending, failed, cancelled or refunded.
-	 * @param array<string, mixed> $details Other keys (order_id, gateway_order_id, transaction_id, amount, currency, full, message).
+	 * @param array<string, mixed> $details Other keys (order_id, gateway_order_id, payment_id, transaction_id, amount, currency, full, message).
 	 * @return array<string, mixed>
 	 */
 	protected function result( string $event, array $details ): array {
@@ -258,6 +258,7 @@ abstract class AbstractGateway implements Gateway {
 				'event'            => $event,
 				'order_id'         => 0,
 				'gateway_order_id' => '',
+				'payment_id'       => '',
 				'transaction_id'   => '',
 				'amount'           => 0.0,
 				'currency'         => '',

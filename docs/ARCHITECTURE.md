@@ -842,3 +842,30 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   it takes the store currency, its mode and its webhook URL. Orders and Coupons are new screens for the
   same capability.
 
+### ADR-048 Stripe: hosted Checkout Sessions on a pinned API version
+- **Context.** ADR-011 names Stripe Payment Intents with a hosted or redirect flow. The owner's sandbox
+  runs API version 2026-10-28.endive, which rejects `payment_method_types` ("payment methods are managed
+  from your Dashboard").
+- **Decision.** Each order becomes a Checkout Session in payment mode (Stripe creates the PaymentIntent),
+  so card data never reaches the site and the account's Dashboard decides the payment methods: the request
+  names none. Every request sends `Stripe-Version: 2026-10-28.endive` and, for writes, an
+  `Idempotency-Key` from the order key, so retries never create a second session or refund. Lines carry the
+  per-line totals after discount; the last line absorbs any rounding so the session total equals the
+  order's. Amounts follow Stripe's rules: whole units for its zero-decimal list (JPY, KRW, VND, XOF…),
+  ISK and UGX as two-decimal values ending in 00, three-decimal currencies in thousandths ending in 0
+  (an order Stripe cannot represent exactly is refused with a clear message instead of being rounded).
+  The session carries `client_reference_id` and metadata with the order key and number; `locale` is
+  `auto`. On return (`session_id`) the site reads the session; webhooks (`checkout.session.completed`,
+  `…async_payment_succeeded`, `…async_payment_failed`, `…expired`, `charge.refunded`, and `refund.created`
+  or `refund.updated` where the account sends them) are verified with `Stripe-Signature`: HMAC-SHA256 over
+  "{t}.{raw body}", any `v1` value, with a 300-second tolerance. `charge.refunded` lists the
+  PaymentIntent's refunds, so refunds made in the Stripe Dashboard are recorded one by one; when they add
+  up to the order total the order is refunded and its enrolments close. Settings: publishable key, secret
+  key (a restricted key works), webhook signing secret, each overridable by
+  `PUBLICLMS_STRIPE_PUBLISHABLE_KEY`, `PUBLICLMS_STRIPE_SECRET_KEY`, `PUBLICLMS_STRIPE_WEBHOOK_SECRET`;
+  the mode (test or live) is read from the key's prefix. Filter: `publiclms_stripe_session_params`.
+- **Consequences.** Stripe takes about 135 currencies and which ones depends on the account, so the
+  gateway accepts any currency and Stripe's own error ("The currency … is not supported") reaches the
+  buyer. Verified on the sandbox: a real session on the pinned version, and a `checkout.session.expired`
+  webhook forwarded by the Stripe CLI, signature-checked and applied.
+

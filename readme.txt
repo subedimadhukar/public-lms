@@ -36,7 +36,11 @@ There is no locked code in the free plugin. Public LMS Pro, sold separately, add
 * Front end built with blocks and the Interactivity API, with no jQuery
 * Every access check goes through one access policy; quizzes are graded on the server
 
-This is a development release (0.3.0). It covers building a course, free enrolment, lessons with video and files, drip and prerequisites, quizzes, assignments, the gradebook and certificates. Checkout, reviews, Q&A, announcements, emails, instructor registration and reports arrive in the releases that follow.
+This is a development release (0.3.0). It covers building a course, free enrolment, lessons with video and files, drip and prerequisites, quizzes, assignments, the gradebook, certificates and selling courses (checkout with offline payments, Stripe and PayPal, coupons and orders). Reviews, Q&A, announcements, emails, instructor registration and reports arrive in the releases that follow.
+
+= Sell in any currency =
+
+Choose any ISO 4217 currency for your store. Prices are shown in each visitor's language and number format, and amounts follow each currency's own decimals (none for yen or won, three for dinars). Buyers pay on the provider's own secure page, so no card or account details ever reach your site.
 
 = What works in 0.2.0 =
 
@@ -68,6 +72,20 @@ No. Everything a teacher needs to teach is free. Pro adds features for schools, 
 = What happens to my data if I delete the plugin? =
 
 Courses, enrolments and orders are kept. To remove everything, add `define( 'PUBLICLMS_REMOVE_ALL_DATA', true );` to wp-config.php before deleting the plugin.
+
+= Does Public LMS send data to other services? =
+
+Only when you switch on a payment method that needs one; see "External services" below. Nothing is sent to us: there is no telemetry and no licence check in the free plugin.
+
+== External services ==
+
+Public LMS connects to a payment provider only when the site owner switches that payment method on in Public LMS → Payments and a buyer chooses it at checkout.
+
+**Stripe** (stripe.com) takes card and other payments on a page hosted by Stripe. When a buyer places an order with Stripe, the site sends Stripe the order's line items (course names and prices), the currency, the buyer's email address, the order number and the site address, and sends the buyer to Stripe's page. Afterwards the site asks Stripe whether the payment went through, receives Stripe's webhooks about payments and refunds, and asks Stripe to refund when the owner refunds an order. Stripe's terms: https://stripe.com/legal/ssa — privacy policy: https://stripe.com/privacy
+
+**PayPal** (paypal.com) takes PayPal and card payments on PayPal's own pages. When a buyer places an order with PayPal, the site sends PayPal the order's line items, the currency, the order number and the site's name, and sends the buyer to PayPal to approve the payment. When the buyer comes back the site captures the payment, receives PayPal's webhooks (verified with PayPal) and asks PayPal to refund when the owner refunds an order. PayPal's terms: https://www.paypal.com/legalhub/home — privacy statement: https://www.paypal.com/myaccount/privacy/privacyhub
+
+The offline payment method and the WooCommerce bridge send nothing anywhere.
 
 == Screenshots ==
 

@@ -24,11 +24,12 @@ defined( 'ABSPATH' ) || exit;
  *     array(
  *         'event'            => 'paid' | 'pending' | 'failed' | 'cancelled' | 'refunded',
  *         'order_id'         => int,    // or
- *         'gateway_order_id' => string, // the provider's order or session ID
+ *         'gateway_order_id' => string, // the provider's order or session ID, or
+ *         'payment_id'       => string, // a payment already recorded (refunds)
  *         'transaction_id'   => string, // payment, capture or refund ID
  *         'amount'           => float,
  *         'currency'         => string,
- *         'full'             => bool,   // refunds: the whole order
+ *         'full'             => bool,   // refunds: the whole order (also when refunds add up to it)
  *         'message'          => string, // shown in the order's history
  *     )
  *
