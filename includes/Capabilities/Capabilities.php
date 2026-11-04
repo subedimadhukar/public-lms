@@ -97,9 +97,14 @@ final class Capabilities {
 	 * @return array<int, string>
 	 */
 	public function map_meta_cap( $caps, $cap, $user_id, $args ): array {
-		$caps      = (array) $caps;
-		$user_id   = (int) $user_id;
-		$object_id = isset( $args[0] ) ? absint( $args[0] ) : 0;
+		$caps    = (array) $caps;
+		$handled = array( self::META_EDIT_COURSE, self::META_VIEW_COURSE_REPORTS, self::META_ENROLL_STUDENT, self::META_MANAGE_ORDER, 'edit_post', 'delete_post' );
+		if ( ! in_array( $cap, $handled, true ) ) {
+			return $caps;
+		}
+		$user_id = (int) $user_id;
+		// Core passes objects for some capabilities (edit_block_binding gets a WP_Block_Editor_Context).
+		$object_id = isset( $args[0] ) && is_scalar( $args[0] ) ? absint( $args[0] ) : 0;
 
 		switch ( $cap ) {
 			case self::META_EDIT_COURSE:
