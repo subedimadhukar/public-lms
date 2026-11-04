@@ -1,12 +1,33 @@
 # Public LMS ↔ theme contracts
 
-**Contract version:** 1.1.0 (phase 1; additive changes only, listed under "Changes" below)
+**Contract version:** 1.2.0 (phase 1; additive changes only, listed under "Changes" below)
 **Applies to:** Public LMS ≥ 0.1.0 and any block theme that styles it, CampusInterface first.
 **Change rule:** a change to either contract is a pull request on both repositories, and bumps this version:
 removing or renaming anything is a major bump; adding a slug, pattern, key or token is a minor bump; wording
 fixes are a patch. The plugin lands contract changes two to three weeks before the theme consumes them.
 **Changes before the gate:** 2026-11-04, template slugs switched from `single-course` and friends to the
 post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the version stayed 1.0.0.
+
+**Changes in 1.2.0 (phase 1, minor), answering the theme's nine open items (theme `docs/CONTRACTS.md`,
+"Open items for the plugin"):**
+1. Course link on lessons and quizzes: already covered by the 1.1.0 keys `course_title` and `course_url`,
+   which resolve from a lesson's (and from phase 2 a quiz's) context. No further change.
+2. Related courses: added `"query":{"publiclmsRelated":true}` on `publiclms/course-query` (A5.5).
+3. Archive filters: a `publiclms/course-filters` block is phase 2 (A6). Until it ships the plugin never
+   injects anything into a theme's filter column; the theme keeps its own Search and Terms Lists.
+4. Form fields: plugin block CSS now sets `background-color`, `color` and `border-color` of inputs, selects
+   and textareas from `--publiclms-color-base` and `--publiclms-color-contrast`, at zero specificity (B5).
+5. Font-size references: B2 now says `theme.json` and block style references must write `2-xl`, `3-xl`,
+   `4-xl` (`var:preset|font-size|2-xl`). The plugin ships no `styles.blocks` defaults and no reference to
+   these slugs, so nothing in the plugin needed fixing.
+6. Variation detection: the variation's `isActive` matches on `namespace` (it has since phase 1 commit
+   9b29002); now stated in A5.5.
+7. Pattern font sizes: plugin patterns use only B2 slugs (`sm`, `lg`); core's `small`, `medium` and `large`
+   are gone. Zero-specificity fallbacks keep the sizes on themes without these presets (B5).
+8. Pattern wrappers: patterns meant for columns and sidebars use `"layout":{"type":"default"}` (A5.7).
+9. Phase 2 patterns: `publiclms/course-reviews`, `quiz-header`, `quiz-runner` and `instructor-dashboard`
+   are not registered in phase 1, so a reference renders nothing; themes should leave those areas out or
+   hide them until the plugin version that ships them (A6).
 
 **Changes in 1.1.0 (phase 1, minor):**
 - A7: four binding keys added: `course_title`, `course_url`, `section_title`, `updated`. An empty value now
@@ -129,10 +150,27 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
    core Query Loop over `plms_course`, with course data from the bindings source in A7. There is no
    `publiclms/course-card` block.
 5. From phase 1 the plugin registers a Query Loop variation, `publiclms/course-query`. Patterns that want
-   its extra controls (filter by level, hide enrolled courses) add `"namespace":"publiclms/course-query"` to
-   the Query block's attributes; patterns without it still work as a plain query.
+   its extra controls add `"namespace":"publiclms/course-query"` to the Query block's attributes; patterns
+   without it still work as a plain query. The variation's `isActive` matches on `namespace` alone, so an
+   inherited archive query and any theme grid that sets the namespace keep the controls in the editor.
+   Query settings the plugin reads (all optional, inside `"query"`):
+
+   | Setting | Since | Effect |
+   |---|---|---|
+   | `publiclmsHideEnrolled` | 1.0.0 | Leaves out courses the current learner is enrolled in |
+   | `publiclmsRelated` | 1.2.0 | On a course (or a lesson of a course), leaves that course out and lists courses sharing its `plms_course_category` terms first, newest first, then fills the row with the newest other courses; `perPage` sets the row length. Ignored where no course is on screen |
+
+   Level and category filtering use core's taxonomy controls (`taxQuery`).
 6. **No guard code.** Template slugs never match another plugin's post types or an ordinary page, so a
    theme ships its overrides without filtering the template hierarchy.
+7. **Patterns fit their slot (1.2.0).** Patterns meant for template columns and sidebars
+   (`course-details`, `course-curriculum`, `course-instructor`, `course-enroll-card`, `lesson-content`,
+   `lesson-navigation`, `lesson-sidebar`) wrap their content in a Group with `"layout":{"type":"default"}`,
+   so they fill the column instead of centring at the content width. Full-width patterns (`course-hero`,
+   `course-archive-header`, `course-grid`, `student-dashboard`) keep a constrained layout; `course-hero` and
+   `lesson-header` justify it left.
+8. **Font sizes (1.2.0).** Plugin patterns set font sizes only with the B2 slugs (`"fontSize":"sm"`,
+   `"lg"` and so on), never core's `small`, `medium` or `large`.
 
 ### A6. Pattern inventory
 
@@ -154,6 +192,13 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 | `publiclms/quiz-runner` | single-plms_quiz | `publiclms/quiz` block (Interactivity API runner, server-graded) (phase 2) |
 | `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block; phase 1 tabs: in progress, completed; quiz results, certificates and orders join in phase 2 |
 | `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports (phase 2) |
+
+**Not registered yet (phase 2):** `publiclms/course-reviews`, `publiclms/quiz-header`, `publiclms/quiz-runner`
+and `publiclms/instructor-dashboard`. A template that references them renders nothing in their place until
+the plugin version that ships them, so a theme should leave those areas out of its templates or hide them
+for now. The same goes for the planned `publiclms/course-filters` block (level, price, duration filters for a
+`publiclms/course-query`, see ARCHITECTURE §5): it arrives in phase 2, the plugin never injects into a theme's
+own filter column, and themes keep their own filters until then.
 
 ### A7. Block bindings source
 
@@ -233,6 +278,13 @@ slugs at letter-number boundaries, so `2xl` becomes `2-xl`.
 
 Plugin blocks never set `font-family`; they inherit the theme's body and heading fonts.
 
+**Writing the slugs in `theme.json` (1.2.0).** WordPress kebab-cases the slug only when it generates the
+custom property and the class (`has-2-xl-font-size`). A preset reference in `theme.json` or in a block's
+style attribute is not converted, so it must already use the kebab-cased form:
+`var:preset|font-size|2-xl`, `3-xl` and `4-xl` (not `2xl`, which resolves to the undefined
+`--wp--preset--font-size--2xl`). The same applies to any `styles.blocks["publiclms/*"]` value; the plugin
+itself ships no such defaults.
+
 ### B3. Spacing
 
 Generated by `settings.spacing.spacingScale` (7 steps, ×1.5, medium 1.5rem) as `--wp--preset--spacing--{slug}`.
@@ -285,6 +337,15 @@ aliases at zero specificity, so any theme rule wins.
 
 Plugin blocks also declare block supports (colour, typography, spacing, border), so a theme can style them
 in `styles.blocks["publiclms/<block>"]` in `theme.json`.
+
+Two more zero-specificity rules ship with the aliases (1.2.0):
+
+- **Form fields.** `:where([class*="wp-block-publiclms-"]) :where(input, select, textarea)` takes
+  `background-color: var(--publiclms-color-base)`, `color: var(--publiclms-color-contrast)` and
+  `border-color: var(--publiclms-color-contrast)`, so fields stay readable on dark palettes.
+- **Font-size fallbacks.** `.has-xs-font-size` to `.has-2-xl-font-size` inside plugin markup fall back to the
+  `--publiclms-font-size-*` aliases. WordPress prints those classes only for themes that define the B2
+  presets, and its rule wins wherever it exists.
 
 ### B6. What the plugin does not read
 

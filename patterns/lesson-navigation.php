@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<!-- wp:group {"className":"publiclms-lesson-nav","layout":{"type":"constrained"}} -->
+<!-- wp:group {"className":"publiclms-lesson-nav","layout":{"type":"default"}} -->
 <div class="wp-block-group publiclms-lesson-nav">
 	<!-- wp:publiclms/lesson-navigation /-->
 </div>

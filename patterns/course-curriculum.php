@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<!-- wp:group {"tagName":"section","className":"publiclms-course-curriculum","layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"var:preset|spacing|40"}}} -->
+<!-- wp:group {"tagName":"section","className":"publiclms-course-curriculum","layout":{"type":"default"},"style":{"spacing":{"blockGap":"var:preset|spacing|40"}}} -->
 <section class="wp-block-group publiclms-course-curriculum">
 	<!-- wp:heading -->
 	<h2 class="wp-block-heading"><?php esc_html_e( 'Curriculum', 'public-lms' ); ?></h2>

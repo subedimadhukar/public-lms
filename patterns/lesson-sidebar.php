@@ -13,11 +13,11 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<!-- wp:group {"tagName":"aside","className":"publiclms-lesson-sidebar","layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"var:preset|spacing|30"}}} -->
+<!-- wp:group {"tagName":"aside","className":"publiclms-lesson-sidebar","layout":{"type":"default"},"style":{"spacing":{"blockGap":"var:preset|spacing|30"}}} -->
 <aside class="wp-block-group publiclms-lesson-sidebar">
-	<!-- wp:heading {"level":2,"fontSize":"medium"} -->
-	<h2 class="wp-block-heading has-medium-font-size"><?php esc_html_e( 'Course content', 'public-lms' ); ?></h2>
+	<!-- wp:heading {"level":2,"fontSize":"lg"} -->
+	<h2 class="wp-block-heading has-lg-font-size"><?php esc_html_e( 'Course content', 'public-lms' ); ?></h2>
 	<!-- /wp:heading -->
-	<!-- wp:publiclms/curriculum {"headingLevel":3,"fontSize":"small"} /-->
+	<!-- wp:publiclms/curriculum {"headingLevel":3,"fontSize":"sm"} /-->
 </aside>
 <!-- /wp:group -->

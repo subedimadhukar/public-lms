@@ -271,4 +271,44 @@ class BlocksTest extends TestCase {
 		$this->assertSame( array( $this->fixture['course'] ), $vars['post__not_in'] );
 		$this->assertSame( array( 'post_type' => 'post' ), $query->query_vars( array( 'post_type' => 'post' ), $plain ) );
 	}
+
+	/**
+	 * @covers \PublicLMS\Blocks\CourseQuery::related
+	 * @covers \PublicLMS\Blocks\CourseQuery::query_vars
+	 */
+	public function test_course_query_related_prefers_shared_categories_and_leaves_the_course_out() {
+		$query    = publiclms()->container()->get( CourseQuery::class );
+		$business = self::factory()->term->create( array( 'taxonomy' => 'plms_course_category' ) );
+		$science  = self::factory()->term->create( array( 'taxonomy' => 'plms_course_category' ) );
+		$current  = $this->create_course( array( 'post_date' => '2026-01-01 10:00:00' ) );
+		$sibling  = $this->create_course( array( 'post_date' => '2026-01-02 10:00:00' ) );
+		$newest   = $this->create_course( array( 'post_date' => '2026-03-01 10:00:00' ) );
+		$older    = $this->create_course( array( 'post_date' => '2025-06-01 10:00:00' ) );
+		wp_set_object_terms( $current, array( $business ), 'plms_course_category' );
+		wp_set_object_terms( $sibling, array( $business ), 'plms_course_category' );
+		wp_set_object_terms( $newest, array( $science ), 'plms_course_category' );
+
+		$vars = $query->related( array( 'posts_per_page' => 3 ), $current );
+		$this->assertSame( 'post__in', $vars['orderby'] );
+		$this->assertSame( $sibling, $vars['post__in'][0], 'A course from the same category comes first.' );
+		$this->assertNotContains( $current, $vars['post__in'] );
+		$this->assertCount( 3, $vars['post__in'], 'The row is filled with other courses.' );
+		$this->assertContains( $newest, $vars['post__in'], 'Fillers are the newest other courses.' );
+		$this->assertNotContains( $older, $vars['post__in'], 'The oldest course does not make the row.' );
+
+		$this->assertSame( array( 'posts_per_page' => 3 ), $query->related( array( 'posts_per_page' => 3 ), 0 ), 'No course on screen: unchanged.' );
+
+		$this->go_to( get_permalink( $this->fixture['lessons'][0] ) );
+		$block       = new WP_Block(
+			array( 'blockName' => 'core/post-template' ),
+			array(
+				'query' => array(
+					'namespace'        => 'publiclms/course-query',
+					'publiclmsRelated' => true,
+				),
+			)
+		);
+		$from_lesson = $query->query_vars( array( 'posts_per_page' => 5 ), $block );
+		$this->assertNotContains( $this->fixture['course'], $from_lesson['post__in'], 'On a lesson, its course is the one left out.' );
+	}
 }

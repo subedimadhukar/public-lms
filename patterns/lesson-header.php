@@ -19,13 +19,13 @@ defined( 'ABSPATH' ) || exit;
 	<div class="wp-block-group">
 		<!-- wp:buttons -->
 		<div class="wp-block-buttons">
-			<!-- wp:button {"className":"is-style-outline","fontSize":"small","metadata":{"bindings":{"text":{"source":"publiclms/course-field","args":{"key":"course_title"}},"url":{"source":"publiclms/course-field","args":{"key":"course_url"}}}}} -->
-			<div class="wp-block-button has-custom-font-size is-style-outline has-small-font-size"><a class="wp-block-button__link wp-element-button"><?php esc_html_e( 'Course', 'public-lms' ); ?></a></div>
+			<!-- wp:button {"className":"is-style-outline","fontSize":"sm","metadata":{"bindings":{"text":{"source":"publiclms/course-field","args":{"key":"course_title"}},"url":{"source":"publiclms/course-field","args":{"key":"course_url"}}}}} -->
+			<div class="wp-block-button has-custom-font-size is-style-outline has-sm-font-size"><a class="wp-block-button__link wp-element-button"><?php esc_html_e( 'Course', 'public-lms' ); ?></a></div>
 			<!-- /wp:button -->
 		</div>
 		<!-- /wp:buttons -->
-		<!-- wp:paragraph {"fontSize":"small","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"section_title"}}}}} -->
-		<p class="has-small-font-size"></p>
+		<!-- wp:paragraph {"fontSize":"sm","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"section_title"}}}}} -->
+		<p class="has-sm-font-size"></p>
 		<!-- /wp:paragraph -->
 	</div>
 	<!-- /wp:group -->

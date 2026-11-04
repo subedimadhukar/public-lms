@@ -300,7 +300,7 @@ final class Plugin {
 		$c->set(
 			CourseQuery::class,
 			static function ( Container $container ) {
-				return new CourseQuery( $container->get( EnrollmentRepository::class ) );
+				return new CourseQuery( $container->get( EnrollmentRepository::class ), $container->get( CourseFields::class ) );
 			}
 		);
 		$c->set(

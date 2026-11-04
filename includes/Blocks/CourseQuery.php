@@ -7,8 +7,10 @@
 
 namespace PublicLMS\Blocks;
 
+use PublicLMS\Courses\CourseFields;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Taxonomies\Taxonomies;
 use WP_Block;
 
 defined( 'ABSPATH' ) || exit;
@@ -20,8 +22,12 @@ defined( 'ABSPATH' ) || exit;
  * Template, Post Title, Post Featured Image and Post Excerpt blocks with
  * values from the bindings source, so the variation needs no wrapper block.
  *
- * This class adds the one control core lacks: `query.publiclmsHideEnrolled`
- * hides courses the current learner is already enrolled in. Level and
+ * This class adds two settings core lacks. `query.publiclmsHideEnrolled`
+ * hides courses the current learner is already enrolled in.
+ * `query.publiclmsRelated` (contract 1.2.0) shows courses related to the
+ * course on screen (or the course of the lesson on screen): it leaves that
+ * course out, lists courses sharing its categories first, newest first, and
+ * fills the rest of the page with the newest other courses. Level and
  * category filters use core's taxonomy controls.
  */
 final class CourseQuery {
@@ -39,12 +45,21 @@ final class CourseQuery {
 	private $enrollments;
 
 	/**
+	 * Course fields, to find the course a page shows.
+	 *
+	 * @var CourseFields
+	 */
+	private $fields;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param EnrollmentRepository $enrollments Enrolments.
+	 * @param CourseFields         $fields      Course fields.
 	 */
-	public function __construct( EnrollmentRepository $enrollments ) {
+	public function __construct( EnrollmentRepository $enrollments, CourseFields $fields ) {
 		$this->enrollments = $enrollments;
+		$this->fields      = $fields;
 	}
 
 	/**
@@ -77,6 +92,80 @@ final class CourseQuery {
 		if ( ! empty( $settings['publiclmsHideEnrolled'] ) ) {
 			$query = $this->exclude_enrolled( $query );
 		}
+		if ( ! empty( $settings['publiclmsRelated'] ) ) {
+			$query = $this->related( $query, $this->fields->resolve_course_id( (int) get_queried_object_id() ) );
+		}
+		return $query;
+	}
+
+	/**
+	 * Narrows a course query to courses related to one course.
+	 *
+	 * Courses sharing a category come first, then the newest others, so a
+	 * "related courses" row is always full when the catalogue allows it. The
+	 * result is fixed with post__in and orderby post__in, which keeps
+	 * pagination and the hide-enrolled setting working.
+	 *
+	 * @param array<string, mixed> $query     Query vars.
+	 * @param int                  $course_id The course to relate to; 0 when the page shows none.
+	 * @return array<string, mixed>
+	 */
+	public function related( array $query, int $course_id ): array {
+		if ( $course_id <= 0 ) {
+			return $query;
+		}
+		$per_page = (int) ( $query['posts_per_page'] ?? get_option( 'posts_per_page' ) );
+		$per_page = $per_page > 0 ? $per_page : 3;
+		$exclude  = array_merge( array( $course_id ), array_map( 'intval', (array) ( $query['post__not_in'] ?? array() ) ) );
+		$base     = array(
+			'post_type'        => PostTypes::COURSE,
+			'post_status'      => 'publish',
+			'fields'           => 'ids',
+			'orderby'          => 'date',
+			'order'            => 'DESC',
+			'no_found_rows'    => true,
+			'suppress_filters' => false,
+		);
+
+		$ids   = array();
+		$terms = wp_get_post_terms( $course_id, Taxonomies::COURSE_CATEGORY, array( 'fields' => 'ids' ) );
+		if ( is_array( $terms ) && ! empty( $terms ) ) {
+			$ids = get_posts(
+				array_merge(
+					$base,
+					array(
+						'posts_per_page' => $per_page,
+						'post__not_in'   => $exclude, // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- The current course and a learner's enrolments; small.
+						'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Category match for a short row of courses.
+							array(
+								'taxonomy' => Taxonomies::COURSE_CATEGORY,
+								'field'    => 'term_id',
+								'terms'    => array_map( 'intval', $terms ),
+							),
+						),
+					)
+				)
+			);
+		}
+		if ( count( $ids ) < $per_page ) {
+			$ids = array_merge(
+				$ids,
+				get_posts(
+					array_merge(
+						$base,
+						array(
+							'posts_per_page' => $per_page - count( $ids ),
+							'post__not_in'   => array_merge( $exclude, $ids ), // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- As above.
+						)
+					)
+				)
+			);
+		}
+
+		$query['post__in']       = empty( $ids ) ? array( 0 ) : array_map( 'intval', $ids );
+		$query['orderby']        = 'post__in';
+		$query['posts_per_page'] = $per_page;
+		unset( $query['post__not_in'], $query['offset'] );
 		return $query;
 	}
 

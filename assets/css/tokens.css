@@ -127,3 +127,57 @@
 :where(.publiclms-template--lesson .publiclms-lesson-layout) {
 	gap: var(--publiclms-space-60);
 }
+
+/* Form fields inside plugin blocks never rely on browser defaults, which are
+   unreadable on dark palettes (contract B1: base and contrast pair). */
+:where([class*="wp-block-publiclms-"]) :where(input, select, textarea) {
+	background-color: var(--publiclms-color-base);
+	color: var(--publiclms-color-contrast);
+	border-color: var(--publiclms-color-contrast);
+}
+
+/* The plugin's patterns use the contract font-size slugs (B2). WordPress prints
+   .has-{slug}-font-size only for themes that define the preset; these
+   zero-specificity fallbacks cover themes that do not, and lose to core's
+   rule everywhere else. */
+:where(
+	[class*="publiclms-"] .has-xs-font-size,
+	[class*="publiclms-"].has-xs-font-size
+) {
+	font-size: var(--publiclms-font-size-xs);
+}
+
+:where(
+	[class*="publiclms-"] .has-sm-font-size,
+	[class*="publiclms-"].has-sm-font-size
+) {
+	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(
+	[class*="publiclms-"] .has-base-font-size,
+	[class*="publiclms-"].has-base-font-size
+) {
+	font-size: var(--publiclms-font-size-base);
+}
+
+:where(
+	[class*="publiclms-"] .has-lg-font-size,
+	[class*="publiclms-"].has-lg-font-size
+) {
+	font-size: var(--publiclms-font-size-lg);
+}
+
+:where(
+	[class*="publiclms-"] .has-xl-font-size,
+	[class*="publiclms-"].has-xl-font-size
+) {
+	font-size: var(--publiclms-font-size-xl);
+}
+
+:where(
+	[class*="publiclms-"] .has-2-xl-font-size,
+	[class*="publiclms-"].has-2-xl-font-size
+) {
+	font-size: var(--publiclms-font-size-2-xl);
+}

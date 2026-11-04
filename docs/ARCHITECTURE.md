@@ -573,3 +573,14 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   time to first byte with curl, logged out or with a learner's cookie.
 - **Consequences.** CI runs the e2e job on WordPress latest. Learners (no `edit_posts`) land on the
   dashboard page after login unless the login link asked for somewhere else.
+
+### ADR-039 Contract 1.2.0: the theme's phase 1 open items
+- **Decision.** The nine items CampusInterface logged against the contract are settled additively
+  (CONTRACTS.md 1.2.0, "Changes in 1.2.0"). Added now: `query.publiclmsRelated` on the course query variation
+  (same-category courses first, then the newest others, via `post__in` so pagination and hide-enrolled keep
+  working), the form-field colour rule, B2-only font-size slugs in patterns with alias fallbacks, and default
+  layouts on column and sidebar patterns. Recorded as phase 2: the `publiclms/course-filters` block and the
+  review, quiz and instructor-dashboard patterns; themes keep their own filters and hide those areas until
+  then. Items 1 and 6 were already met by 1.1.0 keys and the namespace-based `isActive`.
+- **Consequences.** On themes without the B2 presets (Twenty Twenty-Five) pattern text sizes come from the
+  alias fallbacks rather than core's small and large presets.

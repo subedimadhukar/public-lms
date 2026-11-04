@@ -13,9 +13,9 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<!-- wp:group {"tagName":"article","className":"publiclms-lesson-body","layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"var:preset|spacing|50"}}} -->
+<!-- wp:group {"tagName":"article","className":"publiclms-lesson-body","layout":{"type":"default"},"style":{"spacing":{"blockGap":"var:preset|spacing|50"}}} -->
 <article class="wp-block-group publiclms-lesson-body">
-	<!-- wp:publiclms/lesson-content {"layout":{"type":"constrained"}} /-->
+	<!-- wp:publiclms/lesson-content {"layout":{"type":"default"}} /-->
 	<!-- wp:publiclms/mark-complete /-->
 </article>
 <!-- /wp:group -->

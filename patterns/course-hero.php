@@ -21,23 +21,23 @@ defined( 'ABSPATH' ) || exit;
 		<div class="wp-block-column is-vertically-aligned-center" style="flex-basis:55%">
 			<!-- wp:group {"layout":{"type":"flex","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|30"}}} -->
 			<div class="wp-block-group">
-				<!-- wp:paragraph {"className":"publiclms-badge","fontSize":"small","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"level"}}}}} -->
-				<p class="publiclms-badge has-small-font-size"></p>
+				<!-- wp:paragraph {"className":"publiclms-badge","fontSize":"sm","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"level"}}}}} -->
+				<p class="publiclms-badge has-sm-font-size"></p>
 				<!-- /wp:paragraph -->
-				<!-- wp:paragraph {"fontSize":"small","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"lesson_count"}}}}} -->
-				<p class="has-small-font-size"></p>
+				<!-- wp:paragraph {"fontSize":"sm","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"lesson_count"}}}}} -->
+				<p class="has-sm-font-size"></p>
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->
 			<!-- wp:post-title {"level":1} /-->
-			<!-- wp:post-excerpt {"fontSize":"large"} /-->
+			<!-- wp:post-excerpt {"fontSize":"lg"} /-->
 			<!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|20"}}} -->
 			<div class="wp-block-group">
-				<!-- wp:paragraph {"fontSize":"small"} -->
-				<p class="has-small-font-size"><?php esc_html_e( 'Taught by', 'public-lms' ); ?></p>
+				<!-- wp:paragraph {"fontSize":"sm"} -->
+				<p class="has-sm-font-size"><?php esc_html_e( 'Taught by', 'public-lms' ); ?></p>
 				<!-- /wp:paragraph -->
-				<!-- wp:paragraph {"className":"publiclms-value","fontSize":"small","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"instructor"}}}}} -->
-				<p class="publiclms-value has-small-font-size"></p>
+				<!-- wp:paragraph {"className":"publiclms-value","fontSize":"sm","metadata":{"bindings":{"content":{"source":"publiclms/course-field","args":{"key":"instructor"}}}}} -->
+				<p class="publiclms-value has-sm-font-size"></p>
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->

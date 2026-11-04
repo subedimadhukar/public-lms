@@ -3,7 +3,8 @@
  *
  * A core Query Loop over plms_course whose cards are core blocks with
  * values from the bindings source. Level and category filters are core's
- * taxonomy controls; the variation adds "Hide courses I am enrolled in".
+ * taxonomy controls; the variation adds "Hide courses I am enrolled in" and
+ * "Show courses related to the current course" (contract 1.2.0).
  */
 import { InspectorControls } from '@wordpress/block-editor';
 import { registerBlockVariation } from '@wordpress/blocks';
@@ -42,6 +43,7 @@ registerBlockVariation( 'core/query', {
 			sticky: '',
 			inherit: false,
 			publiclmsHideEnrolled: false,
+			publiclmsRelated: false,
 		},
 		align: 'wide',
 	},
@@ -125,6 +127,26 @@ const withHideEnrolledControl = createHigherOrderComponent(
 									query: {
 										...query,
 										publiclmsHideEnrolled: value,
+									},
+								} )
+							}
+						/>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __(
+								'Show courses related to the current course',
+								'public-lms'
+							) }
+							help={ __(
+								'Leaves the course on screen out and lists courses from its categories first.',
+								'public-lms'
+							) }
+							checked={ !! query.publiclmsRelated }
+							onChange={ ( value ) =>
+								props.setAttributes( {
+									query: {
+										...query,
+										publiclmsRelated: value,
 									},
 								} )
 							}
