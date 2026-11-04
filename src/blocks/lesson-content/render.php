@@ -39,8 +39,9 @@ $publiclms_decision = $publiclms_blocks->policy->can_access_item( $publiclms_ite
 $publiclms_course   = $publiclms_blocks->structure->course_id_for( $publiclms_item );
 
 if ( ! $publiclms_decision->is_allowed() ) {
-	$publiclms_custom = trim( wp_strip_all_tags( (string) ( $attributes['lockedMessage'] ?? '' ) ) );
-	$publiclms_reason = $publiclms_decision->reason();
+	Blocks::$locked_notice_shown[ $publiclms_item ] = true; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- A static class property, not a global.
+	$publiclms_custom                               = trim( wp_strip_all_tags( (string) ( $attributes['lockedMessage'] ?? '' ) ) );
+	$publiclms_reason                               = $publiclms_decision->reason();
 	?>
 	<div <?php echo get_block_wrapper_attributes( array( 'class' => 'is-locked' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes(). ?>>
 		<div class="publiclms-locked-notice">

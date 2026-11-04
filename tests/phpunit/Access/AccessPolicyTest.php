@@ -199,7 +199,6 @@ class AccessPolicyTest extends TestCase {
 	 * Without rules every published item of an active enrolment is open.
 	 *
 	 * @covers ::can_access_item
-	 * @covers ::can_submit_assignment
 	 */
 	public function test_items_without_access_rules_stay_open() {
 		$student = self::factory()->user->create();
@@ -207,7 +206,7 @@ class AccessPolicyTest extends TestCase {
 		foreach ( $this->fixture['lessons'] as $lesson ) {
 			$this->assertTrue( $this->policy->can_access_item( $lesson, $student )->is_allowed() );
 		}
-		$this->assertTrue( $this->policy->can_submit_assignment( $this->fixture['lessons'][0], $student )->is_allowed() );
+		$this->assertFalse( $this->policy->can_submit_assignment( $this->fixture['lessons'][0], $student )->is_allowed(), 'Only assignments take hand-ins.' );
 	}
 
 	/**

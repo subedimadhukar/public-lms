@@ -1,0 +1,25 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"publiclms-template publiclms-template--assignment","layout":{"type":"constrained"}} -->
+<main class="wp-block-group publiclms-template publiclms-template--assignment">
+	<!-- wp:columns {"align":"wide","className":"publiclms-lesson-layout"} -->
+	<div class="wp-block-columns alignwide publiclms-lesson-layout">
+		<!-- wp:column {"width":"70%","className":"publiclms-lesson-layout__main"} -->
+		<div class="wp-block-column publiclms-lesson-layout__main" style="flex-basis:70%">
+			<!-- wp:pattern {"slug":"publiclms/lesson-header"} /-->
+			<!-- wp:pattern {"slug":"publiclms/assignment-submission"} /-->
+			<!-- wp:pattern {"slug":"publiclms/lesson-navigation"} /-->
+		</div>
+		<!-- /wp:column -->
+
+		<!-- wp:column {"width":"30%","className":"publiclms-lesson-layout__sidebar"} -->
+		<div class="wp-block-column publiclms-lesson-layout__sidebar" style="flex-basis:30%">
+			<!-- wp:pattern {"slug":"publiclms/lesson-sidebar"} /-->
+		</div>
+		<!-- /wp:column -->
+	</div>
+	<!-- /wp:columns -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

@@ -71,6 +71,14 @@ final class AdminApp {
 		if ( false !== $questions ) {
 			$this->screens[ $questions ] = 'questions';
 		}
+		$submissions = add_submenu_page( self::SLUG, __( 'Submissions', 'public-lms' ), __( 'Submissions', 'public-lms' ), Capabilities::VIEW_REPORTS, self::SLUG . '-submissions', array( $this, 'render' ) );
+		if ( false !== $submissions ) {
+			$this->screens[ $submissions ] = 'submissions';
+		}
+		$gradebook = add_submenu_page( self::SLUG, __( 'Gradebook', 'public-lms' ), __( 'Gradebook', 'public-lms' ), Capabilities::VIEW_REPORTS, self::SLUG . '-gradebook', array( $this, 'render' ) );
+		if ( false !== $gradebook ) {
+			$this->screens[ $gradebook ] = 'gradebook';
+		}
 		$students = add_submenu_page( self::SLUG, __( 'Students', 'public-lms' ), __( 'Students', 'public-lms' ), Capabilities::VIEW_REPORTS, self::SLUG . '-students', array( $this, 'render' ) );
 		if ( false !== $students ) {
 			$this->screens[ $students ] = 'students';
@@ -127,6 +135,8 @@ final class AdminApp {
 			'appUrl'      => admin_url( 'admin.php?page=' . self::SLUG ),
 			'userId'      => get_current_user_id(),
 			'currency'    => (string) get_option( 'publiclms_currency', 'USD' ),
+			'restUrl'     => esc_url_raw( rest_url() ),
+			'restNonce'   => wp_create_nonce( 'wp_rest' ),
 			'permissions' => array(
 				'manageCourses'  => current_user_can( Capabilities::MANAGE_COURSES ),
 				'createCourses'  => null !== $course_type && current_user_can( $course_type->cap->create_posts ),

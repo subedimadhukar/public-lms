@@ -219,8 +219,14 @@ class AccessPolicy {
 	 * @return AccessDecision
 	 */
 	public function can_submit_assignment( int $assignment_id, int $user_id = 0 ): AccessDecision {
-		$user_id = $this->resolve_user( $user_id );
-		return $this->filter( $this->item_decision( $assignment_id, $user_id ), 'submit_assignment', $assignment_id, $user_id );
+		$user_id  = $this->resolve_user( $user_id );
+		$decision = PostTypes::ASSIGNMENT === get_post_type( $assignment_id )
+			? $this->item_decision( $assignment_id, $user_id )
+			: AccessDecision::deny( AccessDecision::REASON_NOT_PUBLISHED );
+		if ( $decision->is_allowed() && $user_id <= 0 ) {
+			$decision = AccessDecision::deny( AccessDecision::REASON_LOGGED_OUT );
+		}
+		return $this->filter( $decision, 'submit_assignment', $assignment_id, $user_id );
 	}
 
 	/**

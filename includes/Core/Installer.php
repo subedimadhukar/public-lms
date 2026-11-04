@@ -24,7 +24,7 @@ final class Installer {
 	/**
 	 * Current schema version. Bump on every change to schema().
 	 */
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
 
 	/**
 	 * Option holding the installed schema version.
@@ -57,6 +57,7 @@ final class Installer {
 		'plms_events',
 		'plms_notifications',
 		'plms_report_daily',
+		'plms_assignment_submissions',
 	);
 
 	/**
@@ -438,6 +439,29 @@ CREATE TABLE {$t['plms_report_daily']} (
   PRIMARY KEY  (id),
   UNIQUE KEY date_course (report_date,course_id),
   KEY course_date (course_id,report_date)
+) $collate;
+CREATE TABLE {$t['plms_assignment_submissions']} (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  user_id bigint(20) unsigned NOT NULL,
+  assignment_id bigint(20) unsigned NOT NULL,
+  course_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  attempt smallint(5) unsigned NOT NULL DEFAULT 1,
+  status varchar(20) NOT NULL DEFAULT 'submitted',
+  content longtext DEFAULT NULL,
+  files longtext DEFAULT NULL,
+  grade decimal(10,2) DEFAULT NULL,
+  max_grade decimal(10,2) DEFAULT NULL,
+  passed tinyint(1) DEFAULT NULL,
+  feedback longtext DEFAULT NULL,
+  submitted_at datetime NOT NULL,
+  graded_at datetime DEFAULT NULL,
+  graded_by bigint(20) unsigned DEFAULT NULL,
+  updated_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  KEY user_assignment (user_id,assignment_id),
+  KEY assignment_status (assignment_id,status),
+  KEY course_status (course_id,status),
+  KEY submitted_at (submitted_at)
 ) $collate;";
 	}
 

@@ -1,0 +1,84 @@
+// Assignment hand-in: status panel and the upload form.
+.wp-block-publiclms-assignment [hidden] {
+	display: none !important;
+}
+
+:where(.wp-block-publiclms-assignment) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-50);
+}
+
+:where(.wp-block-publiclms-assignment__status) {
+	padding: var(--publiclms-space-50);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-lg);
+	background: var(--publiclms-color-surface);
+}
+
+:where(.wp-block-publiclms-assignment__status-title) {
+	margin: 0 0 var(--publiclms-space-30);
+	font-size: var(--publiclms-font-size-xl);
+}
+
+:where(.wp-block-publiclms-assignment__grade) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-2-xl);
+	font-weight: 700;
+}
+
+:where(.wp-block-publiclms-assignment__status.is-passed .wp-block-publiclms-assignment__grade) {
+	color: var(--publiclms-color-success);
+}
+
+:where(.wp-block-publiclms-assignment__status.is-failed .wp-block-publiclms-assignment__grade) {
+	color: var(--publiclms-color-danger);
+}
+
+:where(.wp-block-publiclms-assignment__waiting) {
+	color: var(--publiclms-color-warning);
+	font-weight: 600;
+}
+
+:where(.wp-block-publiclms-assignment__feedback) {
+	margin-top: var(--publiclms-space-30);
+	padding-inline-start: var(--publiclms-space-40);
+	border-inline-start: 3px solid var(--publiclms-color-primary);
+}
+
+:where(.wp-block-publiclms-assignment__files) {
+	margin: var(--publiclms-space-20) 0 0;
+	padding-inline-start: var(--publiclms-space-50);
+	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(.wp-block-publiclms-assignment__form) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-40);
+}
+
+:where(.wp-block-publiclms-assignment__field) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--publiclms-space-20);
+	font-weight: 600;
+
+	textarea,
+	input[type="file"] {
+		padding: 0.5em;
+		border: 1px solid;
+		border-radius: var(--publiclms-radius-sm);
+		font-weight: 400;
+	}
+}
+
+:where(.wp-block-publiclms-assignment__hint) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-sm);
+	font-weight: 400;
+}
+
+:where(.wp-block-publiclms-assignment__message):empty {
+	display: none;
+}

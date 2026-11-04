@@ -477,3 +477,42 @@
 		margin-top: 8px;
 	}
 }
+
+// Assignments, submissions and gradebook (phase 2).
+.publiclms-file-types {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+	gap: 4px 12px;
+}
+
+.publiclms-grading-modal__answer {
+	padding: 12px;
+	border: 1px solid var(--publiclms-admin-border);
+	border-radius: var(--publiclms-admin-radius);
+	background: #f6f7f7;
+	white-space: pre-wrap;
+}
+
+.publiclms-gradebook__scroll {
+	overflow-x: auto;
+}
+
+.publiclms-gradebook__table {
+	min-width: 640px;
+
+	th,
+	td {
+		white-space: nowrap;
+	}
+
+	td.is-failed {
+		color: #b32d2e;
+	}
+}
+
+.publiclms-gradebook__kind {
+	display: block;
+	color: var(--publiclms-admin-muted);
+	font-size: 12px;
+	font-weight: 400;
+}

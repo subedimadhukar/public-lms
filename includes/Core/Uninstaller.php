@@ -62,6 +62,7 @@ final class Uninstaller {
 
 		self::delete_content();
 		self::drop_tables();
+		self::delete_private_files();
 		Roles::uninstall();
 
 		delete_option( Installer::DB_VERSION_OPTION );
@@ -69,6 +70,33 @@ final class Uninstaller {
 		delete_option( 'publiclms_remove_data_on_uninstall' );
 		delete_option( 'publiclms_dashboard_page_id' );
 		delete_option( 'publiclms_instructor_page_id' );
+		delete_option( \PublicLMS\Files\PrivateFiles::TOKEN_OPTION );
+	}
+
+	/**
+	 * Deletes the private uploads folder of this site (assignment files).
+	 *
+	 * @return void
+	 */
+	private static function delete_private_files(): void {
+		$dir = ( new \PublicLMS\Files\PrivateFiles() )->base_dir();
+		if ( '' === $dir || ! is_dir( $dir ) ) {
+			return;
+		}
+		$items = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator( $dir, \FilesystemIterator::SKIP_DOTS ),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+		foreach ( $items as $item ) {
+			if ( $item instanceof \SplFileInfo ) {
+				if ( $item->isDir() ) {
+					rmdir( $item->getPathname() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Removing the plugin's own private folder on opted-in uninstall.
+				} else {
+					wp_delete_file( $item->getPathname() );
+				}
+			}
+		}
+		rmdir( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Same as above.
 	}
 
 	/**

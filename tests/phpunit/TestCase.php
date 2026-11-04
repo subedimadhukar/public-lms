@@ -213,4 +213,56 @@ abstract class TestCase extends WP_UnitTestCase {
 			),
 		);
 	}
+
+	/**
+	 * Creates an assignment in a section.
+	 *
+	 * @param int                  $section_id Section ID.
+	 * @param int                  $order      Menu order.
+	 * @param array<string, mixed> $args       Extra post arguments.
+	 * @return int
+	 */
+	protected function create_assignment( int $section_id, int $order = 20, array $args = array() ): int {
+		return (int) self::factory()->post->create(
+			array_merge(
+				array(
+					'post_type'    => PostTypes::ASSIGNMENT,
+					'post_title'   => 'Close your first month',
+					'post_status'  => 'publish',
+					'post_parent'  => $section_id,
+					'menu_order'   => $order,
+					'post_content' => '<!-- wp:paragraph --><p>Reconcile one month of your accounts.</p><!-- /wp:paragraph -->',
+				),
+				$args
+			)
+		);
+	}
+
+	/**
+	 * Writes a temporary file and returns it in $_FILES shape.
+	 *
+	 * @param string $name     File name the browser sent.
+	 * @param string $contents Contents.
+	 * @return array<string, mixed>
+	 */
+	protected function temp_upload( string $name, string $contents ): array {
+		$path = wp_tempnam( $name );
+		file_put_contents( $path, $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Test fixture.
+		return array(
+			'name'     => $name,
+			'type'     => 'application/octet-stream',
+			'tmp_name' => $path,
+			'error'    => UPLOAD_ERR_OK,
+			'size'     => strlen( $contents ),
+		);
+	}
+
+	/**
+	 * Returns the bytes of a tiny valid PDF.
+	 *
+	 * @return string
+	 */
+	protected function pdf_bytes(): string {
+		return "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n";
+	}
 }

@@ -53,6 +53,7 @@ final class Blocks {
 		'lesson-content',
 		'lesson-navigation',
 		'mark-complete',
+		'assignment',
 		'quiz',
 		'student-dashboard',
 		'video',
@@ -106,6 +107,14 @@ final class Blocks {
 	 * @var array<int, bool>
 	 */
 	public static $rendering = array();
+
+	/**
+	 * Items whose locked notice was already printed in this request, so a
+	 * quiz or assignment block under the gated introduction does not repeat it.
+	 *
+	 * @var array<int, bool>
+	 */
+	public static $locked_notice_shown = array();
 
 	/**
 	 * Courses whose learner state was already seeded in this request.
@@ -461,6 +470,20 @@ final class Blocks {
 			'title'    => __( 'Back to course', 'public-lms' ),
 			'isCourse' => true,
 		);
+	}
+
+	/**
+	 * Formats a grade or score with as few decimals as it needs: 8, 8.5, 8.25.
+	 *
+	 * @param float $value Number.
+	 * @return string
+	 */
+	public static function number( float $value ): string {
+		$decimals = 0;
+		if ( abs( $value - round( $value ) ) >= 0.005 ) {
+			$decimals = abs( $value * 10 - round( $value * 10 ) ) >= 0.05 ? 2 : 1;
+		}
+		return number_format_i18n( $value, $decimals );
 	}
 
 	/**

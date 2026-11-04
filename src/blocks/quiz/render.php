@@ -34,6 +34,9 @@ if ( $publiclms_quiz <= 0 || PostTypes::QUIZ !== get_post_type( $publiclms_quiz 
 $publiclms_access = $publiclms_blocks->policy->can_access_item( $publiclms_quiz );
 $publiclms_course = $publiclms_blocks->structure->course_id_for( $publiclms_quiz );
 if ( ! $publiclms_access->is_allowed() ) {
+	if ( isset( Blocks::$locked_notice_shown[ $publiclms_quiz ] ) ) {
+		return;
+	}
 	printf(
 		'<div %1$s>%2$s</div>',
 		get_block_wrapper_attributes( array( 'class' => 'is-locked' ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes().

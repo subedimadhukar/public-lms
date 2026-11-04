@@ -3,6 +3,7 @@
  */
 import { Button, Notice, Spinner } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
+import { useState } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
 import { __ } from '@wordpress/i18n';
 import { arrowLeft, external } from '@wordpress/icons';
@@ -10,6 +11,7 @@ import { addQueryArgs } from '@wordpress/url';
 
 import { STORE_NAME } from '../../store/courses';
 import { boot } from '../boot';
+import AssignmentSettings from '../assignments/assignment-settings';
 import CourseSettings from './course-settings';
 import CurriculumTree from './curriculum-tree';
 
@@ -22,6 +24,7 @@ const STATUS_LABELS = {
 };
 
 export default function CourseBuilder( { courseId } ) {
+	const [ assignment, setAssignment ] = useState( null );
 	const { course, curriculum, hasLoaded, error } = useSelect(
 		( select ) => {
 			const store = select( STORE_NAME );
@@ -111,22 +114,59 @@ export default function CourseBuilder( { courseId } ) {
 					<CurriculumTree
 						courseId={ courseId }
 						curriculum={ curriculum }
-						itemTypes={ [ 'lesson', 'quiz' ] }
-						renderItemActions={ ( item ) =>
-							item.type === 'quiz' ? (
-								<Button
-									variant="secondary"
-									size="compact"
-									href={ addQueryArgs( boot.appUrl, {
-										course: courseId,
-										quiz: item.id,
-									} ) }
-								>
-									{ __( 'Edit quiz', 'public-lms' ) }
-								</Button>
-							) : null
-						}
+						itemTypes={ [ 'lesson', 'quiz', 'assignment' ] }
+						renderItemActions={ ( item ) => {
+							if ( item.type === 'quiz' ) {
+								return (
+									<Button
+										variant="secondary"
+										size="compact"
+										href={ addQueryArgs( boot.appUrl, {
+											course: courseId,
+											quiz: item.id,
+										} ) }
+									>
+										{ __( 'Edit quiz', 'public-lms' ) }
+									</Button>
+								);
+							}
+							if ( item.type === 'assignment' ) {
+								return (
+									<>
+										<Button
+											variant="secondary"
+											size="compact"
+											onClick={ () =>
+												setAssignment( item )
+											}
+										>
+											{ __( 'Settings', 'public-lms' ) }
+										</Button>
+										{ item.edit_url && (
+											<Button
+												variant="tertiary"
+												size="compact"
+												href={ item.edit_url }
+											>
+												{ __(
+													'Edit brief',
+													'public-lms'
+												) }
+											</Button>
+										) }
+									</>
+								);
+							}
+							return null;
+						} }
 					/>
+					{ assignment && (
+						<AssignmentSettings
+							courseId={ courseId }
+							item={ assignment }
+							onClose={ () => setAssignment( null ) }
+						/>
+					) }
 				</section>
 				<aside className="publiclms-builder__aside">
 					<CourseSettings

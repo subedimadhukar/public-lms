@@ -28,11 +28,11 @@ defined( 'ABSPATH' ) || exit;
  * templates apply to the pages chosen in settings.
  *
  * register_templates() registers each slug whose file exists under
- * templates/. Phase 1 ships single-plms_course, archive-plms_course,
- * single-plms_lesson and plms-dashboard, built from the patterns in
- * patterns/; single-plms_quiz and plms-instructor arrive with quizzes and
- * the instructor dashboard in phase 2. Classic themes get the same blocks
- * through ClassicTemplates.
+ * templates/: single-plms_course, archive-plms_course, single-plms_lesson,
+ * plms-dashboard (phase 1), single-plms_quiz and single-plms_assignment
+ * (phase 2 part A), built from the patterns in patterns/; plms-instructor
+ * arrives with the instructor dashboard. Classic themes get the same
+ * blocks through ClassicTemplates.
  */
 final class TemplateRegistrar {
 
@@ -88,32 +88,37 @@ final class TemplateRegistrar {
 	 */
 	public function templates(): array {
 		return array(
-			'single-' . PostTypes::COURSE => array(
+			'single-' . PostTypes::COURSE     => array(
 				'title'       => __( 'Single Course', 'public-lms' ),
 				'description' => __( 'Displays a course landing page with its curriculum and enrol button.', 'public-lms' ),
 				'post_types'  => array(),
 			),
-			self::COURSE_ARCHIVE          => array(
+			self::COURSE_ARCHIVE              => array(
 				'title'       => __( 'Course Archive', 'public-lms' ),
 				'description' => __( 'Displays the course catalogue and course category, tag and level archives.', 'public-lms' ),
 				'post_types'  => array(),
 			),
-			'single-' . PostTypes::LESSON => array(
+			'single-' . PostTypes::LESSON     => array(
 				'title'       => __( 'Single Lesson', 'public-lms' ),
 				'description' => __( 'Displays a lesson in a distraction-free layout with lesson navigation.', 'public-lms' ),
 				'post_types'  => array(),
 			),
-			'single-' . PostTypes::QUIZ   => array(
+			'single-' . PostTypes::QUIZ       => array(
 				'title'       => __( 'Single Quiz', 'public-lms' ),
 				'description' => __( 'Displays a quiz and its runner.', 'public-lms' ),
 				'post_types'  => array(),
 			),
-			'plms-dashboard'              => array(
+			'single-' . PostTypes::ASSIGNMENT => array(
+				'title'       => __( 'Single Assignment', 'public-lms' ),
+				'description' => __( 'Displays an assignment brief and the hand-in form.', 'public-lms' ),
+				'post_types'  => array(),
+			),
+			'plms-dashboard'                  => array(
 				'title'       => __( 'Student Dashboard', 'public-lms' ),
 				'description' => __( 'The learner dashboard: enrolled courses, progress, quiz results and certificates.', 'public-lms' ),
 				'post_types'  => array( 'page' ),
 			),
-			'plms-instructor'             => array(
+			'plms-instructor'                 => array(
 				'title'       => __( 'Instructor Dashboard', 'public-lms' ),
 				'description' => __( 'The instructor dashboard: own courses, learners, submissions and reports.', 'public-lms' ),
 				'post_types'  => array( 'page' ),

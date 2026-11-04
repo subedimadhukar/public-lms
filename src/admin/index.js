@@ -15,6 +15,8 @@ import { boot } from './boot';
 import { Notices } from './components/notices';
 import CourseBuilder from './courses/course-builder';
 import CourseList from './courses/course-list';
+import GradebookScreen from './grading/gradebook';
+import SubmissionsScreen from './grading/submissions';
 import QuestionBankScreen from './quizzes/question-bank';
 import QuizEditor from './quizzes/quiz-editor';
 import SettingsScreen from './settings/settings-screen';
@@ -33,6 +35,10 @@ function App() {
 		screen = <SettingsScreen />;
 	} else if ( boot.screen === 'questions' ) {
 		screen = <QuestionBankScreen />;
+	} else if ( boot.screen === 'submissions' ) {
+		screen = <SubmissionsScreen />;
+	} else if ( boot.screen === 'gradebook' ) {
+		screen = <GradebookScreen />;
 	} else if ( courseId > 0 && quizId > 0 ) {
 		screen = <QuizEditor courseId={ courseId } quizId={ quizId } />;
 	} else if ( courseId > 0 ) {

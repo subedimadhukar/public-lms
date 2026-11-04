@@ -30,6 +30,10 @@ use PublicLMS\Repositories\EventRepositoryInterface;
 use PublicLMS\Repositories\ProgressRepository;
 use PublicLMS\Repositories\QuizAttemptRepository;
 use PublicLMS\Repositories\QuizAttemptRepositoryInterface;
+use PublicLMS\Repositories\SubmissionRepository;
+use PublicLMS\Files\PrivateFiles;
+use PublicLMS\Services\AssignmentService;
+use PublicLMS\Services\Gradebook;
 use PublicLMS\Quizzes\QuestionBank;
 use PublicLMS\Rest\Api;
 use PublicLMS\Rest\PostFields;
@@ -255,6 +259,45 @@ final class Plugin {
 			RateLimiter::class,
 			static function () {
 				return new RateLimiter();
+			}
+		);
+		$c->set(
+			SubmissionRepository::class,
+			static function () {
+				global $wpdb;
+				return new SubmissionRepository( $wpdb );
+			}
+		);
+		$c->set(
+			PrivateFiles::class,
+			static function () {
+				return new PrivateFiles();
+			}
+		);
+		$c->set(
+			AssignmentService::class,
+			static function ( Container $container ) {
+				return new AssignmentService(
+					$container->get( SubmissionRepository::class ),
+					$container->get( PrivateFiles::class ),
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( ProgressService::class ),
+					$container->get( EventRepositoryInterface::class ),
+					$container->get( AccessPolicy::class ),
+					$container->get( RateLimiter::class )
+				);
+			}
+		);
+		$c->set(
+			Gradebook::class,
+			static function ( Container $container ) {
+				return new Gradebook(
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( QuizAttemptRepository::class ),
+					$container->get( SubmissionRepository::class ),
+					$container->get( ProgressService::class )
+				);
 			}
 		);
 		$c->set(

@@ -414,4 +414,29 @@ class BlocksTest extends TestCase {
 		$this->assertStringContainsString( '100%', $html );
 		$this->assertStringContainsString( 'is-passed', $html );
 	}
+
+	public function test_assignment_block_shows_the_form_then_the_status() {
+		$assignment = $this->create_assignment( $this->fixture['sections'][0] );
+		\PublicLMS\Assignments\AssignmentSettings::update(
+			$assignment,
+			array(
+				'max_files'  => 2,
+				'file_types' => array( 'pdf', 'docx' ),
+			)
+		);
+		$this->assertStringContainsString( 'publiclms-locked-notice', $this->render( '<!-- wp:publiclms/assignment /-->', $assignment ) );
+
+		wp_set_current_user( $this->learner );
+		$form = $this->render( '<!-- wp:publiclms/assignment /-->', $assignment );
+		$this->assertStringContainsString( 'data-wp-on--submit="actions.submitAssignment"', $form );
+		$this->assertStringContainsString( 'accept=".pdf,.docx"', $form );
+		$this->assertStringContainsString( 'name="files[]" multiple', $form );
+		$this->assertStringContainsString( 'Accepted: PDF, DOCX', $form );
+
+		$handin = publiclms()->container()->get( \PublicLMS\Services\AssignmentService::class )->submit( $this->learner, $assignment, 'My answer', array() );
+		$this->assertIsArray( $handin );
+		$status = $this->render( '<!-- wp:publiclms/assignment /-->', $assignment );
+		$this->assertStringContainsString( 'Waiting for a grade', $status );
+		$this->assertStringContainsString( 'Hand in again', $status );
+	}
 }

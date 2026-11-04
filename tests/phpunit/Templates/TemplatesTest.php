@@ -35,6 +35,7 @@ class TemplatesTest extends TestCase {
 			'publiclms/student-dashboard',
 			'publiclms/quiz-header',
 			'publiclms/quiz-runner',
+			'publiclms/assignment-submission',
 		);
 		$registry = WP_Block_Patterns_Registry::get_instance();
 		foreach ( $expected as $slug ) {
@@ -59,7 +60,7 @@ class TemplatesTest extends TestCase {
 
 	public function test_the_plugin_templates_are_registered() {
 		$slugs = wp_list_pluck( get_block_templates( array(), 'wp_template' ), 'slug' );
-		foreach ( array( 'single-plms_course', 'archive-plms_course', 'single-plms_lesson', 'single-plms_quiz', 'plms-dashboard' ) as $slug ) {
+		foreach ( array( 'single-plms_course', 'archive-plms_course', 'single-plms_lesson', 'single-plms_quiz', 'single-plms_assignment', 'plms-dashboard' ) as $slug ) {
 			$this->assertContains( $slug, $slugs );
 		}
 		$this->assertNotContains( 'plms-instructor', $slugs, 'The instructor dashboard arrives in part B of phase 2.' );

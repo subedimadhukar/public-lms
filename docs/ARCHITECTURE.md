@@ -136,8 +136,9 @@ at most 191 characters (ADR-026).
 | `plms_events` | event_type, user_id, course_id, object_type, object_id, payload | (event_type, created_at); user_id; (course_id, created_at) | Append-only; feeds reports, notices, webhooks |
 | `plms_notifications` | user_id, event_id, channel, type, title, message, link, status, read_at, sent_at | (user_id, status); (channel, status); created_at | In-app and email queue |
 | `plms_report_daily` | report_date, course_id (0 = site), enrollments, completions, active_learners, lessons_completed, quiz_attempts, quiz_passes, revenue, refunds | **UNIQUE (report_date, course_id)**; (course_id, report_date) | Dashboards read only aggregates |
+| `plms_assignment_submissions` | user_id, assignment_id, course_id, attempt, status, content, files (JSON), grade, max_grade, passed, feedback, submitted_at, graded_at, graded_by | (user_id, assignment_id); (assignment_id, status); (course_id, status); submitted_at | Phase 2 (schema 2); files live in the private folder, never in the media library (ADR-043) |
 
-Schema version: `Installer::DB_VERSION` (currently `1`), stored in option `publiclms_db_version`; the plugin
+Schema version: `Installer::DB_VERSION` (currently `2`), stored in option `publiclms_db_version`; the plugin
 version in `publiclms_version`. `Installer::maybe_upgrade()` runs `dbDelta()` when either is out of date.
 
 ## 4. REST resources and permission matrix
@@ -162,7 +163,10 @@ header while more rows exist.
 | `quizzes` | `POST`, `GET`, `PATCH`, `DELETE /quizzes/{id}` (2 ✓) | as lessons; editors get the question list, learners their own standing | as lessons, plus `edit_post` on any question added |
 | `questions` | `GET`, `POST`, `GET`, `PATCH`, `DELETE /questions/{id}` (2 ✓) | `publiclms_edit_own_course`; own questions unless `publiclms_manage_courses`; single: `edit_post` | create: the question type's `create_posts`; edit: `edit_post`; delete: `delete_post` |
 | `quizzes/{id}/attempts` | `GET`, `POST` start or resume, `GET /{attempt}`, `POST /{attempt}/answers`, `POST /{attempt}/submit` (2 ✓) | own attempts; others need `publiclms_view_course_reports` | AccessPolicy `can_attempt_quiz` (attempts limit); rate-limited (429 with `Retry-After`) |
-| `assignments/{id}/submissions` | `GET`, `POST`, `PUT /{id}/grade` (2) | own; others need `publiclms_view_course_reports` | submit: `can_submit_assignment`; grade: `publiclms_edit_course` |
+| `assignments` | `POST`, `GET`, `PATCH`, `DELETE /assignments/{id}` (2 ✓) | as lessons, plus the learner's own hand-in | as lessons |
+| `assignments/{id}/submissions` | `GET`, `POST` (multipart), `PUT /{submission}/grade` (2 ✓) | own; others need `publiclms_view_course_reports` | submit: `can_submit_assignment`, rate-limited; grade: `publiclms_edit_course` |
+| `submissions` | `GET /submissions`, `GET /submissions/{id}`, `GET /submissions/{id}/files/{file}` (2 ✓) | list: `publiclms_view_reports`, scoped to taught courses; single and files: the learner or `publiclms_view_course_reports` | none |
+| `courses/{id}/gradebook` | `GET` (JSON pages, or `format=csv`) (2 ✓) | `publiclms_view_course_reports` | none |
 | `orders` | `GET`, `GET /{id}`, `POST /checkout`, `POST /{id}/refund` (2) | own orders; all need `publiclms_manage_orders` | checkout: logged in or guest with email; refund: `publiclms_manage_order` |
 | `webhooks/{gateway}` | `POST` (2) | none | signature verified server-side; no cookie auth |
 | `reports` | `GET /courses/{id}`, `GET /site` (2) | `publiclms_view_course_reports` (meta; site-wide needs `publiclms_manage_courses` too) | none |
@@ -216,7 +220,7 @@ phase 0 draft named one store per block).
 | `publiclms/student-dashboard` | `tabs`, `defaultTab` | yes (WAI-ARIA tabs) | 1 ✓ (tabs: in progress, completed; phase 2 adds quiz results and certificates) |
 | `publiclms/video` | `provider`, `src`, `mediaId`, `captions`, `title`, `caption`, `trackCompletion`, `requiredPercent` | yes (watch tracking, ADR-041) | 2 ✓ |
 | `publiclms/quiz` | `quizId`, `showFacts` | yes (runner, ADR-042) | 2 ✓ |
-| `publiclms/assignment` | `assignmentId`, `allowedTypes`, `maxFileSize` | yes | 2 |
+| `publiclms/assignment` | `assignmentId` (limits live on the assignment, ADR-043) | yes (hand-in) | 2 ✓ |
 | `publiclms/instructor-dashboard` | `tabs` | yes | 2 |
 | `publiclms/course-reviews` | `courseId`, `perPage`, `showForm` | yes | 2 |
 | `publiclms/course-qa` | `courseId`, `perPage` | yes | 2 |
@@ -682,4 +686,37 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   them. Questions drawn per attempt are fixed at start in `question_ids`, so editing a quiz never changes
   an attempt in progress; editing a question's key does change how a later submission of an attempt in
   progress is graded. Pro's manually graded types use the attempt status `pending`.
+
+### ADR-043 Assignments: private uploads, grading and a free gradebook
+- **Context.** PRD §3 puts assignments with file upload and the gradebook in free (ADR-019). ARCHITECTURE
+  §6 asks for uploads checked for type and size and stored outside web-executable paths; the brief adds
+  that files are served only through a permission-checked endpoint, never by direct URL.
+- **Decision.** Hand-ins are rows in the new `plms_assignment_submissions` table (schema 2): typed answer
+  (through `wp_kses_post`), files as JSON, grade out of `max_grade`, pass flag, feedback; status `submitted`,
+  `graded` or `replaced`. Settings sit on the assignment (`Assignments\AssignmentSettings`: points, pass
+  grade, typed answers, files per hand-in, size, types, resubmit); the planned block attributes
+  `allowedTypes` and `maxFileSize` were dropped because only the server can enforce limits. Without a pass
+  grade, handing in completes the assignment; with one, a grade at or above it does. Before grading a learner
+  may hand in again (the waiting hand-in becomes `replaced`); after a fail, again if allowed; after a pass,
+  never. `Files\PrivateFiles` stores uploads in `{uploads}/publiclms-private/{random site token}/{Y}/{m}/`
+  under random 32-character names with no extension, behind `.htaccess` and `web.config` deny rules and
+  empty index files; `PUBLICLMS_PRIVATE_DIR` or `publiclms_private_dir` move it outside the web root. Each
+  file is checked against the assignment's extensions (a subset of a fixed safe list with no HTML, SVG,
+  scripts or executables), the size limit (capped by the server's), and its content with
+  `wp_check_filetype_and_ext()`. Downloads go through `GET /submissions/{id}/files/{file}`, which checks
+  the learner or the course's report viewers and streams the file through `Rest\FileResponse` (hooked to
+  `rest_pre_serve_request`) with the stored type, an RFC 6266 file name, `nosniff` and `no-store`; the same
+  class serves the gradebook CSV and certificate PDFs. Responses never contain storage paths. The
+  gradebook (`Services\Gradebook`) shows learners by the course's quizzes (best graded attempt) and
+  assignments (current hand-in), progress and the plain average of graded cells, paged by enrolment; the
+  CSV holds the whole course and prefixes formula-like cells with an apostrophe. Admin: a settings dialog
+  per assignment in the builder, a Submissions screen with a grading dialog, a Gradebook screen with CSV
+  export. Template `single-plms_assignment` uses the new pattern `assignment-submission`. Hooks:
+  `publiclms_assignment_submitted`, `publiclms_assignment_graded`; events `assignment.submitted`,
+  `assignment.graded`. Hand-ins are limited to 10 an hour per learner and assignment.
+- **Consequences.** On nginx the deny rules do nothing; the files stay unguessable and unexecutable but a
+  leaked path would be readable, so the docs recommend `PUBLICLMS_PRIVATE_DIR` or an nginx `deny` rule for
+  `publiclms-private`. Handing in needs JavaScript (multipart to REST). The gradebook reads each learner's
+  progress summary, one cached query per learner per page. Replaced hand-ins keep their files until the
+  learner's data is erased.
 

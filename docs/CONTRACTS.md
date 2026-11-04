@@ -26,6 +26,11 @@ post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the
    They read only B1 to B4 tokens; the quiz uses `success` and `danger` for results and `3xl` for the score.
 7. A6: curriculum items carry `is-type-lesson`, `is-type-quiz` or `is-type-assignment`, and dripped items
    show "Opens {date}"; section counts read "3 lessons, 1 quiz".
+8. A1: `single-plms_assignment` is registered (Single Assignment: lesson-header, assignment-submission,
+   lesson-navigation, lesson-sidebar), following the naming rule of ADR-023.
+9. A6: pattern `publiclms/assignment-submission`: the brief (`publiclms/lesson-content`) and
+   `publiclms/assignment` (hand-in form, status, grade and feedback). B1: the block uses `warning` for
+   "Waiting for a grade", and `success` and `danger` for the grade.
 
 **Changes in 1.2.0 (phase 1, minor), answering the theme's nine open items (theme `docs/CONTRACTS.md`,
 "Open items for the plugin"):**
@@ -76,7 +81,8 @@ The theme's side of these contracts is in `themes/campusinterface/docs/CONTRACTS
 
 ### A1. Templates the plugin registers
 
-The plugin registers six block templates with `register_block_template()` (WordPress 6.7+). The template ID
+The plugin registers seven block templates with `register_block_template()` (WordPress 6.7+); the seventh,
+`single-plms_assignment`, was added in 1.3.0. The template ID
 is `publiclms//{slug}`; the slug is what a theme matches. Slugs follow the post type keys, or carry the
 `plms-` prefix for the two page templates, so they can never match another plugin's post types or an
 ordinary page (ADR-023).
@@ -87,6 +93,7 @@ ordinary page (ADR-023).
 | `publiclms//archive-plms_course` | `archive-plms_course` | Course Archive | The `plms_course` archive (`/courses/`) and the `plms_course_category`, `plms_course_tag` and `plms_level` term archives | `publiclms/course-archive-header`, `publiclms/course-grid` |
 | `publiclms//single-plms_lesson` | `single-plms_lesson` | Single Lesson | A single `plms_lesson` | `publiclms/lesson-header`, `publiclms/lesson-content`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
 | `publiclms//single-plms_quiz` | `single-plms_quiz` | Single Quiz | A single `plms_quiz` | `publiclms/quiz-header`, `publiclms/quiz-runner`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
+| `publiclms//single-plms_assignment` | `single-plms_assignment` | Single Assignment | A single `plms_assignment` (1.3.0) | `publiclms/lesson-header`, `publiclms/assignment-submission`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
 | `publiclms//plms-dashboard` | `plms-dashboard` | Student Dashboard | The page saved in option `publiclms_dashboard_page_id`, or any page whose editor picks this template | `publiclms/student-dashboard` |
 | `publiclms//plms-instructor` | `plms-instructor` | Instructor Dashboard | The page saved in option `publiclms_instructor_page_id`, or any page whose editor picks this template | `publiclms/instructor-dashboard` |
 
@@ -209,6 +216,7 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 | `publiclms/lesson-sidebar` | single-plms_lesson | Collapsible curriculum for the current course |
 | `publiclms/quiz-header` | single-plms_quiz | Course link, section name, quiz title, and question count, time limit, pass mark and attempts left (A7 quiz keys); course progress (1.3.0) |
 | `publiclms/quiz-runner` | single-plms_quiz | The quiz introduction (`publiclms/lesson-content`) and `publiclms/quiz` (Interactivity API runner, server-graded) (1.3.0) |
+| `publiclms/assignment-submission` | single-plms_assignment | The assignment brief (`publiclms/lesson-content`) and `publiclms/assignment`: hand-in form, status, grade and feedback (1.3.0) |
 | `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block; phase 1 tabs: in progress, completed; quiz results, certificates and orders join in phase 2 |
 | `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports (phase 2) |
 

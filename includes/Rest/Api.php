@@ -15,6 +15,9 @@ use PublicLMS\Repositories\EnrollmentRepository;
 use PublicLMS\Services\EnrollmentService;
 use PublicLMS\Quizzes\QuestionBank;
 use PublicLMS\Repositories\QuizAttemptRepository;
+use PublicLMS\Repositories\SubmissionRepository;
+use PublicLMS\Services\AssignmentService;
+use PublicLMS\Services\Gradebook;
 use PublicLMS\Services\ProgressService;
 use PublicLMS\Services\QuizService;
 
@@ -48,6 +51,7 @@ final class Api {
 	 */
 	public function register(): void {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+		add_filter( 'rest_pre_serve_request', array( FileResponse::class, 'serve' ), 10, 2 );
 	}
 
 	/**
@@ -82,6 +86,9 @@ final class Api {
 			new QuizzesController( $structure, $policy, $progress, $c->get( QuestionBank::class ), $c->get( QuizService::class ) ),
 			new QuestionsController( $c->get( QuestionBank::class ) ),
 			new QuizAttemptsController( $c->get( QuizService::class ), $c->get( QuizAttemptRepository::class ), $structure ),
+			new AssignmentsController( $structure, $policy, $progress, $c->get( AssignmentService::class ), $c->get( SubmissionRepository::class ) ),
+			new SubmissionsController( $c->get( AssignmentService::class ), $c->get( SubmissionRepository::class ), $structure ),
+			new GradebookController( $c->get( Gradebook::class ) ),
 			new EnrollmentsController( $enrollments, $c->get( EnrollmentService::class ), $progress, $fields ),
 			new ProgressController( $progress, $enrollments, $policy ),
 			new StudentsController( $enrollments, $progress ),
