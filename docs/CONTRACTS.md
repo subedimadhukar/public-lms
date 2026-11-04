@@ -5,6 +5,8 @@
 **Change rule:** a change to either contract is a pull request on both repositories, and bumps this version:
 removing or renaming anything is a major bump; adding a slug, pattern, key or token is a minor bump; wording
 fixes are a patch. The plugin lands contract changes two to three weeks before the theme consumes them.
+**Changes before the gate:** 2026-11-04, template slugs switched from `single-course` and friends to the
+post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the version stays 1.0.0.
 
 There are two contracts, as the roadmap calls for:
 
@@ -22,62 +24,62 @@ The theme's side of these contracts is in `themes/campusinterface/docs/CONTRACTS
 ### A1. Templates the plugin registers
 
 The plugin registers six block templates with `register_block_template()` (WordPress 6.7+). The template ID
-is `publiclms//{slug}`; the slug is what a theme matches.
+is `publiclms//{slug}`; the slug is what a theme matches. Slugs follow the post type keys, or carry the
+`plms-` prefix for the two page templates, so they can never match another plugin's post types or an
+ordinary page (ADR-023).
 
 | Template ID | Slug | Title | Applies to | Built from patterns |
 |---|---|---|---|---|
-| `publiclms//single-course` | `single-course` | Single Course | A single `plms_course` | `publiclms/course-hero`, `publiclms/course-details`, `publiclms/course-curriculum`, `publiclms/course-instructor`, `publiclms/course-reviews`, `publiclms/course-enroll-card` |
-| `publiclms//archive-course` | `archive-course` | Course Archive | The `plms_course` archive (`/courses/`) and the `plms_course_category`, `plms_course_tag` and `plms_level` term archives | `publiclms/course-archive-header`, `publiclms/course-grid` |
-| `publiclms//single-lesson` | `single-lesson` | Single Lesson | A single `plms_lesson` | `publiclms/lesson-header`, `publiclms/lesson-content`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
-| `publiclms//single-quiz` | `single-quiz` | Single Quiz | A single `plms_quiz` | `publiclms/quiz-header`, `publiclms/quiz-runner` |
-| `publiclms//page-dashboard` | `page-dashboard` | Student Dashboard | The page saved in option `publiclms_dashboard_page_id`, or any page whose editor picks this template | `publiclms/student-dashboard` |
-| `publiclms//page-instructor` | `page-instructor` | Instructor Dashboard | The page saved in option `publiclms_instructor_page_id`, or any page whose editor picks this template | `publiclms/instructor-dashboard` |
+| `publiclms//single-plms_course` | `single-plms_course` | Single Course | A single `plms_course` | `publiclms/course-hero`, `publiclms/course-details`, `publiclms/course-curriculum`, `publiclms/course-instructor`, `publiclms/course-reviews`, `publiclms/course-enroll-card` |
+| `publiclms//archive-plms_course` | `archive-plms_course` | Course Archive | The `plms_course` archive (`/courses/`) and the `plms_course_category`, `plms_course_tag` and `plms_level` term archives | `publiclms/course-archive-header`, `publiclms/course-grid` |
+| `publiclms//single-plms_lesson` | `single-plms_lesson` | Single Lesson | A single `plms_lesson` | `publiclms/lesson-header`, `publiclms/lesson-content`, `publiclms/lesson-navigation`, `publiclms/lesson-sidebar` |
+| `publiclms//single-plms_quiz` | `single-plms_quiz` | Single Quiz | A single `plms_quiz` | `publiclms/quiz-header`, `publiclms/quiz-runner` |
+| `publiclms//plms-dashboard` | `plms-dashboard` | Student Dashboard | The page saved in option `publiclms_dashboard_page_id`, or any page whose editor picks this template | `publiclms/student-dashboard` |
+| `publiclms//plms-instructor` | `plms-instructor` | Instructor Dashboard | The page saved in option `publiclms_instructor_page_id`, or any page whose editor picks this template | `publiclms/instructor-dashboard` |
 
-No other templates are registered. In particular there is no `taxonomy-course-category` template: course term
-archives use `archive-course` (see A4 and ADR-023 in `ARCHITECTURE.md`).
+No other templates are registered. There is no separate template for course term archives: they use
+`archive-plms_course` (see A2).
 
-`page-dashboard` and `page-instructor` are registered with `post_types: [ "page" ]`, so they appear in the
-page template picker.
+`plms-dashboard` and `plms-instructor` are registered with `post_types: [ "page" ]`, so they appear in the
+page template picker as "Student Dashboard" and "Instructor Dashboard".
 
 ### A2. How the slugs reach the template hierarchy
 
-WordPress looks up `single-{post_type}` and `archive-{post_type}`, which for the plugin's post types are
-`single-plms_course`, `archive-plms_course` and so on. The plugin inserts its friendly slug directly after
-that candidate, so the order of precedence for a course is:
+The four single and archive slugs are exactly the names WordPress looks up for the plugin's post types
+(`single-{post_type}`, `archive-{post_type}`), so they need no help. They are also the names the Site Editor
+creates when a site owner picks "Add template → Single item: Course", so the plugin's template, a theme's
+override and the owner's own edits are always the same template. For a course the order of precedence is
+WordPress's own:
 
 ```
-single-plms_course-{post-name}  →  single-plms_course  →  single-course  →  single  →  singular  →  index
+single-plms_course-{post-name}  →  single-plms_course  →  single  →  singular  →  index
 ```
 
-| Request | Filter | Candidate inserted | Inserted after |
+The plugin adds to the hierarchy in two places only:
+
+| Request | Filter | Candidate added | Position |
 |---|---|---|---|
-| Single `plms_course` | `single_template_hierarchy` | `single-course` | `single-plms_course` |
-| Single `plms_lesson` | `single_template_hierarchy` | `single-lesson` | `single-plms_lesson` |
-| Single `plms_quiz` | `single_template_hierarchy` | `single-quiz` | `single-plms_quiz` |
-| `plms_course` archive | `archive_template_hierarchy` | `archive-course` | `archive-plms_course` |
-| Course category, tag or level archive | `taxonomy_template_hierarchy` | `archive-course` | `taxonomy-{taxonomy}` |
-| Configured dashboard page | `page_template_hierarchy` | `page-dashboard` | first, or after a template the editor picked |
-| Configured instructor page | `page_template_hierarchy` | `page-instructor` | first, or after a template the editor picked |
+| Course category, tag or level archive | `taxonomy_template_hierarchy` | `archive-plms_course` | After `taxonomy-{taxonomy}`, so a template for the taxonomy itself still wins |
+| The page in `publiclms_dashboard_page_id` | `page_template_hierarchy` | `plms-dashboard` | First, or after a template the editor picked for that page |
+| The page in `publiclms_instructor_page_id` | `page_template_hierarchy` | `plms-instructor` | First, or after a template the editor picked for that page |
 
-For pages, the plugin also **removes** `page-dashboard` and `page-instructor` from the hierarchy of any page
-that merely has the slug `dashboard` or `instructor` and is not the configured page, so an unrelated
-"Dashboard" page never gets the student dashboard.
-
-> **Known overlap (ADR-023).** `single-course`, `single-lesson`, `single-quiz` and `archive-course` are also
-> the names WordPress looks up for plugins whose post types are literally `course`, `lesson` or `quiz`
-> (Sensei LMS, and LifterLMS for `course` and `lesson`). The theme guard in A5 rule 6 keeps a theme's copies
-> of these templates off those plugins' pages. If the guard proves fragile, the fallback is to rename the
-> slugs to `single-plms_course` and the like, which needs no alias and no guard; that is a major contract bump.
+Because the page template slugs do not start with `page-`, WordPress never applies them to a page just
+because its slug is "dashboard" or "instructor".
 
 ### A3. Override rule
 
 1. **Same slug wins.** A theme overrides a plugin template by shipping `templates/{slug}.html`, for example
-   `templates/single-course.html`. WordPress gives theme template files precedence over plugin-registered
-   templates with the same slug; users can still edit either one in the Site Editor, and their edits win
-   over both.
-2. **Never the other way.** The plugin never overrides a theme template, and never registers a slug that is
-   not in A1.
-3. **Partial override is fine.** A theme may override `single-course` and leave the other five to the plugin.
+   `templates/single-plms_course.html`. WordPress gives theme template files precedence over
+   plugin-registered templates with the same slug; users can still edit either one in the Site Editor, and
+   their edits win over both.
+2. **Page templates stay pickable.** A theme that ships `templates/plms-dashboard.html` or
+   `templates/plms-instructor.html` also lists it in `customTemplates` in its `theme.json`, with
+   `"postTypes": [ "page" ]` and the titles above, so it remains available in the page template picker.
+3. **Never the other way.** The plugin never overrides a theme template, and never registers a slug that is
+   not in A1. Templates added in later versions follow the same naming rule: a post type key, or the
+   `plms-` prefix.
+4. **Partial override is fine.** A theme may override `single-plms_course` and leave the other five to the
+   plugin.
 
 ### A4. What templates may reference
 
@@ -106,36 +108,34 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 3. Every attribute a user should edit inside a pattern carries `"role": "content"` in the plugin's
    `block.json`, because WordPress 7.0 opens patterns in content-only editing.
 4. Course cards are ordinary Post Template, Post Title, Post Featured Image and Post Excerpt blocks inside a
-   core Query Loop over `plms_course`, with course data from the bindings source in A6. There is no
+   core Query Loop over `plms_course`, with course data from the bindings source in A7. There is no
    `publiclms/course-card` block.
 5. From phase 1 the plugin registers a Query Loop variation, `publiclms/course-query`. Patterns that want
    its extra controls (filter by level, hide enrolled courses) add `"namespace":"publiclms/course-query"` to
    the Query block's attributes; patterns without it still work as a plain query.
-6. **Theme guard.** A theme that ships any of the A1 slugs as files must remove `single-course`,
-   `single-lesson`, `single-quiz`, `archive-course`, `page-dashboard` and `page-instructor` from the
-   template hierarchy when `post_type_exists( 'plms_course' )` is false, so its copies never render for
-   another LMS's `course` post type while Public LMS is inactive.
+6. **No guard code.** Template slugs never match another plugin's post types or an ordinary page, so a
+   theme ships its overrides without filtering the template hierarchy.
 
 ### A6. Pattern inventory
 
 | Pattern slug | Used by | Contents |
 |---|---|---|
-| `publiclms/course-hero` | single-course | Course title, excerpt, featured image (`fetchpriority="high"`), level and instructor via bindings, primary enrol button |
-| `publiclms/course-details` | single-course | Duration, lesson count, level, last updated: Paragraph blocks bound to `publiclms/course-field` |
-| `publiclms/course-curriculum` | single-course, lesson-sidebar | `publiclms/curriculum` block (sections and items, lock and completion states) |
-| `publiclms/course-instructor` | single-course | Instructor avatar, name and bio |
-| `publiclms/course-reviews` | single-course | `publiclms/course-reviews` block |
-| `publiclms/course-enroll-card` | single-course | Price, `publiclms/enroll-button`, "this course includes" list; sticky on wide screens |
-| `publiclms/course-archive-header` | archive-course | Archive title and description |
-| `publiclms/course-grid` | archive-course | Query Loop over `plms_course` (`inherit: true` on archives), Post Template grid of course cards, pagination, no-results message |
-| `publiclms/lesson-header` | single-lesson | Course link, section name, lesson title, `publiclms/course-progress` |
-| `publiclms/lesson-content` | single-lesson | Post Content, attachments, `publiclms/mark-complete` |
-| `publiclms/lesson-navigation` | single-lesson | Previous and next item links (`publiclms/lesson-navigation` block) |
-| `publiclms/lesson-sidebar` | single-lesson | Collapsible curriculum for the current course |
-| `publiclms/quiz-header` | single-quiz | Quiz title, attempts left, time limit, pass mark |
-| `publiclms/quiz-runner` | single-quiz | `publiclms/quiz` block (Interactivity API runner, server-graded) |
-| `publiclms/student-dashboard` | page-dashboard | `publiclms/student-dashboard` block with tabs: courses, progress, quiz results, certificates, orders |
-| `publiclms/instructor-dashboard` | page-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports |
+| `publiclms/course-hero` | single-plms_course | Course title, excerpt, featured image (`fetchpriority="high"`), level and instructor via bindings, primary enrol button |
+| `publiclms/course-details` | single-plms_course | Duration, lesson count, level, last updated: Paragraph blocks bound to `publiclms/course-field` |
+| `publiclms/course-curriculum` | single-plms_course, lesson-sidebar | `publiclms/curriculum` block (sections and items, lock and completion states) |
+| `publiclms/course-instructor` | single-plms_course | Instructor avatar, name and bio |
+| `publiclms/course-reviews` | single-plms_course | `publiclms/course-reviews` block |
+| `publiclms/course-enroll-card` | single-plms_course | Price, `publiclms/enroll-button`, "this course includes" list; sticky on wide screens |
+| `publiclms/course-archive-header` | archive-plms_course | Archive title and description |
+| `publiclms/course-grid` | archive-plms_course | Query Loop over `plms_course` (`inherit: true` on archives), Post Template grid of course cards, pagination, no-results message |
+| `publiclms/lesson-header` | single-plms_lesson | Course link, section name, lesson title, `publiclms/course-progress` |
+| `publiclms/lesson-content` | single-plms_lesson | Post Content, attachments, `publiclms/mark-complete` |
+| `publiclms/lesson-navigation` | single-plms_lesson | Previous and next item links (`publiclms/lesson-navigation` block) |
+| `publiclms/lesson-sidebar` | single-plms_lesson | Collapsible curriculum for the current course |
+| `publiclms/quiz-header` | single-plms_quiz | Quiz title, attempts left, time limit, pass mark |
+| `publiclms/quiz-runner` | single-plms_quiz | `publiclms/quiz` block (Interactivity API runner, server-graded) |
+| `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block with tabs: courses, progress, quiz results, certificates, orders |
+| `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports |
 
 ### A7. Block bindings source
 

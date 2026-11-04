@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-04T08:36:10+00:00\n"
+"POT-Creation-Date: 2026-11-04T09:06:51+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: public-lms\n"
@@ -704,50 +704,50 @@ msgstr ""
 msgid "No levels found."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:71
+#: includes/Templates/TemplateRegistrar.php:89
 msgid "Single Course"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:72
+#: includes/Templates/TemplateRegistrar.php:90
 msgid "Displays a course landing page with its curriculum and enrol button."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:76
+#: includes/Templates/TemplateRegistrar.php:94
 msgid "Course Archive"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:77
+#: includes/Templates/TemplateRegistrar.php:95
 msgid "Displays the course catalogue and course category, tag and level archives."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:81
+#: includes/Templates/TemplateRegistrar.php:99
 msgid "Single Lesson"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:82
+#: includes/Templates/TemplateRegistrar.php:100
 msgid "Displays a lesson in a distraction-free layout with lesson navigation."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:86
+#: includes/Templates/TemplateRegistrar.php:104
 msgid "Single Quiz"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:87
+#: includes/Templates/TemplateRegistrar.php:105
 msgid "Displays a quiz and its runner."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:91
+#: includes/Templates/TemplateRegistrar.php:109
 msgid "Student Dashboard"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:92
+#: includes/Templates/TemplateRegistrar.php:110
 msgid "The learner dashboard: enrolled courses, progress, quiz results and certificates."
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:96
+#: includes/Templates/TemplateRegistrar.php:114
 msgid "Instructor Dashboard"
 msgstr ""
 
-#: includes/Templates/TemplateRegistrar.php:97
+#: includes/Templates/TemplateRegistrar.php:115
 msgid "The instructor dashboard: own courses, learners, submissions and reports."
 msgstr ""

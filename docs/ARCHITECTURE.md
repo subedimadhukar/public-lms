@@ -344,18 +344,24 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   for `PublicLMS\`. Action Scheduler loads only when installed; nothing in phase 0 depends on it.
 - **Consequences.** Release zips always include `vendor/` (production dependencies only).
 
-### ADR-023 Friendly template slugs, aliased into the hierarchy — **Deviation**
-- **Context.** The brief fixes the slugs `single-course`, `archive-course`, `single-lesson`, `single-quiz`,
-  `page-dashboard`, `page-instructor`. WordPress looks up `single-plms_course` for the plugin's post types,
-  so the friendly slugs need an alias. They also match other plugins' post types literally named `course`,
-  `lesson` or `quiz` (Sensei LMS; LifterLMS for two of them) and any page with the slug `dashboard`. The
-  document also listed a `taxonomy-course-category` template, which the brief does not.
-- **Decision.** `TemplateRegistrar` inserts each friendly slug directly after the post-type candidate, sends
-  course term archives to `archive-course`, and applies the two page templates only to their configured
-  pages or where an editor picked them. Themes that ship these slugs add the guard in `CONTRACTS.md` A5.6.
-- **Consequences.** Readable slugs for theme authors. Running Public LMS beside Sensei or LifterLMS can show
-  the plugin's course template on their courses when the theme has none of its own. If that matters in
-  practice, switch to post-type-exact slugs (`single-plms_course`) in a major contract bump.
+### ADR-023 Template slugs follow the post type keys — **Deviation** (owner decision, 2026-11-04)
+- **Context.** The phase 0 brief named the slugs `single-course`, `archive-course`, `single-lesson`,
+  `single-quiz`, `page-dashboard` and `page-instructor`. WordPress looks up `single-plms_course` for the
+  plugin's post types, so those slugs needed hierarchy aliases. Worse, they are also the names WordPress looks
+  up for other plugins whose post types are literally `course`, `lesson` or `quiz` (Sensei LMS, LifterLMS),
+  and `page-dashboard` matches any page with the slug "dashboard". Every theme in the Interface family would
+  have needed guard code to stay off those pages, and the Site Editor's "Add template → Single item: Course"
+  creates `single-plms_course`, which would have competed with `single-course`. The strategy document also
+  listed a `taxonomy-course-category` template.
+- **Decision.** The owner chose post-type-exact slugs before the phase 0 gate: `single-plms_course`,
+  `archive-plms_course`, `single-plms_lesson`, `single-plms_quiz`, and `plms-dashboard` and `plms-instructor`
+  for the two page templates (no `page-` prefix, so WordPress never matches them by page slug). The plugin
+  adds only two hierarchy entries: course term archives fall back to `archive-plms_course`, and the dashboard
+  templates apply to the pages chosen in settings. No separate taxonomy template.
+- **Consequences.** No alias filters for singles and archives, no guard code in any theme, and no collision
+  with other LMS plugins. Theme files are named `templates/single-plms_course.html`; site owners see the
+  template titles ("Single Course"), not the slugs. Later templates follow the same rule (post type key or
+  `plms-` prefix).
 
 ### ADR-024 Health route
 - **Decision.** `GET /publiclms/v1/health` returns `{"status":"ok"}` to anyone and adds version, schema

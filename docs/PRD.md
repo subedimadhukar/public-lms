@@ -129,11 +129,10 @@ complete; the theme runs the alpha with no plugin CSS overrides.
 | EDD Software Licensing behind `LicenseProvider`, Paddle checkout | ADR-015 |
 | Theme Pro is a companion plugin with a pattern cloud shared across the theme family | Out of this PRD; see the theme's docs |
 | Solo owner with Claude Code implementing; no hires | Phase durations to be re-planned before the start date |
+| Template slugs follow the post type keys (`single-plms_course`, `plms-dashboard`), not the brief's `single-course` | ADR-023; no guard code in themes |
 
 ## 9. Open questions for the owner
 
-1. Template slugs: keep the friendly slugs with guards (ADR-023), or switch to post-type-exact slugs before
-   any theme ships overrides?
-2. Instructors publish their own courses without review in free (ADR-025). Keep, or default to review?
-3. Name clearance: the wordpress.org slug `public-lms` and the domain are being checked in another session.
-4. Start date for phase 1, once phase durations are re-planned for the solo model.
+1. Instructors publish their own courses without review in free (ADR-025). Keep, or default to review?
+2. Name clearance: the wordpress.org slug `public-lms` and the domain are being checked in another session.
+3. Start date for phase 1, once phase durations are re-planned for the solo model.
