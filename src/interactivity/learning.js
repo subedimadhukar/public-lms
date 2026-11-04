@@ -85,8 +85,9 @@ const { state } = store( 'publiclms/learning', {
 			return !! state.nextLink?.isCourse;
 		},
 		get isSelectedTab() {
-			const { ref } = getElement();
-			return getContext().selected === ref?.dataset.tab;
+			// The ref is not attached yet while the page hydrates; attributes are.
+			const { attributes } = getElement();
+			return getContext().selected === attributes?.[ 'data-tab' ];
 		},
 		get isTabHidden() {
 			return ! state.isSelectedTab;

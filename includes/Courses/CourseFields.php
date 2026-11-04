@@ -46,12 +46,16 @@ class CourseFields {
 		'enroll_url',
 		'enroll_label',
 		'progress',
+		'course_title',
+		'course_url',
+		'section_title',
+		'updated',
 	);
 
 	/**
 	 * Keys whose value is a URL.
 	 */
-	const URL_KEYS = array( 'instructor_url', 'instructor_avatar', 'enroll_url' );
+	const URL_KEYS = array( 'instructor_url', 'instructor_avatar', 'enroll_url', 'course_url' );
 
 	/**
 	 * Currency symbols for the formats the plugin ships; other ISO codes print the code.
@@ -132,9 +136,10 @@ class CourseFields {
 	 * @param int    $course_id Course ID.
 	 * @param string $key       One of KEYS.
 	 * @param int    $user_id   User for the per-user keys; 0 for the current user.
+	 * @param int    $post_id   The post the value is shown for (a lesson for section_title), or 0.
 	 * @return string
 	 */
-	public function get( int $course_id, string $key, int $user_id = 0 ): string {
+	public function get( int $course_id, string $key, int $user_id = 0, int $post_id = 0 ): string {
 		$course = get_post( $course_id );
 		if ( ! $course instanceof WP_Post || PostTypes::COURSE !== $course->post_type ) {
 			return '';
@@ -176,6 +181,15 @@ class CourseFields {
 				}
 				/* translators: %d: percentage of the course completed. */
 				return sprintf( __( '%d%%', 'public-lms' ), $this->progress->summary( $user_id, $course_id )['percent'] );
+			case 'course_title':
+				return wp_strip_all_tags( get_the_title( $course ) );
+			case 'course_url':
+				return (string) get_permalink( $course );
+			case 'updated':
+				return (string) get_the_modified_date( '', $course );
+			case 'section_title':
+				$section_id = $post_id > 0 ? $this->structure->section_id_for( $post_id ) : 0;
+				return $section_id > 0 ? wp_strip_all_tags( get_the_title( $section_id ) ) : '';
 		}
 		return '';
 	}
@@ -185,12 +199,13 @@ class CourseFields {
 	 *
 	 * @param int $course_id Course ID.
 	 * @param int $user_id   User; 0 for the current user.
+	 * @param int $post_id   The post the values are shown for, or 0.
 	 * @return array<string, string>
 	 */
-	public function all( int $course_id, int $user_id = 0 ): array {
+	public function all( int $course_id, int $user_id = 0, int $post_id = 0 ): array {
 		$values = array();
 		foreach ( self::KEYS as $key ) {
-			$values[ $key ] = $this->get( $course_id, $key, $user_id );
+			$values[ $key ] = $this->get( $course_id, $key, $user_id, $post_id );
 		}
 		return $values;
 	}

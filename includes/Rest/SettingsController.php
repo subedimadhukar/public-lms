@@ -165,7 +165,8 @@ final class SettingsController extends AbstractController {
 	}
 
 	/**
-	 * Creates the dashboard page and selects it.
+	 * Creates the dashboard page and selects it. The page needs no template of
+	 * its own: TemplateRegistrar applies plms-dashboard to the selected page.
 	 *
 	 * @param WP_REST_Request<array<string, mixed>> $request Request.
 	 * @return WP_REST_Response|WP_Error
@@ -177,7 +178,7 @@ final class SettingsController extends AbstractController {
 				'post_status'  => 'publish',
 				'post_title'   => __( 'My learning', 'public-lms' ),
 				'post_name'    => 'my-learning',
-				'post_content' => '<!-- wp:publiclms/student-dashboard /-->',
+				'post_content' => '<!-- wp:paragraph --><p>' . esc_html__( 'Pick up where you left off, or start something new.', 'public-lms' ) . '</p><!-- /wp:paragraph -->',
 			),
 			true
 		);

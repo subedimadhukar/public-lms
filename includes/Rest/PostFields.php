@@ -100,7 +100,7 @@ final class PostFields {
 			'builder_url'  => current_user_can( Capabilities::META_EDIT_COURSE, $course_id )
 				? add_query_arg( 'course', $course_id, admin_url( 'admin.php?page=' . AdminApp::SLUG ) )
 				: '',
-			'fields'       => $this->fields->all( $course_id ),
+			'fields'       => $this->fields->all( $course_id, 0, $post_id ),
 		);
 	}
 }

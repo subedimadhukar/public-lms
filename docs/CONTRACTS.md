@@ -1,12 +1,25 @@
 # Public LMS ↔ theme contracts
 
-**Contract version:** 1.0.0 (phase 0, frozen at the phase 0 gate)
+**Contract version:** 1.1.0 (phase 1; additive changes only, listed under "Changes" below)
 **Applies to:** Public LMS ≥ 0.1.0 and any block theme that styles it, CampusInterface first.
 **Change rule:** a change to either contract is a pull request on both repositories, and bumps this version:
 removing or renaming anything is a major bump; adding a slug, pattern, key or token is a minor bump; wording
 fixes are a patch. The plugin lands contract changes two to three weeks before the theme consumes them.
 **Changes before the gate:** 2026-11-04, template slugs switched from `single-course` and friends to the
-post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the version stays 1.0.0.
+post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the version stayed 1.0.0.
+
+**Changes in 1.1.0 (phase 1, minor):**
+- A7: four binding keys added: `course_title`, `course_url`, `section_title`, `updated`. An empty value now
+  leaves the bound block's own text in place instead of printing an empty element.
+- A1 and A6: phase notes. Phase 1 ships four templates and twelve patterns; `single-plms_quiz`,
+  `plms-instructor` and the quiz, review and instructor-dashboard patterns arrive with their blocks in
+  phase 2, so the plugin's `single-plms_course` leaves out `publiclms/course-reviews` until then.
+- A6: `publiclms/lesson-content` uses the gated `publiclms/lesson-content` block rather than core Post
+  Content; `publiclms/course-details` binds "last updated" to `updated`; `publiclms/lesson-header` binds the
+  course link and section name. Patterns use helper classes (`publiclms-*`) instead of inline styles.
+- B5: the alias selector also covers the patterns' helper classes, `:where([class*="publiclms-"])`, and the
+  aliases load as the `publiclms-tokens` stylesheet with every plugin block and on every plugin page.
+- Nothing was removed or renamed; slugs and keys from 1.0.0 are unchanged.
 
 There are two contracts, as the roadmap calls for:
 
@@ -39,6 +52,11 @@ ordinary page (ADR-023).
 
 No other templates are registered. There is no separate template for course term archives: they use
 `archive-plms_course` (see A2).
+
+**Phase availability.** Phase 1 registers `single-plms_course`, `archive-plms_course`, `single-plms_lesson`
+and `plms-dashboard`. `single-plms_quiz` and `plms-instructor` are registered from phase 2, with the quiz
+runner and instructor dashboard; until then WordPress's own hierarchy applies to quizzes. The plugin
+registers a slug only when its template file ships, so a theme may already ship all six.
 
 `plms-dashboard` and `plms-instructor` are registered with `post_types: [ "page" ]`, so they appear in the
 page template picker as "Student Dashboard" and "Instructor Dashboard".
@@ -121,21 +139,21 @@ templates cannot hold PHP and patterns can (for translation and asset URLs).
 | Pattern slug | Used by | Contents |
 |---|---|---|
 | `publiclms/course-hero` | single-plms_course | Course title, excerpt, featured image (`fetchpriority="high"`), level and instructor via bindings, primary enrol button |
-| `publiclms/course-details` | single-plms_course | Duration, lesson count, level, last updated: Paragraph blocks bound to `publiclms/course-field` |
+| `publiclms/course-details` | single-plms_course | Duration, lesson count, level, last updated: Paragraph blocks bound to `publiclms/course-field` (`duration`, `lesson_count`, `level`, `updated`) |
 | `publiclms/course-curriculum` | single-plms_course, lesson-sidebar | `publiclms/curriculum` block (sections and items, lock and completion states) |
 | `publiclms/course-instructor` | single-plms_course | Instructor avatar, name and bio |
-| `publiclms/course-reviews` | single-plms_course | `publiclms/course-reviews` block |
-| `publiclms/course-enroll-card` | single-plms_course | Price, `publiclms/enroll-button`, "this course includes" list; sticky on wide screens |
+| `publiclms/course-reviews` | single-plms_course | `publiclms/course-reviews` block (phase 2; not registered in phase 1) |
+| `publiclms/course-enroll-card` | single-plms_course | Price and `publiclms/enroll-button`, `publiclms/course-progress`, "this course includes" (`publiclms/course-meta`); sticky |
 | `publiclms/course-archive-header` | archive-plms_course | Archive title and description |
 | `publiclms/course-grid` | archive-plms_course | Query Loop over `plms_course` (`inherit: true` on archives), Post Template grid of course cards, pagination, no-results message |
-| `publiclms/lesson-header` | single-plms_lesson | Course link, section name, lesson title, `publiclms/course-progress` |
-| `publiclms/lesson-content` | single-plms_lesson | Post Content, attachments, `publiclms/mark-complete` |
+| `publiclms/lesson-header` | single-plms_lesson | Course link (Button bound to `course_title` and `course_url`), section name (`section_title`), lesson title, `publiclms/course-progress` |
+| `publiclms/lesson-content` | single-plms_lesson | `publiclms/lesson-content` block (the gated lesson; attachments join in phase 2), `publiclms/mark-complete` |
 | `publiclms/lesson-navigation` | single-plms_lesson | Previous and next item links (`publiclms/lesson-navigation` block) |
 | `publiclms/lesson-sidebar` | single-plms_lesson | Collapsible curriculum for the current course |
-| `publiclms/quiz-header` | single-plms_quiz | Quiz title, attempts left, time limit, pass mark |
-| `publiclms/quiz-runner` | single-plms_quiz | `publiclms/quiz` block (Interactivity API runner, server-graded) |
-| `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block with tabs: courses, progress, quiz results, certificates, orders |
-| `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports |
+| `publiclms/quiz-header` | single-plms_quiz | Quiz title, attempts left, time limit, pass mark (phase 2) |
+| `publiclms/quiz-runner` | single-plms_quiz | `publiclms/quiz` block (Interactivity API runner, server-graded) (phase 2) |
+| `publiclms/student-dashboard` | plms-dashboard | `publiclms/student-dashboard` block; phase 1 tabs: in progress, completed; quiz results, certificates and orders join in phase 2 |
+| `publiclms/instructor-dashboard` | plms-instructor | `publiclms/instructor-dashboard` block: own courses, learners, submissions, reports (phase 2) |
 
 ### A7. Block bindings source
 
@@ -158,8 +176,15 @@ lesson or quiz template the course is taken from context.
 | `enroll_url` | Enrol, checkout or continue URL for the current user | Button `url` |
 | `enroll_label` | "Enrol now", "Buy for $49" or "Continue learning" | Button `text` |
 | `progress` | Current user's progress, e.g. "45%" | Paragraph `content` |
+| `course_title` | Course title (1.1.0) | Paragraph `content`, Heading `content`, Button `text` |
+| `course_url` | Course permalink (1.1.0) | Button `url` |
+| `section_title` | Title of the section the lesson is in, or empty on a course (1.1.0) | Paragraph `content` |
+| `updated` | Course last-modified date in the site's date format (1.1.0) | Paragraph `content` |
 
-Values are escaped by the source. Keys are only ever added; removing or renaming one is a major bump.
+Values are escaped by the source: text with `esc_html()` (core inserts bound rich text as HTML), URLs with
+`esc_url_raw()` (core escapes attribute values itself, so a second encoding would break query strings). An
+empty value returns nothing, so the block keeps its own text, such as a pattern's "—". Keys are only ever
+added; removing or renaming one is a major bump.
 
 ---
 
@@ -239,10 +264,12 @@ fallback `none`.
 ### B5. How the plugin applies fallbacks
 
 Plugin block CSS never reads `--wp--preset--*` directly. It reads its own aliases, declared on the block
-wrappers so they re-resolve wherever a theme scopes presets:
+wrappers and the patterns' helper classes so they re-resolve wherever a theme scopes presets. They ship in
+`assets/css/tokens.css` as the `publiclms-tokens` style, a dependency of every plugin block and enqueued on
+course, lesson, archive and dashboard pages:
 
 ```css
-:where([class*="wp-block-publiclms-"]) {
+:where([class*="publiclms-"]) {
 	--publiclms-color-primary: var(--wp--preset--color--primary, #3858e9);
 	--publiclms-font-size-sm: var(--wp--preset--font-size--sm, 0.875rem);
 	--publiclms-space-50: var(--wp--preset--spacing--50, 1.5rem);

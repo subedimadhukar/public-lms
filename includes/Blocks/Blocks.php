@@ -150,6 +150,7 @@ final class Blocks {
 	public function register(): void {
 		add_action( 'init', array( $this, 'register_blocks' ), 20 );
 		add_filter( 'block_categories_all', array( $this, 'block_category' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_shared_styles' ) );
 	}
 
 	/**
@@ -175,6 +176,22 @@ final class Blocks {
 		foreach ( self::BLOCKS as $name ) {
 			$handle = generate_block_asset_handle( 'publiclms/' . $name, 'editorScript' );
 			wp_set_script_translations( $handle, 'public-lms', PUBLICLMS_PATH . 'languages' );
+		}
+	}
+
+	/**
+	 * Loads the token aliases and pattern helpers on plugin pages, including
+	 * the course archive, whose cards are core blocks only.
+	 *
+	 * @return void
+	 */
+	public function enqueue_shared_styles(): void {
+		$dashboard = (int) get_option( 'publiclms_dashboard_page_id', 0 );
+		if ( is_singular( array( PostTypes::COURSE, PostTypes::LESSON, PostTypes::QUIZ, PostTypes::ASSIGNMENT ) )
+			|| is_post_type_archive( PostTypes::COURSE )
+			|| is_tax( \PublicLMS\Taxonomies\Taxonomies::KEYS )
+			|| ( $dashboard > 0 && is_page( $dashboard ) ) ) {
+			wp_enqueue_style( self::TOKENS );
 		}
 	}
 

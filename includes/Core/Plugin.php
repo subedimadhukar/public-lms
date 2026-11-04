@@ -32,6 +32,8 @@ use PublicLMS\Rest\PostFields;
 use PublicLMS\Services\EnrollmentService;
 use PublicLMS\Services\ProgressService;
 use PublicLMS\Taxonomies\Taxonomies;
+use PublicLMS\Templates\ClassicTemplates;
+use PublicLMS\Templates\PatternRegistrar;
 use PublicLMS\Templates\TemplateRegistrar;
 
 defined( 'ABSPATH' ) || exit;
@@ -127,6 +129,8 @@ final class Plugin {
 
 		$this->container->get( Capabilities::class )->register();
 		$this->container->get( TemplateRegistrar::class )->register();
+		$this->container->get( PatternRegistrar::class )->register();
+		$this->container->get( ClassicTemplates::class )->register();
 		$this->container->get( Api::class )->register();
 
 		add_action( 'wp_initialize_site', array( Installer::class, 'install_on_new_site' ), 200 );
@@ -310,6 +314,18 @@ final class Plugin {
 			TemplateRegistrar::class,
 			static function () {
 				return new TemplateRegistrar( PUBLICLMS_PATH . 'templates/' );
+			}
+		);
+		$c->set(
+			PatternRegistrar::class,
+			static function () {
+				return new PatternRegistrar( PUBLICLMS_PATH . 'patterns/' );
+			}
+		);
+		$c->set(
+			ClassicTemplates::class,
+			static function () {
+				return new ClassicTemplates( PUBLICLMS_PATH . 'templates/' );
 			}
 		);
 		$c->set(

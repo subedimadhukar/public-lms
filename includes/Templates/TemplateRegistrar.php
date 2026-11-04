@@ -27,9 +27,12 @@ defined( 'ABSPATH' ) || exit;
  * archives fall back to the course archive template, and the dashboard
  * templates apply to the pages chosen in settings.
  *
- * Phase 0 stub: the slug list and hierarchy rules are final; the template
- * files under templates/ arrive in phase 1, and register_templates() only
- * registers slugs whose file exists, so nothing is registered yet.
+ * register_templates() registers each slug whose file exists under
+ * templates/. Phase 1 ships single-plms_course, archive-plms_course,
+ * single-plms_lesson and plms-dashboard, built from the patterns in
+ * patterns/; single-plms_quiz and plms-instructor arrive with quizzes and
+ * the instructor dashboard in phase 2. Classic themes get the same blocks
+ * through ClassicTemplates.
  */
 final class TemplateRegistrar {
 

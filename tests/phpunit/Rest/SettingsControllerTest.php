@@ -39,7 +39,7 @@ class SettingsControllerTest extends RestTestCase {
 		$response = $this->request( 'POST', '/settings/dashboard-page', array(), $admin );
 		$page_id  = $response->get_data()['dashboard_page_id'];
 		$this->assertSame( 'page', get_post_type( $page_id ) );
-		$this->assertStringContainsString( 'wp:publiclms/student-dashboard', get_post_field( 'post_content', $page_id ) );
+		$this->assertSame( $page_id, (int) get_option( 'publiclms_dashboard_page_id' ) );
 		$this->assertSame( 403, $this->request( 'POST', '/settings/dashboard-page', array(), $this->instructor )->get_status() );
 	}
 

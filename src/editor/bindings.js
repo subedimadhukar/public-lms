@@ -23,6 +23,10 @@ const KEYS = {
 	enroll_url: __( 'Enrol URL', 'public-lms' ),
 	enroll_label: __( 'Enrol button text', 'public-lms' ),
 	progress: __( 'My progress', 'public-lms' ),
+	course_title: __( 'Course title', 'public-lms' ),
+	course_url: __( 'Course URL', 'public-lms' ),
+	section_title: __( 'Section title', 'public-lms' ),
+	updated: __( 'Last updated', 'public-lms' ),
 };
 
 const COURSE_TYPES = [

@@ -89,20 +89,20 @@ final class BindingsSource {
 			return null;
 		}
 
+		$post_id   = $block_instance instanceof WP_Block && isset( $block_instance->context['postId'] )
+			? absint( $block_instance->context['postId'] )
+			: (int) get_the_ID();
 		$course_id = isset( $source_args['courseId'] ) ? absint( $source_args['courseId'] ) : 0;
-		if ( 0 === $course_id ) {
-			$post_id   = $block_instance instanceof WP_Block && isset( $block_instance->context['postId'] )
-				? absint( $block_instance->context['postId'] )
-				: (int) get_the_ID();
-			$course_id = $this->fields->resolve_course_id( $post_id );
-		} else {
-			$course_id = $this->fields->resolve_course_id( $course_id );
-		}
+		$course_id = $this->fields->resolve_course_id( $course_id > 0 ? $course_id : $post_id );
 		if ( $course_id <= 0 ) {
 			return null;
 		}
 
-		$value = $this->fields->get( $course_id, $key );
+		$value = $this->fields->get( $course_id, $key, 0, $post_id );
+		if ( '' === $value ) {
+			// Keep the block's own text (a pattern's placeholder) rather than print an empty element.
+			return null;
+		}
 		if ( in_array( $key, CourseFields::URL_KEYS, true ) ) {
 			return esc_url_raw( $value );
 		}

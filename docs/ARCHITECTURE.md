@@ -44,7 +44,7 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Data | `Core\Installer` (dbDelta schema), `Repositories\*` | Schema done; interfaces and base repository only | Phase 1: enrolment, progress, event and course structure repositories with object caching. |
 | Access | `Access\AccessPolicy`, `Access\AccessDecision`, `Access\ContentGate` | Phase 1: enrolment, publish state, preview; drip and prerequisites are documented no-ops | Rule order documented in the class; the gate filters `the_content` for every template and API. |
 | REST | `Rest\AbstractController`, `Rest\Api`, controllers per resource | Phase 1: courses, curriculum, sections, lessons, enrolments, progress, students | Matrix in §4. |
-| Templates | `Templates\TemplateRegistrar` | Slug list and hierarchy mapping; no template files | Files under `templates/` in phase 1. |
+| Templates | `Templates\TemplateRegistrar`, `PatternRegistrar`, `ClassicTemplates` | Phase 1: four templates, twelve patterns, classic theme fallback | ADR-037. |
 | Licensing | `Licensing\LicenseProvider`, `NullLicenseProvider`, `LicenseStatus` | Done | Pro binds the EDD provider. |
 | Admin | One React app on `@wordpress/components`, `@wordpress/data` stores per domain, DataViews | Phase 1: "Public LMS" menu with Courses (DataViews list and course builder), Students (DataViews) and Settings | ADR-033, ADR-034. |
 | Front end | Dynamic blocks with block supports; Interactivity API for player, quiz runner, curriculum, dashboard | Phase 1: eight blocks, one shared store module | ADR-035. |
@@ -540,3 +540,21 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   lacks, `query.publiclmsHideEnrolled`, applied on the front end (`query_loop_block_query_vars`) and in the
   editor preview (`rest_plms_course_query`); level and category filtering use core's taxonomy controls.
 - **Consequences.** No contract change; themes compose course cards from core blocks.
+
+### ADR-037 Plugin templates from patterns, with a classic theme fallback in phase 1
+- **Decision.** The plugin ships `templates/single-plms_course.html`, `archive-plms_course.html`,
+  `single-plms_lesson.html` and `plms-dashboard.html`, each a header part, a `<main>` group of
+  `publiclms/*` patterns and a footer part (CONTRACTS.md A1, A4). `Templates\PatternRegistrar` registers
+  `patterns/*.php` from their file headers (WordPress has no automatic pattern folder for plugins), lazily
+  through `filePath` on 6.8+. Static blocks in patterns carry `publiclms-*` helper classes instead of inline
+  style objects, so saved markup always validates in the Site Editor (checked: every pattern and template
+  parses with no invalid block) and themes restyle them through the token aliases. The lesson template puts
+  the lesson before the curriculum sidebar in source order, so keyboard and screen reader users reach the
+  lesson first. The fallback ADR-009 planned for phase 2 ships now: on a classic theme,
+  `Templates\ClassicTemplates` routes plugin requests to `templates/classic.php`, which prints
+  `get_header()`, the template's blocks without its top-level template parts, and `get_footer()`, unless the
+  theme has its own `{slug}.php`. The created dashboard page uses the dashboard template through the
+  `publiclms_dashboard_page_id` hierarchy rule, not a stored page template, so it also works on classic
+  themes.
+- **Consequences.** Verified on Twenty Twenty-Five (block) and Twenty Twenty-One (classic) without the
+  CampusInterface theme. The course template leaves out `publiclms/course-reviews` until reviews exist.

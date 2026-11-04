@@ -1,0 +1,28 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"publiclms-template publiclms-template--course","layout":{"type":"constrained"}} -->
+<main class="wp-block-group publiclms-template publiclms-template--course">
+	<!-- wp:pattern {"slug":"publiclms/course-hero"} /-->
+
+	<!-- wp:columns {"align":"wide","className":"publiclms-course-layout"} -->
+	<div class="wp-block-columns alignwide publiclms-course-layout">
+		<!-- wp:column {"width":"64%"} -->
+		<div class="wp-block-column" style="flex-basis:64%">
+			<!-- wp:pattern {"slug":"publiclms/course-details"} /-->
+			<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+			<!-- wp:pattern {"slug":"publiclms/course-curriculum"} /-->
+			<!-- wp:pattern {"slug":"publiclms/course-instructor"} /-->
+		</div>
+		<!-- /wp:column -->
+
+		<!-- wp:column {"width":"36%"} -->
+		<div class="wp-block-column" style="flex-basis:36%">
+			<!-- wp:pattern {"slug":"publiclms/course-enroll-card"} /-->
+		</div>
+		<!-- /wp:column -->
+	</div>
+	<!-- /wp:columns -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

@@ -4,9 +4,11 @@
  * Plugin block styles never read --wp--preset--* directly; they read these
  * aliases, each with a fallback that passes WCAG 2.2 AA on a white page.
  * :where() keeps them at zero specificity, so any theme rule wins, and a
- * theme may set an alias directly to restyle plugin blocks only.
+ * theme may set an alias directly to restyle plugin blocks only. The
+ * selector covers the plugin's blocks (wp-block-publiclms-*) and the
+ * helper classes its patterns use (publiclms-*).
  */
-:where([class*="wp-block-publiclms-"]) {
+:where([class*="publiclms-"]) {
 	--publiclms-color-base: var(--wp--preset--color--base, #fff);
 	--publiclms-color-contrast: var(--wp--preset--color--contrast, #1e1e1e);
 	--publiclms-color-primary: var(--wp--preset--color--primary, #3858e9);
@@ -59,4 +61,69 @@
 	border-radius: var(--publiclms-radius-md, 8px);
 	background: var(--publiclms-color-surface, #f6f7f7);
 	color: var(--publiclms-color-contrast, #1e1e1e);
+}
+
+/* Pattern helpers: the plugin patterns carry these classes instead of
+   inline styles, so saved markup stays valid and themes restyle them. */
+:where(.publiclms-course-hero) {
+	padding-block: var(--publiclms-space-50);
+}
+
+:where(.publiclms-course-details) {
+	padding-block: var(--publiclms-space-40);
+	border-block: 1px solid var(--publiclms-color-line);
+}
+
+:where(.publiclms-course-curriculum, .publiclms-course-instructor, .publiclms-lesson-nav) {
+	margin-block-start: var(--publiclms-space-60);
+}
+
+:where(.publiclms-course-enroll-card) {
+	padding: var(--publiclms-space-50);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-lg);
+	background: var(--publiclms-color-base);
+	box-shadow: var(--publiclms-shadow-card);
+}
+
+:where(.publiclms-course-archive-header) {
+	padding-block: var(--publiclms-space-50) var(--publiclms-space-40);
+}
+
+:where(.publiclms-course-card) {
+	padding-block-end: var(--publiclms-space-40);
+}
+
+:where(.publiclms-value) {
+	font-weight: 600;
+}
+
+:where(.publiclms-price) {
+	font-weight: 700;
+}
+
+:where(.publiclms-badge) {
+	display: inline-block;
+	padding: 0 var(--publiclms-space-20);
+	border-radius: var(--publiclms-radius-pill);
+	background: var(--publiclms-color-primary-soft);
+	color: var(--publiclms-color-contrast);
+}
+
+:where(.publiclms-badge:empty, .publiclms-course-card p:empty) {
+	display: none;
+}
+
+:where(.publiclms-lesson-sidebar) {
+	padding: var(--publiclms-space-40);
+	border-radius: var(--publiclms-radius-lg);
+	background: var(--publiclms-color-surface);
+}
+
+:where(.publiclms-template) {
+	padding-block: var(--publiclms-space-50) var(--publiclms-space-70);
+}
+
+:where(.publiclms-template--lesson .publiclms-lesson-layout) {
+	gap: var(--publiclms-space-60);
 }
