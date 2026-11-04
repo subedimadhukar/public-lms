@@ -424,7 +424,7 @@ final class Command {
 	 */
 	private function lesson_content( string $title, string $body ): string {
 		return '<!-- wp:paragraph --><p>' . esc_html( $body ) . '</p><!-- /wp:paragraph -->'
-			. '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">Try this</h3><!-- /wp:heading -->'
+			. '<!-- wp:heading --><h2 class="wp-block-heading">Try this</h2><!-- /wp:heading -->'
 			. '<!-- wp:paragraph --><p>' . esc_html( sprintf( 'Before you move on, write down one idea from “%s” that you can use this week, and one question you still have.', $title ) ) . '</p><!-- /wp:paragraph -->';
 	}
 }

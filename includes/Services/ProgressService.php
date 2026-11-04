@@ -183,7 +183,7 @@ class ProgressService {
 
 		return array(
 			'course_id'       => $course_id,
-			'percent'         => $total > 0 ? (int) floor( $done * 100 / $total ) : 0,
+			'percent'         => ProgressRepository::percent( $done, $total ),
 			'items_completed' => $done,
 			'items_total'     => $total,
 			'completed'       => $total > 0 && $done === $total,

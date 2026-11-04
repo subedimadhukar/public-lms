@@ -23,6 +23,78 @@ const STUDENT = {
 };
 const COURSE = 'Composting at Home';
 
+// Theme to run against; CampusInterface when it is mapped into wp-env.
+const THEME = process.env.PUBLICLMS_E2E_THEME || 'twentytwentyfive';
+
+/**
+ * Returns the WCAG contrast ratio between each text span of an element and
+ * the element's own background colour.
+ *
+ * @param {import('@playwright/test').Locator} locator Element with a solid background.
+ * @return {Promise<Array<{text: string, color: string, background: string, ratio: number}>>} One entry per span.
+ */
+function textContrast( locator ) {
+	return locator.evaluate( ( element ) => {
+		const channels = ( value ) =>
+			value
+				.match( /[\d.]+/g )
+				.slice( 0, 3 )
+				.map( Number );
+		const luminance = ( rgb ) => {
+			const [ r, g, b ] = rgb.map( ( v ) => {
+				const c = v / 255;
+				return c <= 0.03928
+					? c / 12.92
+					: ( ( c + 0.055 ) / 1.055 ) ** 2.4;
+			} );
+			return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		};
+		const background =
+			element.ownerDocument.defaultView.getComputedStyle(
+				element
+			).backgroundColor;
+		const bg = luminance( channels( background ) );
+		return Array.from( element.querySelectorAll( 'span' ) ).map(
+			( span ) => {
+				const color =
+					span.ownerDocument.defaultView.getComputedStyle(
+						span
+					).color;
+				const fg = luminance( channels( color ) );
+				return {
+					text: span.textContent.trim(),
+					color,
+					background,
+					ratio:
+						( Math.max( fg, bg ) + 0.05 ) /
+						( Math.min( fg, bg ) + 0.05 ),
+				};
+			}
+		);
+	} );
+}
+
+/**
+ * Asserts that every text span of the next link is readable on its fill.
+ *
+ * @param {import('@playwright/test').Locator} next The next link.
+ */
+async function expectReadable( next ) {
+	const entries = await textContrast( next );
+	test.info().annotations.push( {
+		type: `next link contrast (${ THEME })`,
+		description: entries
+			.map(
+				( entry ) => `${ entry.text }: ${ entry.ratio.toFixed( 2 ) }:1`
+			)
+			.join( ', ' ),
+	} );
+	for ( const entry of entries ) {
+		expect( entry.color, entry.text ).not.toBe( entry.background );
+		expect( entry.ratio, entry.text ).toBeGreaterThanOrEqual( 4.5 );
+	}
+}
+
 /**
  * Logs a page in through the login form.
  *
@@ -74,7 +146,7 @@ test.describe( 'Phase 1 learning journey', () => {
 
 	test.beforeAll( async ( { requestUtils } ) => {
 		await requestUtils.activatePlugin( 'public-lms' );
-		await requestUtils.activateTheme( 'twentytwentyfive' );
+		await requestUtils.activateTheme( THEME );
 		await requestUtils.deleteAllUsers();
 		await requestUtils.createUser( INSTRUCTOR );
 		await requestUtils.createUser( STUDENT );
@@ -99,7 +171,10 @@ test.describe( 'Phase 1 learning journey', () => {
 		const admin = await instructorContext.newPage();
 		await logIn( admin, INSTRUCTOR );
 		await admin.goto( '/wp-admin/admin.php?page=publiclms' );
-		await admin.getByRole( 'button', { name: 'Add course' } ).click();
+		// The admin bundle can take a while on a cold start after a build.
+		const addCourse = admin.getByRole( 'button', { name: 'Add course' } );
+		await expect( addCourse ).toBeVisible( { timeout: 30_000 } );
+		await addCourse.click();
 		await admin
 			.getByRole( 'textbox', { name: 'Course title' } )
 			.fill( COURSE );
@@ -194,6 +269,15 @@ test.describe( 'Phase 1 learning journey', () => {
 			name: /Next.*Greens and browns/,
 		} );
 		await expect( next ).toHaveClass( /is-ready/ );
+
+		// The filled next link stays readable on any theme that colours links,
+		// at rest, on hover and after a reload.
+		await expectReadable( next );
+		await next.hover();
+		await expectReadable( next );
+		await page.reload();
+		await expect( next ).toHaveClass( /is-ready/ );
+		await expectReadable( next );
 
 		// The dashboard shows the course and its progress.
 		await page.goto( dashboardUrl );

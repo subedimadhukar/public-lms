@@ -141,7 +141,7 @@ class ProgressRepositoryTest extends TestCase {
 		$this->assertNull( $again['enrollment_id'] );
 
 		$grown = $this->repo->refresh_course_progress( $user, 10, array( 11, 12, 13 ) );
-		$this->assertSame( 66, $grown['percent'] );
+		$this->assertSame( 67, $grown['percent'] );
 		$this->assertNull( $grown['completed_at'] );
 
 		$empty = $this->repo->refresh_course_progress( $user, 10, array() );
@@ -197,5 +197,30 @@ class ProgressRepositoryTest extends TestCase {
 		$this->assertSame( array(), $this->repo->items_for_course( $user, 10 ) );
 		$this->assertSame( array(), $this->repo->course_progress_for_user( $user ) );
 		$this->assertCount( 1, $this->repo->items_for_course( $other, 10 ) );
+	}
+
+	/**
+	 * @covers ::percent
+	 */
+	public function test_percent_rounds_to_nearest_but_keeps_100_for_completion() {
+		$this->assertSame( 17, ProgressRepository::percent( 1, 6 ) );
+		$this->assertSame( 67, ProgressRepository::percent( 2, 3 ) );
+		$this->assertSame( 83, ProgressRepository::percent( 5, 6 ) );
+		$this->assertSame( 33, ProgressRepository::percent( 1, 3 ) );
+		$this->assertSame( 99, ProgressRepository::percent( 199, 200 ), 'Never 100 before the last item.' );
+		$this->assertSame( 1, ProgressRepository::percent( 1, 300 ), 'Never 0 once an item is done.' );
+		$this->assertSame( 100, ProgressRepository::percent( 6, 6 ) );
+		$this->assertSame( 0, ProgressRepository::percent( 0, 6 ) );
+		$this->assertSame( 0, ProgressRepository::percent( 0, 0 ) );
+	}
+
+	/**
+	 * @covers ::refresh_course_progress
+	 */
+	public function test_one_of_six_reads_17_percent_in_the_stored_aggregate() {
+		$user = self::factory()->user->create();
+		$this->repo->upsert_item( $user, 10, 11, 'lesson', 'completed' );
+		$row = $this->repo->refresh_course_progress( $user, 10, array( 11, 12, 13, 14, 15, 16 ) );
+		$this->assertSame( 17, $row['percent'] );
 	}
 }

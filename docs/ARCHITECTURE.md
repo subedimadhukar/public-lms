@@ -447,6 +447,9 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
 - **Caching.** `enrollments:user:{id}` (every row of a user, which serves all access checks in a request),
   `enrolled_count:{course}`, `progress_items:{user}:{course}` and `course_progress:user:{id}`, all cleared by
   the repository that writes them.
+- **Percentages.** `ProgressRepository::percent()` rounds to the nearest whole number (1 of 6 is 17%), but
+  reads 100 only when every item is done and at least 1 once any item is. The stored aggregate, the live
+  summary, REST, the progress bar, the dashboard and the live-region message all use it.
 - **Events.** Enrolment, item completion and course completion append to `plms_events` for phase 2 reports.
 
 ### ADR-030 Cursor pagination for sorted lists
@@ -528,6 +531,11 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   (whoever wrote it) while embeds, which render from block markup, keep working.
 - **Course progress looks** are block style variations (`is-style-bar`, `is-style-ring`, `is-style-text`),
   not an attribute: an attribute named `style` collides with WordPress's own block-supports `style`.
+- **State colours.** Block CSS sits in `:where()` so themes win, except where a state paints text on a filled
+  background: the completed lesson's next link. Core's global link colour, `a:where(:not(.wp-element-button))`
+  and its `:hover` and `:focus` variants, outranks `:where()` and painted primary text on the primary fill
+  (1:1 on CampusInterface). That rule now carries real specificity and is themed through the colour aliases;
+  the e2e journey asserts at least 4.5:1 at rest, on hover and after a reload.
 - **Accessibility.** The curriculum's sections are native `<details>`; the dashboard tabs follow the WAI-ARIA
   tabs pattern; the mark-complete button keeps its visible label as its name and gains a description while
   complete; progress is a `role="progressbar"` with live `aria-valuenow`; no motion without

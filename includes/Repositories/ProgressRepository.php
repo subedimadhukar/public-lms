@@ -47,6 +47,27 @@ class ProgressRepository implements ProgressRepositoryInterface {
 	}
 
 	/**
+	 * Returns a completion percentage: rounded to the nearest whole number,
+	 * but 100 only when every item is done and at least 1 once any item is.
+	 *
+	 * The progress bar, the dashboard, the live region and REST all show this
+	 * number, so 1 of 6 reads 17% everywhere and 199 of 200 never reads 100%.
+	 *
+	 * @param int $done  Items completed.
+	 * @param int $total Items in the course.
+	 * @return int 0 to 100.
+	 */
+	public static function percent( int $done, int $total ): int {
+		if ( $total <= 0 || $done <= 0 ) {
+			return 0;
+		}
+		if ( $done >= $total ) {
+			return 100;
+		}
+		return max( 1, min( 99, (int) round( $done * 100 / $total ) ) );
+	}
+
+	/**
 	 * Returns the per-item table name.
 	 *
 	 * @return string
@@ -244,7 +265,7 @@ class ProgressRepository implements ProgressRepositoryInterface {
 		if ( $total > 0 ) {
 			$completed = count( array_intersect( $item_ids, $this->completed_item_ids( $user_id, $course_id ) ) );
 		}
-		$percent = $total > 0 ? (int) floor( $completed * 100 / $total ) : 0;
+		$percent = self::percent( $completed, $total );
 		$now     = gmdate( 'Y-m-d H:i:s' );
 
 		// completed_at is set the first time the course reaches 100% and cleared

@@ -31,10 +31,22 @@
 	text-align: end;
 }
 
-:where(.wp-block-publiclms-lesson-navigation__link.is-next.is-ready) {
+// Once the item is complete the next link becomes a filled call to action.
+// This state rule needs real specificity: core's global link colour,
+// a:where(:not(.wp-element-button)) and its :hover and :focus variants,
+// would otherwise paint the text in the same primary colour as the fill.
+// Themes restyle it through the colour aliases.
+.wp-block-publiclms-lesson-navigation .wp-block-publiclms-lesson-navigation__link.is-next.is-ready,
+.wp-block-publiclms-lesson-navigation .wp-block-publiclms-lesson-navigation__link.is-next.is-ready:hover,
+.wp-block-publiclms-lesson-navigation .wp-block-publiclms-lesson-navigation__link.is-next.is-ready:focus,
+.wp-block-publiclms-lesson-navigation .wp-block-publiclms-lesson-navigation__link.is-next.is-ready:focus-visible {
 	border-color: var(--publiclms-color-primary);
 	background: var(--publiclms-color-primary);
 	color: var(--publiclms-color-base);
+}
+
+.wp-block-publiclms-lesson-navigation .wp-block-publiclms-lesson-navigation__link.is-next.is-ready:focus-visible {
+	outline-color: var(--publiclms-color-contrast);
 }
 
 :where(.wp-block-publiclms-lesson-navigation__label) {
