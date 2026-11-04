@@ -343,7 +343,7 @@ export default function QuestionEditor( {
 						<TextareaControl
 							label={ __( 'Sentence with blanks', 'public-lms' ) }
 							help={ __(
-								'Wrap each missing word in double braces: The capital of Nepal is {{Kathmandu}}. Separate other accepted answers with |, as in {{colour|color}}. Case and spacing are ignored.',
+								'Wrap each missing word in double braces: The largest ocean on Earth is the {{Pacific}}. Separate other accepted answers with |, as in {{colour|color}}. Case and spacing are ignored.',
 								'public-lms'
 							) }
 							value={ question.template }

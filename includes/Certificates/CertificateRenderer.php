@@ -125,7 +125,8 @@ class CertificateRenderer {
 	public static function sample(): array {
 		return array(
 			'certificate_key' => 'PLMS-SAMP-LE00-0000',
-			'learner_name'    => __( 'Sita Gurung', 'public-lms' ),
+			/* translators: Sample learner name in the certificate preview; use a name common in your language. */
+			'learner_name'    => __( 'Alex Morgan', 'public-lms' ),
 			'course_title'    => __( 'Bookkeeping Basics for Small Businesses', 'public-lms' ),
 			'completed_at'    => gmdate( 'Y-m-d H:i:s' ),
 			'data'            => array(

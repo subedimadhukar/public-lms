@@ -601,7 +601,11 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   with varied progress and a dashboard page; everything it creates carries `_plms_seed` post, term or user
   meta, so `wp publiclms reset --yes` removes exactly that, including the seeded users' enrolment, progress
   and event rows. It refuses to run on a production environment without `--force`. Seeded users share one
-  password (`--password`, `PUBLICLMS_SEED_PASSWORD`, or `public-lms-demo`). Playwright
+  password (`--password`, `PUBLICLMS_SEED_PASSWORD`, or `public-lms-demo`). Since phase 2 part B the logins
+  are role-based (`learner`, `instructor`, then `learner.*` and `instructor.*`) and the display names span
+  several scripts (Arabic, Devanagari, Latin, Japanese, Korean, Chinese, Cyrillic), so the audience the
+  plugin serves is global from the first screen; one seeded course is paid, with a checkout page, the
+  offline method and the coupon `WELCOME10` created when the site has none. Playwright
   (`@wordpress/e2e-test-utils-playwright`) covers the alpha journey in `tests/e2e/`: an instructor builds a
   course with two sections and three lessons in the admin app, a student enrols, completes a lesson
   (no navigation, progress 33 percent, next link ready) and sees it on the dashboard, whose tabs work from the

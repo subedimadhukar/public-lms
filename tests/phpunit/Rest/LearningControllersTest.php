@@ -73,7 +73,7 @@ class LearningControllersTest extends RestTestCase {
 		$page1 = $this->request( 'GET', '/courses/' . $course . '/enrollments', array( 'per_page' => 2 ), $this->instructor );
 		$this->assertSame( 200, $page1->get_status() );
 		$this->assertSame( '3', $page1->get_headers()['X-WP-Total'] );
-		$this->assertSame( 'Sita Gurung', $page1->get_data()[0]['user']['name'] );
+		$this->assertSame( 'Lucía Fernández', $page1->get_data()[0]['user']['name'] );
 		$page2 = $this->request(
 			'GET',
 			'/courses/' . $course . '/enrollments',
@@ -179,7 +179,7 @@ class LearningControllersTest extends RestTestCase {
 
 		$first = $this->request( 'GET', '/students', array( 'per_page' => 2 ), $this->manager );
 		$this->assertSame( '3', $first->get_headers()['X-WP-Total'] );
-		$this->assertSame( array( 'Amir Khan', 'Sita Gurung' ), wp_list_pluck( $first->get_data(), 'name' ) );
+		$this->assertSame( array( 'Amir Khan', 'Lucía Fernández' ), wp_list_pluck( $first->get_data(), 'name' ) );
 		$second = $this->request(
 			'GET',
 			'/students',

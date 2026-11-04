@@ -21,9 +21,13 @@ npx wp-env run cli wp publiclms seed --courses=10
 ```
 
 Then open the course catalogue at `/courses/`, the admin app under **Public LMS** (Courses, Questions,
-Submissions, Gradebook, Certificate), and log in as a seeded learner (`sita.gurung`, who has finished a course
-and has its certificate) or instructor (`anita.shrestha`) with the seed password (`public-lms-demo` unless you
-set `PUBLICLMS_SEED_PASSWORD` or `--password`). Every seeded course has a quiz and an assignment.
+Submissions, Gradebook, Orders, Coupons, Payments, Certificate), and log in as the seeded learner (`learner`,
+who has finished a course and has its certificate) or instructor (`instructor`) with the seed password
+(`public-lms-demo` unless you set `PUBLICLMS_SEED_PASSWORD` or `--password`). More seeded people log in as
+`learner.sharma`, `learner.fernandez`, `learner.sato`, `learner.kim`, `learner.walsh`, `instructor.wang` and
+`instructor.ivanov`; their display names are in several scripts (Arabic, Devanagari, Latin, Japanese, Korean,
+Chinese, Cyrillic). Every seeded course has a quiz and an assignment, and one is paid: buy it at the checkout
+page with the offline payment method and the coupon `WELCOME10`, then mark the order paid under Orders.
 `wp publiclms reset --yes` removes everything the seed made.
 
 - Product requirements: [docs/PRD.md](docs/PRD.md)

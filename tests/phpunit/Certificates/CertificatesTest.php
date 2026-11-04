@@ -51,7 +51,7 @@ class CertificatesTest extends RestTestCase {
 		$this->assertCount( 1, $issued );
 		$certificate = $issued[0];
 		$this->assertMatchesRegularExpression( '/^PLMS-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/', $certificate['certificate_key'] );
-		$this->assertSame( 'Sita Gurung', $certificate['learner_name'] );
+		$this->assertSame( 'Lucía Fernández', $certificate['learner_name'] );
 		$this->assertSame( 'Introduction to Statistics', $certificate['course_title'] );
 
 		$service = publiclms()->container()->get( CertificateService::class );
@@ -59,10 +59,10 @@ class CertificatesTest extends RestTestCase {
 		wp_update_user(
 			array(
 				'ID'           => $this->subscriber,
-				'display_name' => 'Sita G.',
+				'display_name' => 'Lucía F.',
 			)
 		);
-		$this->assertSame( 'Sita Gurung', $service->issue( $this->subscriber, $this->fixture['course'] )['learner_name'], 'An issued certificate keeps its text.' );
+		$this->assertSame( 'Lucía Fernández', $service->issue( $this->subscriber, $this->fixture['course'] )['learner_name'], 'An issued certificate keeps its text.' );
 	}
 
 	public function test_courses_without_certificates_issue_none() {
@@ -77,7 +77,7 @@ class CertificatesTest extends RestTestCase {
 		$certificate = publiclms()->container()->get( CertificateService::class )->issue( $this->subscriber, $this->fixture['course'] );
 		$html        = publiclms()->container()->get( CertificateRenderer::class )->html( $certificate );
 
-		$this->assertStringContainsString( 'Sita Gurung', $html );
+		$this->assertStringContainsString( 'Lucía Fernández', $html );
 		$this->assertStringContainsString( 'Introduction to Statistics', $html );
 		$this->assertStringContainsString( $certificate['certificate_key'], $html );
 		$this->assertStringContainsString( wp_date( (string) get_option( 'date_format' ) ), $html );

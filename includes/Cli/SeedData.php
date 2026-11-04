@@ -20,29 +20,36 @@ final class SeedData {
 	/**
 	 * Instructors: login => display name.
 	 *
+	 * Logins are role-based; display names come from several scripts, so
+	 * certificates, dashboards and reports show more than Latin text.
+	 *
 	 * @return array<string, string>
 	 */
 	public static function instructors(): array {
 		return array(
-			'anita.shrestha' => 'Anita Shrestha',
-			'david.okafor'   => 'David Okafor',
-			'mei.lin'        => 'Mei Lin',
+			'instructor'        => 'Amara Okafor',
+			'instructor.wang'   => '王芳',
+			'instructor.ivanov' => 'Дмитрий Иванов',
 		);
 	}
 
 	/**
 	 * Learners: login => display name.
 	 *
+	 * The first learner, `learner`, finishes a course and has its
+	 * certificate (in Arabic script); the second has a hand-in waiting for a
+	 * grade.
+	 *
 	 * @return array<string, string>
 	 */
 	public static function students(): array {
 		return array(
-			'sita.gurung'  => 'Sita Gurung',
-			'arjun.mehta'  => 'Arjun Mehta',
-			'grace.kim'    => 'Grace Kim',
-			'tomas.rivera' => 'Tomás Rivera',
-			'fatima.noor'  => 'Fatima Noor',
-			'liam.walsh'   => 'Liam Walsh',
+			'learner'           => 'ليلى حداد',
+			'learner.sharma'    => 'प्रिया शर्मा',
+			'learner.fernandez' => 'Lucía Fernández',
+			'learner.sato'      => '佐藤 健',
+			'learner.kim'       => '김지우',
+			'learner.walsh'     => 'Liam Walsh',
 		);
 	}
 
@@ -57,7 +64,7 @@ final class SeedData {
 		return array(
 			array(
 				'title'       => 'Bookkeeping Basics for Small Businesses',
-				'instructor'  => 'anita.shrestha',
+				'instructor'  => 'instructor',
 				'category'    => 'Business',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Set up simple, reliable books for a small business and close your first month with confidence.',
@@ -77,7 +84,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Introduction to Python Programming',
-				'instructor'  => 'david.okafor',
+				'instructor'  => 'instructor.ivanov',
 				'category'    => 'Technology',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Write your first useful Python programs, from variables and decisions to functions and files.',
@@ -97,7 +104,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Conversational Nepali for Travellers',
-				'instructor'  => 'anita.shrestha',
+				'instructor'  => 'instructor',
 				'category'    => 'Languages',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Greet people, shop, eat and get around in Nepal with everyday Nepali phrases and good manners.',
@@ -117,7 +124,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Digital Photography: Light and Composition',
-				'instructor'  => 'mei.lin',
+				'instructor'  => 'instructor.wang',
 				'category'    => 'Arts',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Take control of your camera and learn to see light, so every photo looks the way you intended.',
@@ -137,7 +144,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Teaching Online: Designing Engaging Lessons',
-				'instructor'  => 'mei.lin',
+				'instructor'  => 'instructor.wang',
 				'category'    => 'Education',
 				'level'       => 'Intermediate',
 				'excerpt'     => 'Plan online lessons that learners finish, with clear outcomes, short chunks and activities that check understanding.',
@@ -157,7 +164,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Personal Finance Fundamentals',
-				'instructor'  => 'david.okafor',
+				'instructor'  => 'instructor.ivanov',
 				'category'    => 'Business',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Build a budget you can keep, protect yourself with an emergency fund and start saving for the things that matter.',
@@ -177,7 +184,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Web Accessibility Essentials',
-				'instructor'  => 'david.okafor',
+				'instructor'  => 'instructor.ivanov',
 				'category'    => 'Technology',
 				'level'       => 'Intermediate',
 				'excerpt'     => 'Build websites everyone can use, with structure, text alternatives, contrast and keyboard support done right.',
@@ -197,7 +204,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Climate Science for Everyone',
-				'instructor'  => 'mei.lin',
+				'instructor'  => 'instructor.wang',
 				'category'    => 'Science',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Understand how the climate works, how it is changing and what communities are doing about it.',
@@ -217,7 +224,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Public Speaking with Confidence',
-				'instructor'  => 'anita.shrestha',
+				'instructor'  => 'instructor',
 				'category'    => 'Personal Development',
 				'level'       => 'Beginner',
 				'excerpt'     => 'Prepare talks people remember and deliver them calmly, from a team meeting to a conference stage.',
@@ -237,7 +244,7 @@ final class SeedData {
 			),
 			array(
 				'title'       => 'Introduction to Statistics',
-				'instructor'  => 'david.okafor',
+				'instructor'  => 'instructor.ivanov',
 				'category'    => 'Science',
 				'level'       => 'Intermediate',
 				'excerpt'     => 'Describe data honestly and draw sound conclusions, with averages, spread, sampling and probability.',

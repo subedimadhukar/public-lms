@@ -60,7 +60,7 @@ abstract class RestTestCase extends TestCase {
 		$this->subscriber       = self::factory()->user->create(
 			array(
 				'role'         => 'subscriber',
-				'display_name' => 'Sita Gurung',
+				'display_name' => 'Lucía Fernández',
 			)
 		);
 		$this->fixture          = $this->create_course_with_lessons( array( 'post_author' => $this->instructor ) );

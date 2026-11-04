@@ -27,7 +27,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * - single, multiple: `options` [{ id, text, correct }], 2 to 10.
  * - true_false:       `answer` bool.
- * - fill_blank:       `template` "The capital of Nepal is {{Kathmandu}}." and the
+ * - fill_blank:       `template` "The largest ocean on Earth is the {{Pacific}}." and the
  *                     derived `blanks` [[ accepted answers ]]; `|` separates alternatives.
  * - short_answer:     `accepted` [ answers ], compared ignoring case and spacing.
  * - matching:         `pairs` [{ prompt_id, prompt, match_id, match }], 2 to 10.
@@ -141,7 +141,7 @@ final class QuestionBank {
 				$template = trim( sanitize_textarea_field( (string) ( $input['template'] ?? '' ) ) );
 				$blanks   = self::parse_blanks( $template );
 				if ( empty( $blanks ) ) {
-					return $this->invalid( __( 'Wrap each missing word in double braces, for example {{Kathmandu}}.', 'public-lms' ) );
+					return $this->invalid( __( 'Wrap each missing word in double braces, for example {{Pacific}}.', 'public-lms' ) );
 				}
 				$clean['template'] = $template;
 				$clean['blanks']   = $blanks;

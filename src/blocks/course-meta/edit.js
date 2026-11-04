@@ -5,7 +5,7 @@ import {
 	SelectControl,
 	ToggleControl,
 } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 
 import { useCourseInfo } from '../shared/use-course';
 
@@ -13,12 +13,17 @@ const FIELDS = {
 	lessons: {
 		label: __( 'Lessons', 'public-lms' ),
 		key: 'lesson_count',
-		sample: '12 lessons',
+		sample: sprintf(
+			/* translators: %d: number of lessons. */
+			_n( '%d lesson', '%d lessons', 12, 'public-lms' ),
+			12
+		),
 	},
 	duration: {
 		label: __( 'Duration', 'public-lms' ),
 		key: 'duration',
-		sample: '3h 20m',
+		/* translators: 1: hours, 2: minutes. */
+		sample: sprintf( __( '%1$dh %2$dm', 'public-lms' ), 3, 20 ),
 	},
 	level: {
 		label: __( 'Level', 'public-lms' ),
@@ -28,12 +33,16 @@ const FIELDS = {
 	instructor: {
 		label: __( 'Instructor', 'public-lms' ),
 		key: 'instructor',
-		sample: 'Anita Shrestha',
+		sample: __( 'Alex Morgan', 'public-lms' ),
 	},
 	learners: {
 		label: __( 'Learners', 'public-lms' ),
 		key: 'enrolled_count',
-		sample: '128 learners',
+		sample: sprintf(
+			/* translators: %d: number of learners. */
+			_n( '%d learner', '%d learners', 128, 'public-lms' ),
+			128
+		),
 	},
 	price: {
 		label: __( 'Price', 'public-lms' ),

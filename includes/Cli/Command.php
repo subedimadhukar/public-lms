@@ -10,6 +10,10 @@ namespace PublicLMS\Cli;
 use PublicLMS\Assignments\AssignmentSettings;
 use PublicLMS\Capabilities\Roles;
 use PublicLMS\Certificates\CertificateService;
+use PublicLMS\Commerce\CheckoutPage;
+use PublicLMS\Commerce\Coupons;
+use PublicLMS\Commerce\Gateways\OfflineGateway;
+use PublicLMS\Commerce\Money;
 use PublicLMS\Core\Container;
 use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
@@ -127,7 +131,12 @@ final class Command {
 	 * section and an assignment at the end, categories and levels, free
 	 * enrolments with some progress (quizzes taken, work handed in and graded,
 	 * one course completed with its certificate), and a dashboard page if none
-	 * is set.
+	 * is set. For selling, one course is paid, and unless the site has them
+	 * already: a store currency (USD), a checkout page, the offline payment
+	 * method and a coupon (WELCOME10, 10% off).
+	 *
+	 * Logins are role-based (`instructor`, `learner`, then `instructor.*` and
+	 * `learner.*`); display names come from several scripts.
 	 *
 	 * ## OPTIONS
 	 *
@@ -231,6 +240,8 @@ final class Command {
 			update_option( 'publiclms_dashboard_page_id', $page_id );
 		}
 
+		$selling = $this->seed_commerce( $courses );
+
 		// One hand-in waits for a grade, so the Submissions screen has work to show.
 		$waiting = array_values( $learners )[1] ?? 0;
 		if ( null !== $this->container && $waiting > 0 ) {
@@ -254,7 +265,64 @@ final class Command {
 		WP_CLI::success( sprintf( 'Seeded %d courses with %d steps (lessons, quizzes, assignments), %d instructors, %d learners and %d enrolments; certificates issued: %d.', count( $courses ), $lessons, count( $instructors ), count( $learners ), $enrolments, $certificates ) );
 		WP_CLI::log( sprintf( 'Course catalogue: %s', (string) get_post_type_archive_link( PostTypes::COURSE ) ) );
 		WP_CLI::log( sprintf( 'Student dashboard: %s', (string) get_permalink( $page_id ) ) );
+		if ( '' !== $selling ) {
+			WP_CLI::log( $selling );
+		}
 		WP_CLI::log( sprintf( 'Log in as an instructor (%s) or a learner (%s) with the seed password.', implode( ', ', array_keys( $instructors ) ), implode( ', ', array_keys( $learners ) ) ) );
+	}
+
+	/**
+	 * Sets up selling: one paid course, and (only when missing) a currency, a
+	 * checkout page, the offline payment method and a coupon.
+	 *
+	 * @param array<int, int> $courses Seeded course IDs.
+	 * @return string What was set up, for the log.
+	 */
+	private function seed_commerce( array $courses ): string {
+		$paid = (int) ( $courses[1] ?? 0 );
+		if ( $paid <= 0 ) {
+			return '';
+		}
+		if ( '' === Money::currency() ) {
+			update_option( Money::OPTION, 'USD' );
+		}
+		update_post_meta( $paid, Meta::ACCESS_MODE, 'paid' );
+		update_post_meta( $paid, Meta::PRICE, '49' );
+		update_post_meta( $paid, Meta::SALE_PRICE, '39' );
+
+		if ( CheckoutPage::page_id() <= 0 ) {
+			$page = CheckoutPage::create();
+			if ( ! is_wp_error( $page ) ) {
+				update_post_meta( $page, self::FLAG, 1 );
+			}
+		}
+		$offline = new OfflineGateway();
+		if ( ! $offline->is_enabled() ) {
+			$offline->update_settings(
+				array(
+					'enabled'      => true,
+					'title'        => 'Bank transfer',
+					'instructions' => 'This is a demo store: nothing needs to be paid. An admin marks the order paid in Public LMS → Orders, which opens the course.',
+				)
+			);
+		}
+		$code = 'WELCOME10';
+		if ( null !== $this->container ) {
+			$coupons = $this->container->get( Coupons::class );
+			if ( null === $coupons->find( $code ) ) {
+				$coupon = $coupons->save(
+					array(
+						'code'   => $code,
+						'type'   => 'percent',
+						'amount' => 10,
+					)
+				);
+				if ( ! is_wp_error( $coupon ) ) {
+					update_post_meta( $coupon, self::FLAG, 1 );
+				}
+			}
+		}
+		return sprintf( 'Selling: "%s" is paid (%s on sale from %s); checkout at %s; coupon %s takes 10%% off.', get_the_title( $paid ), Money::format( 39 ), Money::format( 49 ), CheckoutPage::url( $paid ), $code );
 	}
 
 	/**
@@ -290,6 +358,10 @@ final class Command {
 		$dashboard = (int) get_option( 'publiclms_dashboard_page_id', 0 );
 		if ( $dashboard > 0 && ! get_post( $dashboard ) ) {
 			delete_option( 'publiclms_dashboard_page_id' );
+		}
+		$checkout = (int) get_option( CheckoutPage::OPTION, 0 );
+		if ( $checkout > 0 && ! get_post( $checkout ) ) {
+			delete_option( CheckoutPage::OPTION );
 		}
 
 		$users = get_users(

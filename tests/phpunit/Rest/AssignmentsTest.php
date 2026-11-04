@@ -235,7 +235,7 @@ class AssignmentsTest extends RestTestCase {
 		$this->assertInstanceOf( FileResponse::class, $csv );
 		$body = $csv->contents();
 		$this->assertStringContainsString( '"Check your understanding (best %)"', $body );
-		$this->assertStringContainsString( '"Sita Gurung","', $body );
+		$this->assertStringContainsString( '"Lucía Fernández","', $body );
 		$this->assertStringContainsString( '"\'=HYPERLINK(""x"")"', $body, 'Formula-like cells are neutralised.' );
 		$this->assertStringContainsString( '"Waiting for a grade"', $body );
 		$this->assertStringContainsString( '"Not taken"', $body );

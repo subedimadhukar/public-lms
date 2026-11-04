@@ -19,7 +19,8 @@ use PublicLMS\Repositories\EnrollmentRepository;
 class AccessRulesTest extends RestTestCase {
 
 	public function test_items_take_drip_and_prerequisites_from_the_builder() {
-		update_option( 'timezone_string', 'Asia/Kathmandu' );
+		update_option( 'timezone_string', '' );
+		update_option( 'gmt_offset', 5.75 );
 		$lessons  = $this->fixture['lessons'];
 		$response = $this->request(
 			'PATCH',
@@ -35,7 +36,7 @@ class AccessRulesTest extends RestTestCase {
 		$data = $response->get_data();
 		$this->assertSame( 7, $data['drip_days'] );
 		$this->assertSame( '2030-01-15T09:00:00', $data['drip_date'] );
-		$this->assertSame( '2030-01-15T03:15:00', $data['drip_date_gmt'], 'Stored in UTC; Kathmandu is UTC+5:45.' );
+		$this->assertSame( '2030-01-15T03:15:00', $data['drip_date_gmt'], 'Stored in UTC; the site is UTC+5:45.' );
 		$this->assertSame( array( $lessons[0], $lessons[1] ), $data['prerequisites'] );
 		$this->assertSame( '2030-01-15 03:15:00', get_post_meta( $lessons[2], Meta::DRIP_DATE, true ) );
 
