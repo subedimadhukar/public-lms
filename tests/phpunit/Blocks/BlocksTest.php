@@ -312,6 +312,49 @@ class BlocksTest extends TestCase {
 		$this->assertNotContains( $this->fixture['course'], $from_lesson['post__in'], 'On a lesson, its course is the one left out.' );
 	}
 
+	/**
+	 * Renders the course grid variation the way core does: `namespace` is a Query block attribute
+	 * beside `query`, so the Post Template's context carries only the `query` keys (finding 11).
+	 *
+	 * @covers \PublicLMS\Blocks\CourseQuery::query_vars
+	 */
+	public function test_related_and_hide_enrolled_apply_in_real_block_rendering() {
+		$current = $this->create_course(
+			array(
+				'post_title' => 'Course On Screen',
+				'post_date'  => '2026-05-03 10:00:00',
+			)
+		);
+		$other   = $this->create_course(
+			array(
+				'post_title' => 'Course Learner Has',
+				'post_date'  => '2026-05-02 10:00:00',
+			)
+		);
+		$third   = $this->create_course(
+			array(
+				'post_title' => 'Course Still Open',
+				'post_date'  => '2026-05-01 10:00:00',
+			)
+		);
+		$grid    = static function ( string $setting ): string {
+			return '<!-- wp:query {"queryId":7,"query":{"perPage":3,"postType":"plms_course","order":"desc","orderBy":"date","inherit":false,"' . $setting . '":true},"namespace":"publiclms/course-query"} --><div class="wp-block-query"><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --></div><!-- /wp:query -->';
+		};
+
+		$this->go_to( get_permalink( $current ) );
+		$related = do_blocks( $grid( 'publiclmsRelated' ) );
+		$this->assertStringNotContainsString( 'Course On Screen', $related, 'Related courses leave out the course on screen, even when it is among the newest.' );
+		$this->assertStringContainsString( 'Course Learner Has', $related );
+
+		publiclms()->container()->get( \PublicLMS\Services\EnrollmentService::class )->enroll( $this->learner, $other, 'manual' );
+		wp_set_current_user( $this->learner );
+		$open = do_blocks( $grid( 'publiclmsHideEnrolled' ) );
+		$this->assertStringNotContainsString( 'Course Learner Has', $open, 'Hide-enrolled leaves out enrolled courses.' );
+		$this->assertStringContainsString( 'Course Still Open', $open );
+		$this->assertStringContainsString( 'Course On Screen', $open );
+		unset( $third );
+	}
+
 	public function test_video_tracks_completion_only_for_enrolled_learners_on_items() {
 		$lesson = $this->fixture['lessons'][1];
 		$markup = '<!-- wp:publiclms/video {"src":"https://youtu.be/dQw4w9WgXcQ","title":"Reading a balance sheet","requiredPercent":80} /-->';

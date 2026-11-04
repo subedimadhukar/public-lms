@@ -85,7 +85,10 @@ final class CourseQuery {
 			return $query;
 		}
 		$settings = isset( $block->context['query'] ) && is_array( $block->context['query'] ) ? $block->context['query'] : array();
-		if ( self::NAMESPACE_NAME !== ( $settings['namespace'] ?? '' ) ) {
+		// Core passes only the Query block's `query` attribute as context; `namespace` is a separate
+		// attribute (A5.5), so the variation is recognised by its own keys (finding 11).
+		$ours = self::NAMESPACE_NAME === ( $settings['namespace'] ?? '' ) || ! empty( $settings['publiclmsRelated'] ) || ! empty( $settings['publiclmsHideEnrolled'] );
+		if ( ! $ours ) {
 			return $query;
 		}
 		$query['post_type'] = PostTypes::COURSE;
