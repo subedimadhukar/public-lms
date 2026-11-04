@@ -79,6 +79,7 @@ final class Api {
 			new EnrollmentsController( $enrollments, $c->get( EnrollmentService::class ), $progress, $fields ),
 			new ProgressController( $progress, $enrollments, $policy ),
 			new StudentsController( $enrollments, $progress ),
+			new SettingsController(),
 		);
 
 		/**

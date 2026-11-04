@@ -47,9 +47,12 @@ final class PostTypes {
 	);
 
 	/**
-	 * Admin menu parent for every type except the course itself.
+	 * Admin menu parent. Since phase 1 the "Public LMS" app menu replaces the
+	 * post type screens in the menu (ADR-033); the screens stay reachable for
+	 * the block editor and for Pro, which can show them again through
+	 * `publiclms_post_type_args`.
 	 */
-	const MENU_PARENT = 'edit.php?post_type=plms_course';
+	const MENU_PARENT = false;
 
 	/**
 	 * Registers the post types. Hooked to `init`.
@@ -131,7 +134,7 @@ final class PostTypes {
 				'publicly_queryable'  => true,
 				'exclude_from_search' => false,
 				'show_ui'             => true,
-				'show_in_menu'        => true,
+				'show_in_menu'        => self::MENU_PARENT,
 				'show_in_rest'        => true,
 				'show_in_nav_menus'   => true,
 				'menu_position'       => 25,

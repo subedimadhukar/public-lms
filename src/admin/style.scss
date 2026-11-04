@@ -1,0 +1,329 @@
+// DataViews' own styles, inlined here; wp-components is a style
+// dependency in PHP.
+@use "@wordpress/dataviews/build-style/style";
+
+// Public LMS admin app. Colours follow the admin colour scheme through
+// WordPress's --wp-admin-theme-color variables; nothing is set inline.
+
+.publiclms-admin {
+	--publiclms-admin-gap: 16px;
+	--publiclms-admin-border: #dcdcde;
+	--publiclms-admin-muted: #646970;
+	--publiclms-admin-surface: #fff;
+	--publiclms-admin-radius: 4px;
+}
+
+.publiclms-admin__loading {
+	color: var(--publiclms-admin-muted);
+}
+
+.publiclms-screen {
+	margin-top: var(--publiclms-admin-gap);
+	max-width: 1400px;
+}
+
+.publiclms-screen--loading {
+	display: flex;
+	justify-content: center;
+	padding: 48px 0;
+}
+
+.publiclms-screen__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 8px;
+}
+
+.publiclms-screen__title {
+	margin: 0;
+	font-size: 23px;
+	font-weight: 400;
+	line-height: 1.3;
+}
+
+.publiclms-screen__header-actions {
+	display: flex;
+	gap: 8px;
+	margin-inline-start: auto;
+}
+
+.publiclms-screen__summary {
+	margin: 0 0 8px;
+	min-height: 1.5em;
+	color: var(--publiclms-admin-muted);
+}
+
+.publiclms-screen .dataviews-wrapper {
+	background: var(--publiclms-admin-surface);
+	border: 1px solid var(--publiclms-admin-border);
+	border-radius: var(--publiclms-admin-radius);
+}
+
+.publiclms-course-list__thumb {
+	display: block;
+	width: 48px;
+	height: 32px;
+	object-fit: cover;
+	border-radius: 2px;
+
+	&.is-empty {
+		background: #f0f0f1;
+	}
+}
+
+.publiclms-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+}
+
+.publiclms-status,
+.publiclms-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	font-size: 12px;
+	line-height: 1.6;
+	background: #f0f0f1;
+	color: #1e1e1e;
+}
+
+.publiclms-status.is-publish {
+	background: #edfaef;
+	color: #00450c;
+}
+
+.publiclms-status.is-draft,
+.publiclms-status.is-pending {
+	background: #fcf9e8;
+	color: #614200;
+}
+
+.publiclms-badge {
+	background: #f0f6fc;
+	color: #0a4b78;
+}
+
+// Builder layout.
+.publiclms-builder__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	gap: 24px;
+	align-items: start;
+	margin-top: var(--publiclms-admin-gap);
+
+	@media (max-width: 960px) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.publiclms-builder__heading {
+	margin: 0 0 12px;
+	font-size: 16px;
+}
+
+.publiclms-builder__sections,
+.publiclms-builder__items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.publiclms-builder__section,
+.publiclms-builder__item {
+	transform: var(--publiclms-drag-transform, none);
+	transition: var(--publiclms-drag-transition, none);
+}
+
+.publiclms-builder__section {
+	margin: 0 0 12px;
+	padding: 12px;
+	background: var(--publiclms-admin-surface);
+	border: 1px solid var(--publiclms-admin-border);
+	border-radius: var(--publiclms-admin-radius);
+
+	&.is-dragging {
+		position: relative;
+		z-index: 2;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+	}
+}
+
+.publiclms-builder__section-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.publiclms-builder__section-title {
+	flex: 1;
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.publiclms-builder__count {
+	color: var(--publiclms-admin-muted);
+	font-size: 12px;
+}
+
+.publiclms-builder__item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 4px;
+	padding: 6px 8px;
+	background: #f6f7f7;
+	border: 1px solid transparent;
+	border-radius: var(--publiclms-admin-radius);
+
+	&:hover,
+	&:focus-within {
+		border-color: var(--publiclms-admin-border);
+	}
+
+	&.is-dragging {
+		position: relative;
+		z-index: 2;
+		background: var(--publiclms-admin-surface);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+}
+
+.publiclms-builder__item-title {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.publiclms-builder__item-icon {
+	flex: none;
+	fill: var(--publiclms-admin-muted);
+}
+
+.publiclms-builder__badges {
+	display: flex;
+	gap: 4px;
+}
+
+.publiclms-builder__empty {
+	padding: 12px;
+	color: var(--publiclms-admin-muted);
+	border: 1px dashed var(--publiclms-admin-border);
+	border-radius: var(--publiclms-admin-radius);
+}
+
+.publiclms-drag-handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 2px;
+	background: transparent;
+	cursor: grab;
+	touch-action: none;
+
+	&:focus-visible {
+		outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+		outline-offset: 1px;
+	}
+
+	&:active {
+		cursor: grabbing;
+	}
+}
+
+.publiclms-drag-handle__icon {
+	fill: currentcolor;
+}
+
+.publiclms-add-inline {
+	margin-top: 4px;
+}
+
+.publiclms-inline-form {
+	display: flex;
+	flex: 1;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+
+	.components-base-control {
+		flex: 1;
+		min-width: 200px;
+		margin-bottom: 0;
+	}
+
+	.components-base-control__field {
+		margin-bottom: 0;
+	}
+}
+
+.publiclms-builder__settings .components-base-control {
+	margin-bottom: 16px;
+}
+
+.publiclms-media-field {
+	margin-bottom: 16px;
+}
+
+.publiclms-media-field__label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+
+.publiclms-media-field__preview {
+	display: block;
+	width: 100%;
+	max-height: 180px;
+	margin-bottom: 8px;
+	object-fit: cover;
+	border-radius: var(--publiclms-admin-radius);
+}
+
+.publiclms-media-field__actions,
+.publiclms-form__actions,
+.publiclms-confirm__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.publiclms-form__actions,
+.publiclms-confirm__actions {
+	justify-content: flex-end;
+	margin-top: 16px;
+}
+
+.publiclms-settings .components-panel {
+	max-width: 720px;
+}
+
+.publiclms-student-detail__progress {
+	width: 120px;
+	vertical-align: middle;
+}
+
+.publiclms-admin__snackbars {
+	position: fixed;
+	bottom: 24px;
+	left: 184px;
+	z-index: 100000;
+
+	@media (max-width: 960px) {
+		left: 60px;
+	}
+
+	@media (max-width: 782px) {
+		left: 16px;
+	}
+}

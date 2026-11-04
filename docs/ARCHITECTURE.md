@@ -46,7 +46,7 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | REST | `Rest\AbstractController`, `Rest\Api`, controllers per resource | Phase 1: courses, curriculum, sections, lessons, enrolments, progress, students | Matrix in §4. |
 | Templates | `Templates\TemplateRegistrar` | Slug list and hierarchy mapping; no template files | Files under `templates/` in phase 1. |
 | Licensing | `Licensing\LicenseProvider`, `NullLicenseProvider`, `LicenseStatus` | Done | Pro binds the EDD provider. |
-| Admin | One React app on `@wordpress/components`, `@wordpress/data` stores per domain, DataViews | Not started | Phase 1. |
+| Admin | One React app on `@wordpress/components`, `@wordpress/data` stores per domain, DataViews | Phase 1: "Public LMS" menu with Courses (DataViews list and course builder), Students (DataViews) and Settings | ADR-033, ADR-034. |
 | Front end | Dynamic blocks with block supports; Interactivity API for player, quiz runner, curriculum, dashboard | Not started | Phase 1 and 2. |
 | Bindings | `publiclms/course-field` source in PHP and JS | Keys frozen in `CONTRACTS.md` A7 | Phase 1. |
 | Payments | `Gateway` interface; hosted or redirect flows only | Not started | Phase 2. |
@@ -469,3 +469,33 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
 - **Consequences.** Progress needs an active enrolment even for free previews and for teachers previewing
   their own course; summaries are computed from the cached structure, so they reflect lessons added since
   the stored aggregate was written.
+
+### ADR-033 Admin app shell: one menu, DataViews' `/wp` build, stores per domain
+- **Decision.** A top-level "Public LMS" menu (`dashicons-welcome-learn-more`) holds Courses, Students,
+  Categories, Levels and Settings; the course and item post types no longer appear in the menu (their edit
+  screens stay, for the block editor and for Pro). One React app (`src/admin/`, `build/admin/index.js`) reads
+  which screen it is on from `window.publiclmsAdmin`. Data lives in `@wordpress/data` stores per domain,
+  `publiclms/courses` and `publiclms/students`, with thunk resolvers over `apiFetch`; lists are cached per
+  query including the cursor (ADR-030). DataViews is imported from `@wordpress/dataviews/wp`, the build made
+  for plugins: it inlines its own components and uses WordPress's data, i18n, date and hooks, so the list
+  screens do not depend on the private component APIs of whichever WordPress version runs them (6.7 to
+  7.1). Its stylesheet is inlined into `build/admin/style-index.css`, which depends on `wp-components`.
+  Plugin settings sit behind `publiclms/v1/settings` (`publiclms_manage_courses`) rather than
+  `/wp/v2/settings`, which needs `manage_options`; the uninstall data switch also needs `delete_plugins`.
+  A document panel in the block editor links lessons back to their course builder, using a read-only
+  `publiclms` field on the `wp/v2` routes.
+- **Consequences.** The admin bundle is large (about 1.7 MB minified, mostly DataViews and its UI
+  libraries) but loads only on the plugin's own screens. Styles come from the stylesheet and the admin
+  colour scheme; the only inline style is the transform dnd-kit sets while a row moves, passed through CSS
+  custom properties.
+
+### ADR-034 Course builder drag and drop with dnd-kit
+- **Context.** The builder reorders sections and moves lessons between sections. DataViews' grouping shows
+  rows grouped by a field but has no reordering, and nothing in `@wordpress/components` sorts nested lists.
+- **Decision.** `@dnd-kit/core` and `@dnd-kit/sortable`, bundled: one sortable list of sections, one per
+  section for its items, with a collision filter so sections only meet sections and lessons meet lessons
+  or empty sections. Keyboard sorting (Space, arrows, Space) with translated screen reader instructions
+  and announcements; every row also has "Move up" and "Move down" in its menu. The new order shows at
+  once and is saved with `PUT /courses/{id}/curriculum`; on failure the server's order comes back.
+- **Consequences.** About 45 KB of the admin bundle. Nested drag (sections inside sections) is not needed
+  and not supported.

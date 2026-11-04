@@ -8,6 +8,8 @@
 namespace PublicLMS\Core;
 
 use PublicLMS\Access\AccessPolicy;
+use PublicLMS\Admin\AdminApp;
+use PublicLMS\Admin\EditorAssets;
 use PublicLMS\Access\ContentGate;
 use PublicLMS\Courses\CourseFields;
 use PublicLMS\Frontend\EnrollmentHandler;
@@ -23,6 +25,7 @@ use PublicLMS\Repositories\EventRepository;
 use PublicLMS\Repositories\EventRepositoryInterface;
 use PublicLMS\Repositories\ProgressRepository;
 use PublicLMS\Rest\Api;
+use PublicLMS\Rest\PostFields;
 use PublicLMS\Services\EnrollmentService;
 use PublicLMS\Services\ProgressService;
 use PublicLMS\Taxonomies\Taxonomies;
@@ -110,6 +113,11 @@ final class Plugin {
 		$this->container->get( CourseStructureRepository::class )->register();
 		$this->container->get( ContentGate::class )->register();
 		$this->container->get( EnrollmentHandler::class )->register();
+		$this->container->get( PostFields::class )->register();
+		$this->container->get( EditorAssets::class )->register();
+		if ( is_admin() ) {
+			$this->container->get( AdminApp::class )->register();
+		}
 
 		$this->container->get( Capabilities::class )->register();
 		$this->container->get( TemplateRegistrar::class )->register();
@@ -248,6 +256,24 @@ final class Plugin {
 			EnrollmentHandler::class,
 			static function ( Container $container ) {
 				return new EnrollmentHandler( $container->get( EnrollmentService::class ), $container->get( CourseFields::class ) );
+			}
+		);
+		$c->set(
+			PostFields::class,
+			static function ( Container $container ) {
+				return new PostFields( $container->get( CourseFields::class ) );
+			}
+		);
+		$c->set(
+			EditorAssets::class,
+			static function () {
+				return new EditorAssets();
+			}
+		);
+		$c->set(
+			AdminApp::class,
+			static function () {
+				return new AdminApp();
 			}
 		);
 		$c->set(
