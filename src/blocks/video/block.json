@@ -1,0 +1,90 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/video",
+	"version": "0.3.0",
+	"title": "Lesson Video",
+	"category": "publiclms",
+	"icon": "video-alt3",
+	"description": "Embeds a YouTube, Vimeo, Bunny Stream or self-hosted video and can complete the lesson once the learner has watched enough of it.",
+	"keywords": [
+		"video",
+		"youtube",
+		"vimeo",
+		"bunny"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"provider": {
+			"type": "string",
+			"enum": [ "", "youtube", "vimeo", "bunny", "self" ],
+			"default": ""
+		},
+		"src": {
+			"type": "string",
+			"default": ""
+		},
+		"mediaId": {
+			"type": "integer",
+			"default": 0
+		},
+		"captions": {
+			"type": "string",
+			"default": ""
+		},
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"caption": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"trackCompletion": {
+			"type": "boolean",
+			"default": true
+		},
+		"requiredPercent": {
+			"type": "integer",
+			"default": 90,
+			"minimum": 10,
+			"maximum": 100
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true,
+		"interactivity": true
+	},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens",
+		"file:./style-index.css"
+	],
+	"viewScriptModule": "@publiclms/learning",
+	"render": "file:./render.php"
+}

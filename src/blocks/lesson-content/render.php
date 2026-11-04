@@ -8,6 +8,9 @@
  * markup) still work. Everyone else gets a locked notice with the reason and
  * the way in: log in, or enrol on the course page.
  *
+ * Lesson files (the lesson's `_plms_attachments`) are listed under the
+ * content, only for learners who can open the lesson.
+ *
  * @package PublicLMS
  *
  * @var array<string, mixed> $attributes Block attributes.
@@ -16,6 +19,8 @@
  */
 
 use PublicLMS\Blocks\Blocks;
+use PublicLMS\PostTypes\PostTypes;
+use PublicLMS\Rest\LessonsController;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -61,7 +66,23 @@ Blocks::$rendering[ $publiclms_item ] = true; // phpcs:ignore WordPress.NamingCo
 $publiclms_html                       = wp_kses_post( $publiclms_post->post_content );
 $publiclms_html                       = (string) apply_filters( 'the_content', str_replace( ']]>', ']]&gt;', $publiclms_html ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
 unset( Blocks::$rendering[ $publiclms_item ] );
+$publiclms_files = ! empty( $attributes['showAttachments'] ) && PostTypes::LESSON === $publiclms_post->post_type ? LessonsController::attachments( $publiclms_item ) : array();
 ?>
 <div <?php echo get_block_wrapper_attributes( array( 'class' => 'entry-content' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes(). ?>>
 	<?php echo $publiclms_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Lesson HTML, passed through wp_kses_post() before the_content. ?>
+	<?php if ( ! empty( $publiclms_files ) ) : ?>
+		<section class="wp-block-publiclms-lesson-content__attachments" aria-labelledby="<?php echo esc_attr( 'publiclms-attachments-' . $publiclms_item ); ?>">
+			<h2 id="<?php echo esc_attr( 'publiclms-attachments-' . $publiclms_item ); ?>" class="wp-block-publiclms-lesson-content__attachments-title"><?php esc_html_e( 'Lesson files', 'public-lms' ); ?></h2>
+			<ul class="wp-block-publiclms-lesson-content__files">
+				<?php foreach ( $publiclms_files as $publiclms_file ) : ?>
+					<li class="wp-block-publiclms-lesson-content__file">
+						<a href="<?php echo esc_url( $publiclms_file['url'] ); ?>" download><?php echo esc_html( '' !== $publiclms_file['title'] ? $publiclms_file['title'] : $publiclms_file['filename'] ); ?></a>
+						<?php if ( '' !== $publiclms_file['size'] ) : ?>
+							<span class="wp-block-publiclms-lesson-content__file-meta"><?php echo esc_html( strtoupper( (string) pathinfo( $publiclms_file['filename'], PATHINFO_EXTENSION ) ) . ' · ' . $publiclms_file['size'] ); ?></span>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</section>
+	<?php endif; ?>
 </div>

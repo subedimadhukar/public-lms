@@ -8,3 +8,34 @@
 	margin-top: 0;
 	font-size: var(--publiclms-font-size-lg);
 }
+
+:where(.wp-block-publiclms-lesson-content__attachments) {
+	margin-top: var(--publiclms-space-50);
+	padding: var(--publiclms-space-40);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-md);
+	background: var(--publiclms-color-surface);
+}
+
+:where(.wp-block-publiclms-lesson-content__attachments-title) {
+	margin: 0 0 var(--publiclms-space-30);
+	font-size: var(--publiclms-font-size-lg);
+}
+
+:where(.wp-block-publiclms-lesson-content__files) {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+:where(.wp-block-publiclms-lesson-content__file) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--publiclms-space-20);
+	align-items: baseline;
+	padding: var(--publiclms-space-20) 0;
+}
+
+:where(.wp-block-publiclms-lesson-content__file-meta) {
+	font-size: var(--publiclms-font-size-xs);
+}

@@ -42,7 +42,7 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Post types and taxonomies | `PostTypes\PostTypes`, `Taxonomies\Taxonomies` | Done | All `show_in_rest`; capability mapping in ADR-025. |
 | Capabilities | `Capabilities\Capabilities`, `Capabilities\Roles` | Done | Five primitive capabilities, four meta capabilities, three roles. |
 | Data | `Core\Installer` (dbDelta schema), `Repositories\*` | Schema done; interfaces and base repository only | Phase 1: enrolment, progress, event and course structure repositories with object caching. |
-| Access | `Access\AccessPolicy`, `Access\AccessDecision`, `Access\ContentGate` | Phase 1: enrolment, publish state, preview; drip and prerequisites are documented no-ops | Rule order documented in the class; the gate filters `the_content` for every template and API. |
+| Access | `Access\AccessPolicy`, `Access\AccessDecision`, `Access\ContentGate` | Phase 2: enrolment, publish state, preview, course and item prerequisites, drip by days or date (ADR-040) | Rule order documented in the class; the gate filters `the_content` for every template and API. |
 | REST | `Rest\AbstractController`, `Rest\Api`, controllers per resource | Phase 1: courses, curriculum, sections, lessons, enrolments, progress, students | Matrix in §4. |
 | Templates | `Templates\TemplateRegistrar`, `PatternRegistrar`, `ClassicTemplates` | Phase 1: four templates, twelve patterns, classic theme fallback | ADR-037. |
 | Licensing | `Licensing\LicenseProvider`, `NullLicenseProvider`, `LicenseStatus` | Done | Pro binds the EDD provider. |
@@ -111,7 +111,9 @@ Curriculum relationships are `post_parent` and `menu_order` (ADR-028): a section
 lesson's, quiz's or assignment's parent is its section. Question → quiz links arrive with quizzes in phase 2.
 Course and item settings are registered post meta with the `_plms_` prefix (`PostTypes\Meta`):
 `_plms_access_mode` (free, closed, paid), `_plms_price`, `_plms_sale_price`, `_plms_duration` (minutes) and,
-on items, `_plms_preview`. Lessons, quizzes and assignments are excluded from
+on items, `_plms_preview`. Phase 2 adds `_plms_drip_days` and `_plms_drip_date` (sections and items),
+`_plms_prerequisites` (course IDs on courses, item IDs on items), `_plms_attachments` (lessons) and
+`_plms_certificate` (courses, `1` or `0`); see ADR-040. Lessons, quizzes and assignments are excluded from
 search so gated content never leaks through it.
 
 ### 3.2 Tables
@@ -207,10 +209,10 @@ phase 0 draft named one store per block).
 | `publiclms/course-progress` | `courseId`; block styles `bar` (default), `ring`, `text` | yes (live value) | 1 ✓ |
 | `publiclms/mark-complete` | `label` (content), `completedLabel` (content) | yes (the lesson player) | 1 ✓ |
 | `publiclms/lesson-navigation` | `showTitles`, `previousLabel` (content), `nextLabel` (content) | yes (next link follows completion) | 1 ✓ |
-| `publiclms/lesson-content` | `lockedMessage` (content) | no (gated by the access policy) | 1 ✓ (added in phase 1) |
+| `publiclms/lesson-content` | `lockedMessage` (content), `showAttachments` | no (gated by the access policy; lists the lesson's files, phase 2) | 1 ✓ (added in phase 1) |
 | `publiclms/course-meta` | `courseId`, `fields`, `showLabels`, `layout` | no | 1 ✓ (added in phase 1) |
 | `publiclms/student-dashboard` | `tabs`, `defaultTab` | yes (WAI-ARIA tabs) | 1 ✓ (tabs: in progress, completed) |
-| `publiclms/video` | `provider`, `src`, `trackCompletion`, `requiredPercent` | yes | moved to 2 |
+| `publiclms/video` | `provider`, `src`, `mediaId`, `captions`, `title`, `caption`, `trackCompletion`, `requiredPercent` | yes (watch tracking, ADR-041) | 2 ✓ |
 | `publiclms/quiz` | `quizId` | yes (runner) | 2 |
 | `publiclms/assignment` | `assignmentId`, `allowedTypes`, `maxFileSize` | yes | 2 |
 | `publiclms/instructor-dashboard` | `tabs` | yes | 2 |
@@ -597,3 +599,46 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   then. Items 1 and 6 were already met by 1.1.0 keys and the namespace-based `isActive`.
 - **Consequences.** On themes without the B2 presets (Twenty Twenty-Five) pattern text sizes come from the
   alias fallbacks rather than core's small and large presets.
+
+### ADR-040 Drip and prerequisites in the access policy
+- **Context.** Phase 1 left rules 6 and 7 of `AccessPolicy` as documented no-ops. The PRD puts drip "by
+  days or date" and prerequisites in free; the brief names "course needs course; lesson needs lesson".
+- **Decision.** Drip lives on sections and items: `_plms_drip_days` (days after the enrolment's
+  `enrolled_at`) and `_plms_drip_date` (a UTC datetime). Every rule that applies to an item (its own and
+  its section's) must pass, so the latest unlock time wins; the denial carries it as `available_at`.
+  Prerequisites: a course lists courses (`_plms_prerequisites` on the course) that must have a completed
+  enrolment (`completed_at` set) before the learner can enrol, and items of that course stay locked for
+  learners enrolled by hand; an item lists lessons, quizzes or assignments of the same course that must be
+  complete. Unpublished courses, items of other courses and self-references are ignored, so deleting a
+  step never locks a course for good. `AccessDecision` gained `requires()` (the IDs still to complete),
+  which `message()` names ("Complete “Lesson 3” first.") and `to_array()` returns with titles and URLs.
+  Teachers and free previews pass before either rule (rules 1 and 3). REST: `drip_days`, `drip_date`
+  (site timezone, like core's `date`) and `drip_date_gmt` on sections and items, `prerequisites` on items
+  and courses, and `lock_reason` and `available_at` per item in the curriculum. The builder edits them in
+  an "Access rules" dialog per section and item, and course prerequisites in course settings. Lesson,
+  quiz and assignment routes share `Rest\AbstractItemController`.
+- **Consequences.** Drip counts from the latest (re)enrolment, because `enrolled_at` restarts when a
+  cancelled enrolment is reactivated (ADR-029). There is no "take items in order" switch; authors chain
+  prerequisites instead. No job releases dripped items: they open when the next request finds the time
+  has passed, and drip reminders (emails) are Pro. `AccessPolicy` takes the progress repository as an
+  optional third constructor argument.
+
+### ADR-041 Lesson video without provider scripts
+- **Context.** The PRD wants YouTube, Vimeo, Bunny and self-hosted video with completion tracking, and
+  forbids remote assets in free. Each provider's JavaScript SDK is a remote script.
+- **Decision.** `publiclms/video` renders the provider's own iframe (youtube-nocookie.com, Vimeo with
+  `dnt=1`, Bunny Stream's embed) or a native `<video>` with an optional WebVTT captions track, and reads
+  progress from the players' postMessage events: YouTube's widget `listening`/`infoDelivery` messages,
+  Vimeo's `timeupdate` event, Bunny's player.js `timeupdate`, or the element's `timeupdate`. The store
+  counts each second actually played (a jump of more than two seconds adds nothing), and when the share
+  reaches `requiredPercent` (default 90) on a lesson the learner is enrolled in, it posts the completion
+  to `publiclms/v1/progress` like the mark-complete button. `Blocks\VideoSource` parses watch, share,
+  embed and Shorts URLs and IDs. Lesson files (`_plms_attachments`, media library IDs) are listed by
+  `publiclms/lesson-content` under the lesson for learners who can open it, and edited in a block editor
+  panel or over `PATCH /lessons/{id}`.
+- **Consequences.** Watch tracking is a learning aid, not proof: the server cannot verify playback, so it
+  does not refuse a manual completion, and nothing gates the mark-complete button. YouTube's message
+  protocol is the one its own iframe API uses but is not formally documented; if it changes, tracking
+  stops silently and the lesson can still be completed by hand. Lesson files stay in the media library,
+  so their URLs are public once known; private files are what assignment uploads are for (ADR-043).
+

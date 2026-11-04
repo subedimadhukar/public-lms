@@ -12,6 +12,7 @@ use PublicLMS\Access\AccessPolicy;
 use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Services\ProgressService;
 use PublicLMS\Tests\TestCase;
 
 /**
@@ -195,20 +196,106 @@ class AccessPolicyTest extends TestCase {
 	}
 
 	/**
-	 * Drip and prerequisites are documented no-ops until phase 2.
+	 * Without rules every published item of an active enrolment is open.
 	 *
 	 * @covers ::can_access_item
-	 * @covers ::can_attempt_quiz
 	 * @covers ::can_submit_assignment
 	 */
-	public function test_drip_and_prerequisites_do_not_lock_anything_yet() {
+	public function test_items_without_access_rules_stay_open() {
 		$student = self::factory()->user->create();
 		$this->enrollments->enroll( $student, $this->fixture['course'] );
 		foreach ( $this->fixture['lessons'] as $lesson ) {
 			$this->assertTrue( $this->policy->can_access_item( $lesson, $student )->is_allowed() );
 		}
-		$this->assertTrue( $this->policy->can_attempt_quiz( $this->fixture['lessons'][0], $student )->is_allowed() );
 		$this->assertTrue( $this->policy->can_submit_assignment( $this->fixture['lessons'][0], $student )->is_allowed() );
+	}
+
+	/**
+	 * @covers ::check_drip
+	 * @covers ::unlock_time
+	 */
+	public function test_drip_days_count_from_the_enrolment_date() {
+		$student = self::factory()->user->create();
+		$lesson  = $this->fixture['lessons'][1];
+		update_post_meta( $lesson, Meta::DRIP_DAYS, 3 );
+		$enrolment = $this->enrollments->enroll( $student, $this->fixture['course'] );
+
+		$decision = $this->policy->can_access_item( $lesson, $student );
+		$this->assertSame( AccessDecision::REASON_DRIP, $decision->reason() );
+		$this->assertEqualsWithDelta( time() + 3 * DAY_IN_SECONDS, (int) $decision->available_at(), 5 );
+		$this->assertStringContainsString( wp_date( (string) get_option( 'date_format' ), (int) $decision->available_at() ), $decision->message() );
+		$this->assertTrue( $this->policy->can_access_item( $this->fixture['lessons'][0], $student )->is_allowed(), 'Items without a rule stay open.' );
+		$this->assertTrue( $this->policy->can_access_item( $lesson, $this->instructor )->is_allowed(), 'Teachers are never dripped.' );
+
+		$this->enrollments->update( $enrolment, array( 'enrolled_at' => gmdate( 'Y-m-d H:i:s', time() - 4 * DAY_IN_SECONDS ) ) );
+		$this->assertTrue( $this->policy->can_access_item( $lesson, $student )->is_allowed() );
+	}
+
+	/**
+	 * @covers ::check_drip
+	 * @covers ::unlock_time
+	 */
+	public function test_section_and_item_drip_dates_apply_together_and_the_later_wins() {
+		$student = self::factory()->user->create();
+		$this->enrollments->enroll( $student, $this->fixture['course'] );
+		$tomorrow = gmdate( 'Y-m-d H:i:s', time() + DAY_IN_SECONDS );
+		$in_week  = gmdate( 'Y-m-d H:i:s', time() + WEEK_IN_SECONDS );
+		update_post_meta( $this->fixture['sections'][1], Meta::DRIP_DATE, $tomorrow );
+		update_post_meta( $this->fixture['lessons'][3], Meta::DRIP_DATE, $in_week );
+
+		$this->assertTrue( $this->policy->can_access_item( $this->fixture['lessons'][1], $student )->is_allowed() );
+		$this->assertSame( strtotime( $tomorrow . ' UTC' ), $this->policy->can_access_item( $this->fixture['lessons'][2], $student )->available_at() );
+		$this->assertSame( strtotime( $in_week . ' UTC' ), $this->policy->can_access_item( $this->fixture['lessons'][3], $student )->available_at() );
+
+		update_post_meta( $this->fixture['sections'][1], Meta::DRIP_DATE, gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ) );
+		$this->assertTrue( $this->policy->can_access_item( $this->fixture['lessons'][2], $student )->is_allowed() );
+		$this->assertSame( AccessDecision::REASON_DRIP, $this->policy->can_access_item( $this->fixture['lessons'][3], $student )->reason() );
+	}
+
+	/**
+	 * @covers ::check_prerequisites
+	 * @covers ::missing_item_prerequisites
+	 */
+	public function test_item_prerequisites_open_once_the_required_steps_are_complete() {
+		$student = self::factory()->user->create();
+		$this->enrollments->enroll( $student, $this->fixture['course'] );
+		$lessons = $this->fixture['lessons'];
+		$other   = $this->create_course_with_lessons();
+		update_post_meta( $lessons[2], Meta::PREREQUISITES, array( $lessons[0], $other['lessons'][0], $lessons[2] ) );
+
+		$decision = $this->policy->can_access_item( $lessons[2], $student );
+		$this->assertSame( AccessDecision::REASON_PREREQUISITE, $decision->reason() );
+		$this->assertSame( array( $lessons[0] ), $decision->requires(), 'Items of other courses and the item itself are ignored.' );
+		$this->assertStringContainsString( get_the_title( $lessons[0] ), $decision->message() );
+		$this->assertSame( $lessons[0], $decision->to_array()['requires'][0]['id'] );
+
+		publiclms()->container()->get( ProgressService::class )->complete_item( $student, $lessons[0] );
+		$this->assertTrue( $this->policy->can_access_item( $lessons[2], $student )->is_allowed() );
+	}
+
+	/**
+	 * @covers ::can_enroll
+	 * @covers ::missing_course_prerequisites
+	 */
+	public function test_course_prerequisites_block_enrolment_and_items_until_completed() {
+		$student  = self::factory()->user->create();
+		$required = $this->create_course_with_lessons( array( 'post_title' => 'Foundations' ) );
+		$draft    = $this->create_course( array( 'post_status' => 'draft' ) );
+		update_post_meta( $this->fixture['course'], Meta::PREREQUISITES, array( $required['course'], $draft, $this->fixture['course'] ) );
+
+		$decision = $this->policy->can_enroll( $this->fixture['course'], $student );
+		$this->assertSame( AccessDecision::REASON_PREREQUISITE, $decision->reason() );
+		$this->assertSame( array( $required['course'] ), $decision->requires(), 'Unpublished courses and the course itself do not count.' );
+		$this->assertStringContainsString( 'Foundations', $decision->message() );
+
+		$this->enrollments->enroll( $student, $this->fixture['course'], 'manual' );
+		$this->assertSame( AccessDecision::REASON_PREREQUISITE, $this->policy->can_access_item( $this->fixture['lessons'][0], $student )->reason() );
+
+		$this->enrollments->enroll( $student, $required['course'] );
+		$this->enrollments->set_completed( $student, $required['course'], gmdate( 'Y-m-d H:i:s' ) );
+		$this->assertTrue( $this->policy->can_access_item( $this->fixture['lessons'][0], $student )->is_allowed() );
+		$other = self::factory()->user->create();
+		$this->assertSame( AccessDecision::REASON_PREREQUISITE, $this->policy->can_enroll( $this->fixture['course'], $other )->reason() );
 	}
 
 	/**

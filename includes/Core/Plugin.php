@@ -222,7 +222,8 @@ final class Plugin {
 			static function ( Container $container ) {
 				return new AccessPolicy(
 					$container->get( CourseStructureRepositoryInterface::class ),
-					$container->get( EnrollmentRepository::class )
+					$container->get( EnrollmentRepository::class ),
+					$container->get( ProgressRepository::class )
 				);
 			}
 		);

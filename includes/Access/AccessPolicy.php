@@ -12,6 +12,7 @@ use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
 use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Repositories\ProgressRepository;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -30,9 +31,15 @@ defined( 'ABSPATH' ) || exit;
  * 3. The item is marked as a free preview: allow.
  * 4. The user is logged out: deny (logged_out).
  * 5. No active enrolment: deny (not_enrolled); expired enrolment: deny (expired).
- * 6. A prerequisite course or item is incomplete: deny (prerequisite). Phase 2; no-op today.
- * 7. Drip schedule not reached: deny (drip, with available_at). Phase 2; no-op today.
+ * 6. A prerequisite course of the course, or a prerequisite item of the item, is
+ *    incomplete: deny (prerequisite, naming what to complete).
+ * 7. The drip time of the item or its section has not come: deny (drip, with
+ *    available_at). Drip counts days from the enrolment date, or waits for a
+ *    fixed date; when both apply the later one wins (ADR-040).
  * 8. Otherwise: allow.
+ *
+ * Enrolment also checks course prerequisites: a learner who has not completed
+ * the required courses cannot enrol themselves.
  *
  * Every decision passes through the `publiclms_access_decision` filter so Pro
  * memberships and groups can grant access without changing this class.
@@ -54,14 +61,23 @@ class AccessPolicy {
 	private $enrollments;
 
 	/**
+	 * Progress, for item prerequisites.
+	 *
+	 * @var ProgressRepository|null
+	 */
+	private $progress;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param CourseStructureRepositoryInterface $structure   Course structure.
 	 * @param EnrollmentRepository               $enrollments Enrolments.
+	 * @param ProgressRepository|null            $progress    Progress; without it item prerequisites never block.
 	 */
-	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentRepository $enrollments ) {
+	public function __construct( CourseStructureRepositoryInterface $structure, EnrollmentRepository $enrollments, ?ProgressRepository $progress = null ) {
 		$this->structure   = $structure;
 		$this->enrollments = $enrollments;
+		$this->progress    = $progress;
 	}
 
 	/**
@@ -109,6 +125,8 @@ class AccessPolicy {
 			$decision = AccessDecision::deny( AccessDecision::REASON_LOGGED_OUT );
 		} elseif ( $this->enrollments->is_enrolled( $user_id, $course_id ) ) {
 			$decision = AccessDecision::deny( AccessDecision::REASON_ALREADY_ENROLLED );
+		} elseif ( ! empty( $this->missing_course_prerequisites( $course_id, $user_id ) ) ) {
+			$decision = AccessDecision::deny( AccessDecision::REASON_PREREQUISITE, null, $this->missing_course_prerequisites( $course_id, $user_id ) );
 		} else {
 			$mode = Meta::access_mode( $course_id );
 			if ( 'closed' === $mode ) {
@@ -240,13 +258,13 @@ class AccessPolicy {
 			return $enrolment;
 		}
 
-		// 6. Prerequisites (phase 2).
+		// 6. Prerequisites.
 		$prerequisite = $this->check_prerequisites( $item_id, $course_id, $user_id );
 		if ( null !== $prerequisite ) {
 			return $prerequisite;
 		}
 
-		// 7. Drip (phase 2).
+		// 7. Drip.
 		$drip = $this->check_drip( $item_id, $course_id, $user_id );
 		if ( null !== $drip ) {
 			return $drip;
@@ -302,29 +320,128 @@ class AccessPolicy {
 	}
 
 	/**
-	 * Rule 6: prerequisites. Documented no-op until phase 2, which reads the
-	 * course's prerequisite courses and the item's required earlier items.
+	 * Rule 6: prerequisites. The course's prerequisite courses must be completed,
+	 * then the item's prerequisite items (published items of the same course;
+	 * others are ignored so a deleted lesson never locks a course for good).
 	 *
 	 * @param int $item_id   Item ID.
 	 * @param int $course_id Course ID.
 	 * @param int $user_id   User ID.
 	 * @return AccessDecision|null A denial, or null to continue.
 	 */
-	protected function check_prerequisites( int $item_id, int $course_id, int $user_id ): ?AccessDecision { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed,Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Phase 2 hook point; the signature is fixed for subclasses.
+	protected function check_prerequisites( int $item_id, int $course_id, int $user_id ): ?AccessDecision {
+		$courses = $this->missing_course_prerequisites( $course_id, $user_id );
+		if ( ! empty( $courses ) ) {
+			return AccessDecision::deny( AccessDecision::REASON_PREREQUISITE, null, $courses );
+		}
+		$items = $this->missing_item_prerequisites( $item_id, $course_id, $user_id );
+		if ( ! empty( $items ) ) {
+			return AccessDecision::deny( AccessDecision::REASON_PREREQUISITE, null, $items );
+		}
 		return null;
 	}
 
 	/**
-	 * Rule 7: drip. Documented no-op until phase 2, which opens items a number
-	 * of days after enrolment or on a date and returns the unlock time.
+	 * Rule 7: drip. Denies until the item's unlock time.
 	 *
 	 * @param int $item_id   Item ID.
 	 * @param int $course_id Course ID.
 	 * @param int $user_id   User ID.
 	 * @return AccessDecision|null A denial, or null to continue.
 	 */
-	protected function check_drip( int $item_id, int $course_id, int $user_id ): ?AccessDecision { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed,Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Phase 2 hook point; the signature is fixed for subclasses.
+	protected function check_drip( int $item_id, int $course_id, int $user_id ): ?AccessDecision {
+		$unlock = $this->unlock_time( $item_id, $course_id, $user_id );
+		if ( null !== $unlock && $unlock > $this->now() ) {
+			return AccessDecision::deny( AccessDecision::REASON_DRIP, $unlock );
+		}
 		return null;
+	}
+
+	/**
+	 * Returns the prerequisite courses of a course the user has not completed.
+	 *
+	 * Only published courses count; a course listed as its own prerequisite is ignored.
+	 *
+	 * @param int $course_id Course ID.
+	 * @param int $user_id   User ID.
+	 * @return array<int, int>
+	 */
+	public function missing_course_prerequisites( int $course_id, int $user_id ): array {
+		$missing = array();
+		foreach ( Meta::id_list( $course_id, Meta::PREREQUISITES ) as $required ) {
+			if ( $required === $course_id || PostTypes::COURSE !== get_post_type( $required ) || 'publish' !== get_post_status( $required ) ) {
+				continue;
+			}
+			$row = $user_id > 0 ? $this->enrollments->find_by_user_and_course( $user_id, $required ) : null;
+			if ( null === $row || empty( $row['completed_at'] ) ) {
+				$missing[] = $required;
+			}
+		}
+		return $missing;
+	}
+
+	/**
+	 * Returns the prerequisite items of an item the user has not completed.
+	 *
+	 * @param int $item_id   Item ID.
+	 * @param int $course_id The item's course.
+	 * @param int $user_id   User ID.
+	 * @return array<int, int>
+	 */
+	public function missing_item_prerequisites( int $item_id, int $course_id, int $user_id ): array {
+		$required = Meta::id_list( $item_id, Meta::PREREQUISITES );
+		if ( empty( $required ) ) {
+			return array();
+		}
+		$required = array_values( array_intersect( $required, $this->structure->item_ids( $course_id ) ) );
+		$required = array_values( array_diff( $required, array( $item_id ) ) );
+		$done     = null === $this->progress || $user_id <= 0 ? array() : $this->progress->completed_item_ids( $user_id, $course_id );
+		return array_values( array_diff( $required, $done ) );
+	}
+
+	/**
+	 * Returns when an item opens for a learner under its drip rules, or null when it has none.
+	 *
+	 * The item's and its section's rules all apply, so the latest time wins.
+	 * Day counts run from the enrolment date; without an enrolment they run
+	 * from now, so the item reads as locked for that many days.
+	 *
+	 * @param int $item_id   Item ID.
+	 * @param int $course_id The item's course.
+	 * @param int $user_id   User ID.
+	 * @return int|null Unix timestamp, or null.
+	 */
+	public function unlock_time( int $item_id, int $course_id, int $user_id ): ?int {
+		$enrolment = $user_id > 0 ? $this->enrollments->find_by_user_and_course( $user_id, $course_id ) : null;
+		$start     = null !== $enrolment && ! empty( $enrolment['enrolled_at'] ) ? strtotime( $enrolment['enrolled_at'] . ' UTC' ) : false;
+		$start     = false === $start ? $this->now() : $start;
+
+		$times = array();
+		foreach ( array( $this->structure->section_id_for( $item_id ), $item_id ) as $post_id ) {
+			if ( $post_id <= 0 ) {
+				continue;
+			}
+			$drip = Meta::drip( $post_id );
+			if ( $drip['days'] > 0 ) {
+				$times[] = $start + $drip['days'] * DAY_IN_SECONDS;
+			}
+			if ( '' !== $drip['date'] ) {
+				$date = strtotime( $drip['date'] . ' UTC' );
+				if ( false !== $date ) {
+					$times[] = $date;
+				}
+			}
+		}
+		return empty( $times ) ? null : (int) max( $times );
+	}
+
+	/**
+	 * Returns the current Unix time. A seam for tests and for Pro's time-travel previews.
+	 *
+	 * @return int
+	 */
+	protected function now(): int {
+		return time();
 	}
 
 	/**

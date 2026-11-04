@@ -604,6 +604,8 @@ final class CoursesController extends AbstractController {
 			'sale_price'     => (string) get_post_meta( $course_id, Meta::SALE_PRICE, true ),
 			'duration'       => (int) get_post_meta( $course_id, Meta::DURATION, true ),
 			'duration_label' => $this->fields->format_duration( $this->fields->duration_minutes( $course_id ) ),
+			'prerequisites'  => Meta::id_list( $course_id, Meta::PREREQUISITES ),
+			'certificate'    => Meta::issues_certificate( $course_id ),
 			'sections_count' => count( $structure['sections'] ),
 			'lessons_count'  => $lessons,
 			'enrolled_count' => $this->enrollments->count_by_course( $course_id, EnrollmentRepository::STATUS_ACTIVE ),
@@ -744,6 +746,17 @@ final class CoursesController extends AbstractController {
 					'context'     => $view_edit,
 					'readonly'    => true,
 				),
+				'prerequisites'  => array(
+					'description' => __( 'Courses a learner must complete before enrolling.', 'public-lms' ),
+					'type'        => 'array',
+					'items'       => array( 'type' => 'integer' ),
+					'context'     => $view_edit,
+				),
+				'certificate'    => array(
+					'description' => __( 'Whether completing the course issues a certificate.', 'public-lms' ),
+					'type'        => 'boolean',
+					'context'     => $view_edit,
+				),
 				'sections_count' => array(
 					'description' => __( 'Published sections.', 'public-lms' ),
 					'type'        => 'integer',
@@ -809,16 +822,25 @@ final class CoursesController extends AbstractController {
 								'items' => array(
 									'type'       => 'object',
 									'properties' => array(
-										'id'        => array( 'type' => 'integer' ),
-										'type'      => array( 'type' => 'string' ),
-										'title'     => array( 'type' => 'string' ),
-										'status'    => array( 'type' => 'string' ),
-										'preview'   => array( 'type' => 'boolean' ),
-										'duration'  => array( 'type' => 'integer' ),
-										'link'      => array( 'type' => 'string' ),
-										'edit_url'  => array( 'type' => 'string' ),
-										'completed' => array( 'type' => 'boolean' ),
-										'locked'    => array( 'type' => 'boolean' ),
+										'id'            => array( 'type' => 'integer' ),
+										'type'          => array( 'type' => 'string' ),
+										'title'         => array( 'type' => 'string' ),
+										'status'        => array( 'type' => 'string' ),
+										'preview'       => array( 'type' => 'boolean' ),
+										'duration'      => array( 'type' => 'integer' ),
+										'link'          => array( 'type' => 'string' ),
+										'edit_url'      => array( 'type' => 'string' ),
+										'completed'     => array( 'type' => 'boolean' ),
+										'locked'        => array( 'type' => 'boolean' ),
+										'lock_reason'   => array( 'type' => 'string' ),
+										'available_at'  => array( 'type' => array( 'integer', 'null' ) ),
+										'prerequisites' => array(
+											'type'  => 'array',
+											'items' => array( 'type' => 'integer' ),
+										),
+										'drip_days'     => array( 'type' => 'integer' ),
+										'drip_date'     => array( 'type' => 'string' ),
+										'drip_date_gmt' => array( 'type' => 'string' ),
 									),
 								),
 							),
@@ -988,6 +1010,13 @@ final class CoursesController extends AbstractController {
 				'sanitize_callback' => 'absint',
 				'validate_callback' => 'rest_validate_request_arg',
 			),
+			'prerequisites'  => AccessRules::prerequisites_arg( __( 'Courses a learner must complete before enrolling.', 'public-lms' ) ),
+			'certificate'    => array(
+				'description'       => __( 'Whether completing the course issues a certificate.', 'public-lms' ),
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'validate_callback' => 'rest_validate_request_arg',
+			),
 		);
 	}
 
@@ -1045,6 +1074,17 @@ final class CoursesController extends AbstractController {
 		if ( isset( $request['duration'] ) ) {
 			update_post_meta( $course_id, Meta::DURATION, absint( $request['duration'] ) );
 		}
+		if ( isset( $request['prerequisites'] ) ) {
+			$required = Meta::sanitize_id_list( $request['prerequisites'] );
+			$valid    = AccessRules::validate_course_prerequisites( $course_id, $required );
+			if ( is_wp_error( $valid ) ) {
+				return $valid;
+			}
+			update_post_meta( $course_id, Meta::PREREQUISITES, $required );
+		}
+		if ( isset( $request['certificate'] ) ) {
+			update_post_meta( $course_id, Meta::CERTIFICATE, (bool) $request['certificate'] ? '1' : '0' );
+		}
 		return true;
 	}
 
@@ -1065,25 +1105,35 @@ final class CoursesController extends AbstractController {
 		foreach ( $structure['sections'] as $section ) {
 			$items = array();
 			foreach ( (array) $section['items'] as $item ) {
-				$item_id = (int) $item['id'];
-				$items[] = array(
-					'id'        => $item_id,
-					'type'      => (string) $item['type'],
-					'title'     => $editable ? (string) $item['title'] : wp_strip_all_tags( get_the_title( $item_id ) ),
-					'status'    => (string) $item['status'],
-					'preview'   => (bool) $item['preview'],
-					'duration'  => (int) $item['duration'],
-					'link'      => (string) get_permalink( $item_id ),
-					'edit_url'  => $editable ? (string) get_edit_post_link( $item_id, 'raw' ) : '',
-					'completed' => in_array( $item_id, $completed, true ),
-					'locked'    => ! $this->policy->can_access_item( $item_id )->is_allowed(),
+				$item_id  = (int) $item['id'];
+				$decision = $this->policy->can_access_item( $item_id );
+				$items[]  = array_merge(
+					array(
+						'id'            => $item_id,
+						'type'          => (string) $item['type'],
+						'title'         => $editable ? (string) $item['title'] : wp_strip_all_tags( get_the_title( $item_id ) ),
+						'status'        => (string) $item['status'],
+						'preview'       => (bool) $item['preview'],
+						'duration'      => (int) $item['duration'],
+						'link'          => (string) get_permalink( $item_id ),
+						'edit_url'      => $editable ? (string) get_edit_post_link( $item_id, 'raw' ) : '',
+						'completed'     => in_array( $item_id, $completed, true ),
+						'locked'        => ! $decision->is_allowed(),
+						'lock_reason'   => $decision->reason(),
+						'available_at'  => $decision->available_at(),
+						'prerequisites' => Meta::id_list( $item_id, Meta::PREREQUISITES ),
+					),
+					AccessRules::drip_data( $item_id )
 				);
 			}
-			$sections[] = array(
-				'id'     => (int) $section['id'],
-				'title'  => $editable ? (string) $section['title'] : wp_strip_all_tags( get_the_title( (int) $section['id'] ) ),
-				'status' => (string) $section['status'],
-				'items'  => $items,
+			$sections[] = array_merge(
+				array(
+					'id'     => (int) $section['id'],
+					'title'  => $editable ? (string) $section['title'] : wp_strip_all_tags( get_the_title( (int) $section['id'] ) ),
+					'status' => (string) $section['status'],
+					'items'  => $items,
+				),
+				AccessRules::drip_data( (int) $section['id'] )
 			);
 		}
 
@@ -1101,12 +1151,15 @@ final class CoursesController extends AbstractController {
 	 * @return array<string, mixed>
 	 */
 	private function enrollment_data( int $course_id ): array {
-		$state   = $this->fields->enroll_state( $course_id );
-		$data    = array(
+		$state = $this->fields->enroll_state( $course_id );
+		$data  = array(
 			'state' => $state['state'],
 			'label' => $state['label'],
 			'url'   => $state['url'],
 		);
+		if ( 'prerequisite' === $state['state'] ) {
+			$data['access'] = $this->policy->can_enroll( $course_id )->to_array();
+		}
 		$user_id = get_current_user_id();
 		if ( $user_id > 0 && $this->enrollments->is_enrolled( $user_id, $course_id ) ) {
 			$data['progress'] = $this->progress->summary( $user_id, $course_id );

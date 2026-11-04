@@ -18,6 +18,10 @@
 			"type": "string",
 			"default": "",
 			"role": "content"
+		},
+		"showAttachments": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"usesContext": [

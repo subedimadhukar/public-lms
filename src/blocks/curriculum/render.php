@@ -51,11 +51,7 @@ if ( empty( $publiclms_sections ) ) {
 			$publiclms_items    = (array) $publiclms_section['items'];
 			$publiclms_has_open = $publiclms_current > 0 && in_array( $publiclms_current, array_map( 'intval', wp_list_pluck( $publiclms_items, 'id' ) ), true );
 			$publiclms_title    = wp_strip_all_tags( get_the_title( (int) $publiclms_section['id'] ) );
-			$publiclms_count    = sprintf(
-				/* translators: %d: number of lessons in the section. */
-				_n( '%d lesson', '%d lessons', count( $publiclms_items ), 'public-lms' ),
-				count( $publiclms_items )
-			);
+			$publiclms_count    = Blocks::items_label( $publiclms_items );
 			?>
 			<li class="wp-block-publiclms-curriculum__section">
 				<?php if ( $publiclms_collapse ) : ?>
@@ -71,12 +67,16 @@ if ( empty( $publiclms_sections ) ) {
 					<?php
 					foreach ( $publiclms_items as $publiclms_item ) :
 						$publiclms_item_id = (int) $publiclms_item['id'];
+						$publiclms_kind    = (string) ( $publiclms_item['type'] ?? 'lesson' );
 						$publiclms_access  = $publiclms_blocks->policy->can_access_item( $publiclms_item_id );
 						$publiclms_locked  = $publiclms_locks && ! $publiclms_access->is_allowed();
-						// Locks that enrolling removes; drip and prerequisites stay locked (phase 2).
+						// Locks that enrolling removes; drip and prerequisites stay locked.
 						$publiclms_soft    = in_array( $publiclms_access->reason(), array( 'logged_out', 'not_enrolled' ), true );
+						$publiclms_opens   = $publiclms_locked && 'drip' === $publiclms_access->reason() && null !== $publiclms_access->available_at()
+							? wp_date( (string) get_option( 'date_format' ), (int) $publiclms_access->available_at() )
+							: '';
 						$publiclms_is_done = isset( $publiclms_done[ $publiclms_item_id ] );
-						$publiclms_classes = array( 'wp-block-publiclms-curriculum__item' );
+						$publiclms_classes = array( 'wp-block-publiclms-curriculum__item', 'is-type-' . sanitize_html_class( $publiclms_kind ) );
 						if ( $publiclms_is_done ) {
 							$publiclms_classes[] = 'is-completed';
 						}
@@ -105,6 +105,16 @@ if ( empty( $publiclms_sections ) ) {
 							<span class="publiclms-visually-hidden" data-wp-bind--hidden="!state.isItemCompleted"<?php echo $publiclms_is_done ? '' : ' hidden'; ?>><?php esc_html_e( '(completed)', 'public-lms' ); ?></span>
 							<?php if ( $publiclms_locked ) : ?>
 								<span class="publiclms-visually-hidden"<?php echo $publiclms_soft ? ' data-wp-bind--hidden="!state.isItemLocked"' : ''; ?>><?php esc_html_e( '(locked)', 'public-lms' ); ?></span>
+							<?php endif; ?>
+							<?php if ( '' !== $publiclms_opens ) : ?>
+								<span class="wp-block-publiclms-curriculum__opens">
+									<?php
+									/* translators: %s: date the item opens. */
+									echo esc_html( sprintf( __( 'Opens %s', 'public-lms' ), $publiclms_opens ) );
+									?>
+								</span>
+							<?php elseif ( $publiclms_locked && 'prerequisite' === $publiclms_access->reason() ) : ?>
+								<span class="wp-block-publiclms-curriculum__opens"><?php esc_html_e( 'Complete earlier steps first', 'public-lms' ); ?></span>
 							<?php endif; ?>
 							<?php if ( ! empty( $publiclms_item['preview'] ) && $publiclms_locks && ! $publiclms_blocks->enrollments->is_enrolled( get_current_user_id(), $publiclms_course ) ) : ?>
 								<span class="wp-block-publiclms-curriculum__badge"><?php esc_html_e( 'Preview', 'public-lms' ); ?></span>

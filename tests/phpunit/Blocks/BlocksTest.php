@@ -102,7 +102,7 @@ class BlocksTest extends TestCase {
 		$html = $this->render( '<!-- wp:publiclms/curriculum {"collapsible":false,"headingLevel":4} /-->', $lessons[1] );
 		$this->assertStringNotContainsString( '<details', $html );
 		$this->assertStringContainsString( '<h4 class="wp-block-publiclms-curriculum__section-title">', $html );
-		$this->assertSame( 1, preg_match_all( '/class="wp-block-publiclms-curriculum__item is-completed"/', $html ) );
+		$this->assertSame( 1, preg_match_all( '/class="wp-block-publiclms-curriculum__item is-type-lesson is-completed"/', $html ) );
 		$this->assertStringContainsString( 'aria-current="page"', $html );
 		$this->assertStringNotContainsString( 'is-locked', $html );
 	}
@@ -310,5 +310,57 @@ class BlocksTest extends TestCase {
 		);
 		$from_lesson = $query->query_vars( array( 'posts_per_page' => 5 ), $block );
 		$this->assertNotContains( $this->fixture['course'], $from_lesson['post__in'], 'On a lesson, its course is the one left out.' );
+	}
+
+	public function test_video_tracks_completion_only_for_enrolled_learners_on_items() {
+		$lesson = $this->fixture['lessons'][1];
+		$markup = '<!-- wp:publiclms/video {"src":"https://youtu.be/dQw4w9WgXcQ","title":"Reading a balance sheet","requiredPercent":80} /-->';
+
+		$public = $this->render( $markup, $lesson );
+		$this->assertStringContainsString( 'src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?', $public );
+		$this->assertStringContainsString( 'title="Reading a balance sheet"', $public );
+		$this->assertStringContainsString( '"track":false', $public );
+		$this->assertStringNotContainsString( 'role="status"', $public );
+
+		wp_set_current_user( $this->learner );
+		$html = $this->render( $markup, $lesson );
+		$this->assertStringContainsString( 'data-wp-init="callbacks.initVideo"', $html );
+		$this->assertStringContainsString( '"track":true', $html );
+		$this->assertStringContainsString( '"required":80', $html );
+		$this->assertStringContainsString( 'role="status"', $html );
+
+		$file = $this->render( '<!-- wp:publiclms/video {"provider":"self","src":"https://example.com/intro.mp4","captions":"https://example.com/intro.vtt"} /-->', $lesson );
+		$this->assertStringContainsString( '<video controls', $file );
+		$this->assertStringContainsString( '<track kind="captions" src="https://example.com/intro.vtt"', $file );
+		$this->assertSame( '', trim( $this->render( '<!-- wp:publiclms/video {"src":"https://example.com/page"} /-->', $lesson ) ) );
+	}
+
+	public function test_lesson_content_lists_attachments_for_learners_who_can_open_it() {
+		$lesson     = $this->fixture['lessons'][1];
+		$attachment = self::factory()->attachment->create_object(
+			'worksheet.pdf',
+			$lesson,
+			array(
+				'post_mime_type' => 'application/pdf',
+				'post_title'     => 'Practice worksheet',
+			)
+		);
+		update_post_meta( $lesson, Meta::ATTACHMENTS, array( $attachment ) );
+
+		$this->assertStringNotContainsString( 'Practice worksheet', $this->render( '<!-- wp:publiclms/lesson-content /-->', $lesson ) );
+		wp_set_current_user( $this->learner );
+		$html = $this->render( '<!-- wp:publiclms/lesson-content /-->', $lesson );
+		$this->assertStringContainsString( 'Lesson files', $html );
+		$this->assertStringContainsString( 'Practice worksheet', $html );
+		$this->assertStringNotContainsString( 'Lesson files', $this->render( '<!-- wp:publiclms/lesson-content {"showAttachments":false} /-->', $lesson ) );
+	}
+
+	public function test_curriculum_shows_when_dripped_items_open() {
+		update_post_meta( $this->fixture['lessons'][3], Meta::DRIP_DAYS, 5 );
+		update_post_meta( $this->fixture['lessons'][2], Meta::PREREQUISITES, array( $this->fixture['lessons'][0] ) );
+		wp_set_current_user( $this->learner );
+		$html = $this->render( '<!-- wp:publiclms/curriculum /-->', $this->fixture['course'] );
+		$this->assertStringContainsString( 'Opens ' . wp_date( (string) get_option( 'date_format' ), time() + 5 * DAY_IN_SECONDS ), $html );
+		$this->assertStringContainsString( 'Complete earlier steps first', $html );
 	}
 }

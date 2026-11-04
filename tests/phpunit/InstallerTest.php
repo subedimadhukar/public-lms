@@ -18,6 +18,22 @@ use WP_UnitTestCase;
 class InstallerTest extends WP_UnitTestCase {
 
 	/**
+	 * Drops the temporary copies install() created.
+	 *
+	 * The test suite turns CREATE TABLE into CREATE TEMPORARY TABLE, and a
+	 * temporary table shadows the real one for the rest of the run. Its rows
+	 * do not roll back, so later tests would see each other's data.
+	 */
+	public function tear_down() {
+		global $wpdb;
+		foreach ( Installer::tables() as $table ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Test cleanup of temporary tables.
+			$wpdb->query( $wpdb->prepare( 'DROP TEMPORARY TABLE IF EXISTS %i', $table ) );
+		}
+		parent::tear_down();
+	}
+
+	/**
 	 * The table list matches the data model in docs/ARCHITECTURE.md, and
 	 * install() creates every table in it.
 	 *

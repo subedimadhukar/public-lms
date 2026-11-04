@@ -1,0 +1,42 @@
+// Lesson video: a responsive 16:9 frame, a caption and the watch status.
+:where(.wp-block-publiclms-video) {
+	margin-inline: 0;
+}
+
+.wp-block-publiclms-video__frame {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: var(--publiclms-radius-md);
+	background: var(--publiclms-color-contrast);
+}
+
+.wp-block-publiclms-video__frame > iframe,
+.wp-block-publiclms-video__frame > video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+:where(.wp-block-publiclms-video__caption) {
+	margin: var(--publiclms-space-20) 0 0;
+	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(.wp-block-publiclms-video__status) {
+	margin: var(--publiclms-space-20) 0 0;
+	font-size: var(--publiclms-font-size-xs);
+}
+
+:where(.wp-block-publiclms-video__status:empty) {
+	display: none;
+}
+
+:where(.wp-block-publiclms-video__placeholder) {
+	padding: var(--publiclms-space-50);
+	border: 1px dashed var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-md);
+	font-size: var(--publiclms-font-size-sm);
+}

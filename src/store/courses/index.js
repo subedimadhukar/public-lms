@@ -13,6 +13,15 @@ export const STORE_NAME = 'publiclms/courses';
 
 const API = '/publiclms/v1';
 
+/**
+ * REST bases of the curriculum item types.
+ */
+export const ITEM_BASES = {
+	lesson: 'lessons',
+	quiz: 'quizzes',
+	assignment: 'assignments',
+};
+
 const DEFAULT_STATE = {
 	lists: {},
 	items: {},
@@ -206,39 +215,54 @@ const actions = {
 			await dispatch.refreshCurriculum( courseId );
 		},
 
-	addLesson:
-		( courseId, sectionId, title ) =>
+	addItem:
+		( courseId, sectionId, type, title ) =>
 		async ( { dispatch } ) => {
-			const lesson = await apiFetch( {
-				path: `${ API }/lessons`,
+			const item = await apiFetch( {
+				path: `${ API }/${ ITEM_BASES[ type ] }`,
 				method: 'POST',
 				data: { section_id: sectionId, title },
 			} );
 			await dispatch.refreshCurriculum( courseId );
-			return lesson;
+			return item;
 		},
 
-	updateLesson:
-		( courseId, lessonId, data ) =>
+	updateItem:
+		( courseId, type, itemId, data ) =>
 		async ( { dispatch } ) => {
-			const lesson = await apiFetch( {
-				path: `${ API }/lessons/${ lessonId }`,
+			const item = await apiFetch( {
+				path: `${ API }/${ ITEM_BASES[ type ] }/${ itemId }`,
 				method: 'PATCH',
 				data,
 			} );
 			await dispatch.refreshCurriculum( courseId );
-			return lesson;
+			return item;
 		},
 
-	deleteLesson:
-		( courseId, lessonId ) =>
+	deleteItem:
+		( courseId, type, itemId ) =>
 		async ( { dispatch } ) => {
 			await apiFetch( {
-				path: `${ API }/lessons/${ lessonId }`,
+				path: `${ API }/${ ITEM_BASES[ type ] }/${ itemId }`,
 				method: 'DELETE',
 			} );
 			await dispatch.refreshCurriculum( courseId );
 		},
+
+	addLesson:
+		( courseId, sectionId, title ) =>
+		( { dispatch } ) =>
+			dispatch.addItem( courseId, sectionId, 'lesson', title ),
+
+	updateLesson:
+		( courseId, lessonId, data ) =>
+		( { dispatch } ) =>
+			dispatch.updateItem( courseId, 'lesson', lessonId, data ),
+
+	deleteLesson:
+		( courseId, lessonId ) =>
+		( { dispatch } ) =>
+			dispatch.deleteItem( courseId, 'lesson', lessonId ),
 
 	/**
 	 * Saves a new curriculum order. The new order shows at once; on failure the

@@ -54,6 +54,7 @@
 
 :where(.wp-block-publiclms-curriculum__item) {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--publiclms-space-20);
 	padding: var(--publiclms-space-20) var(--publiclms-space-30);
@@ -67,7 +68,7 @@
 }
 
 :where(.wp-block-publiclms-curriculum__title) {
-	flex: 1;
+	flex: 1 1 8em;
 	min-width: 0;
 	color: inherit;
 }
@@ -103,4 +104,9 @@
 :where(.wp-block-publiclms-curriculum__empty) {
 	margin: 0;
 	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(.wp-block-publiclms-curriculum__opens) {
+	font-size: var(--publiclms-font-size-xs);
+	white-space: nowrap;
 }

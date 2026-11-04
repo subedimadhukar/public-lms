@@ -32,18 +32,95 @@ import {
 	arrowDown,
 	arrowUp,
 	dragHandle,
+	help,
+	lock,
 	moreVertical,
 	page,
 	pencil,
 	seen,
 	trash,
 	unseen,
+	upload,
 } from '@wordpress/icons';
 
 import { STORE_NAME } from '../../store/courses';
 import ConfirmDialog from '../components/confirm-dialog';
 import { notifyError, notifySuccess } from '../components/notices';
+import AccessRulesModal, { accessSummary } from './access-rules';
 import { AddInline, InlineForm } from './inline-forms';
+
+const TYPE_ICONS = {
+	lesson: page,
+	quiz: help,
+	assignment: upload,
+};
+
+/**
+ * Translated words for each item type, used in labels and messages.
+ *
+ * @param {string} type Item type.
+ * @return {Object} Labels.
+ */
+export function typeLabels( type ) {
+	if ( type === 'quiz' ) {
+		return {
+			name: __( 'Quiz', 'public-lms' ),
+			reorder: ( title ) =>
+				/* translators: %s: quiz title. */
+				sprintf( __( 'Reorder quiz: %s', 'public-lms' ), title ),
+			actions: ( title ) =>
+				/* translators: %s: quiz title. */
+				sprintf( __( 'Actions for quiz: %s', 'public-lms' ), title ),
+			titleField: __( 'Quiz title', 'public-lms' ),
+			renamed: __( 'Quiz renamed.', 'public-lms' ),
+			updated: __( 'Quiz updated.', 'public-lms' ),
+			deleted: __( 'Quiz deleted.', 'public-lms' ),
+			deleteTitle: __( 'Delete quiz?', 'public-lms' ),
+			deleteConfirm: __( 'Delete quiz', 'public-lms' ),
+			add: __( 'Add quiz', 'public-lms' ),
+			added: __( 'Quiz added.', 'public-lms' ),
+		};
+	}
+	if ( type === 'assignment' ) {
+		return {
+			name: __( 'Assignment', 'public-lms' ),
+			reorder: ( title ) =>
+				/* translators: %s: assignment title. */
+				sprintf( __( 'Reorder assignment: %s', 'public-lms' ), title ),
+			actions: ( title ) =>
+				sprintf(
+					/* translators: %s: assignment title. */
+					__( 'Actions for assignment: %s', 'public-lms' ),
+					title
+				),
+			titleField: __( 'Assignment title', 'public-lms' ),
+			renamed: __( 'Assignment renamed.', 'public-lms' ),
+			updated: __( 'Assignment updated.', 'public-lms' ),
+			deleted: __( 'Assignment deleted.', 'public-lms' ),
+			deleteTitle: __( 'Delete assignment?', 'public-lms' ),
+			deleteConfirm: __( 'Delete assignment', 'public-lms' ),
+			add: __( 'Add assignment', 'public-lms' ),
+			added: __( 'Assignment added.', 'public-lms' ),
+		};
+	}
+	return {
+		name: __( 'Lesson', 'public-lms' ),
+		reorder: ( title ) =>
+			/* translators: %s: lesson title. */
+			sprintf( __( 'Reorder lesson: %s', 'public-lms' ), title ),
+		actions: ( title ) =>
+			/* translators: %s: lesson title. */
+			sprintf( __( 'Actions for lesson: %s', 'public-lms' ), title ),
+		titleField: __( 'Lesson title', 'public-lms' ),
+		renamed: __( 'Lesson renamed.', 'public-lms' ),
+		updated: __( 'Lesson updated.', 'public-lms' ),
+		deleted: __( 'Lesson deleted.', 'public-lms' ),
+		deleteTitle: __( 'Delete lesson?', 'public-lms' ),
+		deleteConfirm: __( 'Delete lesson', 'public-lms' ),
+		add: __( 'Add lesson', 'public-lms' ),
+		added: __( 'Lesson added.', 'public-lms' ),
+	};
+}
 
 const sectionKey = ( id ) => `s-${ id }`;
 const itemKey = ( id ) => `i-${ id }`;
@@ -71,10 +148,22 @@ function titleOf( entity ) {
 	return decodeEntities( entity.title ) || __( '(no title)', 'public-lms' );
 }
 
-function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
+function ItemRow( {
+	courseId,
+	item,
+	isFirst,
+	isLast,
+	onMove,
+	sections,
+	renderActions,
+} ) {
 	const [ isRenaming, setIsRenaming ] = useState( false );
 	const [ isDeleting, setIsDeleting ] = useState( false );
-	const { updateLesson, deleteLesson } = useDispatch( STORE_NAME );
+	const [ isEditingRules, setIsEditingRules ] = useState( false );
+	const { updateItem, deleteItem } = useDispatch( STORE_NAME );
+	const labels = typeLabels( item.type );
+	const update = ( data ) => updateItem( courseId, item.type, item.id, data );
+	const rules = accessSummary( item );
 	const {
 		attributes,
 		listeners,
@@ -109,30 +198,28 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 				className="publiclms-drag-handle"
 				{ ...attributes }
 				{ ...listeners }
-				aria-label={ sprintf(
-					/* translators: %s: lesson title. */
-					__( 'Reorder lesson: %s', 'public-lms' ),
-					title
-				) }
+				aria-label={ labels.reorder( title ) }
 			>
 				<Icon
 					icon={ dragHandle }
 					className="publiclms-drag-handle__icon"
 				/>
 			</button>
-			<Icon icon={ page } className="publiclms-builder__item-icon" />
+			<Icon
+				icon={ TYPE_ICONS[ item.type ] || page }
+				className="publiclms-builder__item-icon"
+			/>
+			<span className="screen-reader-text">{ labels.name }:</span>
 			{ isRenaming ? (
 				<InlineForm
-					label={ __( 'Lesson title', 'public-lms' ) }
+					label={ labels.titleField }
 					initial={ item.title }
 					submitLabel={ __( 'Save', 'public-lms' ) }
 					onCancel={ () => setIsRenaming( false ) }
 					onSubmit={ async ( value ) => {
-						await updateLesson( courseId, item.id, {
-							title: value,
-						} );
+						await update( { title: value } );
 						setIsRenaming( false );
-						notifySuccess( __( 'Lesson renamed.', 'public-lms' ) );
+						notifySuccess( labels.renamed );
 					} }
 				/>
 			) : (
@@ -151,7 +238,11 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 						{ __( 'Free preview', 'public-lms' ) }
 					</span>
 				) }
+				{ rules && (
+					<span className="publiclms-badge is-rules">{ rules }</span>
+				) }
 			</span>
+			{ renderActions && renderActions( item ) }
 			{ item.edit_url && (
 				<Button
 					variant="tertiary"
@@ -163,11 +254,7 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 			) }
 			<DropdownMenu
 				icon={ moreVertical }
-				label={ sprintf(
-					/* translators: %s: lesson title. */
-					__( 'Actions for lesson: %s', 'public-lms' ),
-					title
-				) }
+				label={ labels.actions( title ) }
 				toggleProps={ { size: 'compact' } }
 				controls={ [
 					{
@@ -182,7 +269,7 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 						icon: item.preview ? unseen : seen,
 						onClick: () =>
 							run(
-								updateLesson( courseId, item.id, {
+								update( {
 									preview: ! item.preview,
 								} ),
 								item.preview
@@ -197,19 +284,24 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 							),
 					},
 					{
+						title: __( 'Access rules', 'public-lms' ),
+						icon: lock,
+						onClick: () => setIsEditingRules( true ),
+					},
+					{
 						title:
 							item.status === 'publish'
 								? __( 'Switch to draft', 'public-lms' )
 								: __( 'Publish', 'public-lms' ),
 						onClick: () =>
 							run(
-								updateLesson( courseId, item.id, {
+								update( {
 									status:
 										item.status === 'publish'
 											? 'draft'
 											: 'publish',
 								} ),
-								__( 'Lesson updated.', 'public-lms' )
+								labels.updated
 							),
 					},
 					{
@@ -231,23 +323,32 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 					},
 				] }
 			/>
+			{ isEditingRules && (
+				<AccessRulesModal
+					entity={ item }
+					kind="item"
+					sections={ sections }
+					onSave={ update }
+					onClose={ () => setIsEditingRules( false ) }
+				/>
+			) }
 			{ isDeleting && (
 				<ConfirmDialog
-					title={ __( 'Delete lesson?', 'public-lms' ) }
+					title={ labels.deleteTitle }
 					message={ sprintf(
-						/* translators: %s: lesson title. */
+						/* translators: %s: lesson, quiz or assignment title. */
 						__(
-							'“%s” moves to the trash. You can restore it from the Lessons trash.',
+							'“%s” moves to the trash. You can restore it from the trash.',
 							'public-lms'
 						),
 						title
 					) }
-					confirmLabel={ __( 'Delete lesson', 'public-lms' ) }
+					confirmLabel={ labels.deleteConfirm }
 					onCancel={ () => setIsDeleting( false ) }
 					onConfirm={ async () => {
 						await run(
-							deleteLesson( courseId, item.id ),
-							__( 'Lesson deleted.', 'public-lms' )
+							deleteItem( courseId, item.type, item.id ),
+							labels.deleted
 						);
 						setIsDeleting( false );
 					} }
@@ -260,17 +361,21 @@ function ItemRow( { courseId, item, isFirst, isLast, onMove } ) {
 function SectionCard( {
 	courseId,
 	section,
+	sections,
 	index,
 	count,
 	firstItemId,
 	lastItemId,
 	onMoveSection,
 	onMoveItem,
+	itemTypes,
+	renderItemActions,
 } ) {
 	const [ isRenaming, setIsRenaming ] = useState( false );
 	const [ isDeleting, setIsDeleting ] = useState( false );
-	const { updateSection, deleteSection, addLesson } =
-		useDispatch( STORE_NAME );
+	const [ isEditingRules, setIsEditingRules ] = useState( false );
+	const { updateSection, deleteSection, addItem } = useDispatch( STORE_NAME );
+	const rules = accessSummary( section );
 	const {
 		attributes,
 		listeners,
@@ -338,16 +443,19 @@ function SectionCard( {
 				) }
 				<span className="publiclms-builder__count">
 					{ sprintf(
-						/* translators: %d: number of lessons. */
+						/* translators: %d: number of lessons, quizzes and assignments. */
 						_n(
-							'%d lesson',
-							'%d lessons',
+							'%d step',
+							'%d steps',
 							section.items.length,
 							'public-lms'
 						),
 						section.items.length
 					) }
 				</span>
+				{ rules && (
+					<span className="publiclms-badge is-rules">{ rules }</span>
+				) }
 				<DropdownMenu
 					icon={ moreVertical }
 					label={ sprintf(
@@ -361,6 +469,11 @@ function SectionCard( {
 							title: __( 'Rename', 'public-lms' ),
 							icon: pencil,
 							onClick: () => setIsRenaming( true ),
+						},
+						{
+							title: __( 'Access rules', 'public-lms' ),
+							icon: lock,
+							onClick: () => setIsEditingRules( true ),
 						},
 						{
 							title: __( 'Move up', 'public-lms' ),
@@ -395,6 +508,8 @@ function SectionCard( {
 							isFirst={ item.id === firstItemId }
 							isLast={ item.id === lastItemId }
 							onMove={ onMoveItem }
+							sections={ sections }
+							renderActions={ renderItemActions }
 						/>
 					) ) }
 					{ section.items.length === 0 && (
@@ -407,22 +522,46 @@ function SectionCard( {
 					) }
 				</ul>
 			</SortableContext>
-			<AddInline
-				buttonLabel={ __( 'Add lesson', 'public-lms' ) }
-				fieldLabel={ __( 'Lesson title', 'public-lms' ) }
-				onAdd={ async ( value ) => {
-					await addLesson( courseId, section.id, value );
-					notifySuccess( __( 'Lesson added.', 'public-lms' ) );
-				} }
-			/>
+			<div className="publiclms-builder__add-items">
+				{ itemTypes.map( ( type ) => {
+					const labels = typeLabels( type );
+					return (
+						<AddInline
+							key={ type }
+							buttonLabel={ labels.add }
+							fieldLabel={ labels.titleField }
+							onAdd={ async ( value ) => {
+								await addItem(
+									courseId,
+									section.id,
+									type,
+									value
+								);
+								notifySuccess( labels.added );
+							} }
+						/>
+					);
+				} ) }
+			</div>
+			{ isEditingRules && (
+				<AccessRulesModal
+					entity={ section }
+					kind="section"
+					sections={ sections }
+					onSave={ ( data ) =>
+						updateSection( courseId, section.id, data )
+					}
+					onClose={ () => setIsEditingRules( false ) }
+				/>
+			) }
 			{ isDeleting && (
 				<ConfirmDialog
 					title={ __( 'Delete section?', 'public-lms' ) }
 					message={ sprintf(
-						/* translators: 1: section title, 2: number of lessons. */
+						/* translators: 1: section title, 2: number of lessons, quizzes and assignments. */
 						_n(
-							'“%1$s” and its %2$d lesson move to the trash.',
-							'“%1$s” and its %2$d lessons move to the trash.',
+							'“%1$s” and its %2$d step move to the trash.',
+							'“%1$s” and its %2$d steps move to the trash.',
 							section.items.length,
 							'public-lms'
 						),
@@ -464,7 +603,12 @@ function sectionIndexOf( sections, key ) {
 	);
 }
 
-export default function CurriculumTree( { courseId, curriculum } ) {
+export default function CurriculumTree( {
+	courseId,
+	curriculum,
+	itemTypes = [ 'lesson' ],
+	renderItemActions,
+} ) {
 	const { saveOrder, addSection } = useDispatch( STORE_NAME );
 	const [ sections, setSections ] = useState( curriculum.sections );
 	const [ activeKey, setActiveKey ] = useState( null );
@@ -746,6 +890,9 @@ export default function CurriculumTree( { courseId, curriculum } ) {
 								key={ section.id }
 								courseId={ courseId }
 								section={ section }
+								sections={ sections }
+								itemTypes={ itemTypes }
+								renderItemActions={ renderItemActions }
 								index={ index }
 								count={ sections.length }
 								firstItemId={ allItems[ 0 ]?.id }

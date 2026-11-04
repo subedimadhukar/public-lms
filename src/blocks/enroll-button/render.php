@@ -74,6 +74,17 @@ $publiclms_context = array(
 			data-wp-text="state.i18n.startLearning"
 		><?php esc_html_e( 'Start learning', 'public-lms' ); ?></a>
 		<p class="wp-block-publiclms-enroll-button__message" role="status" aria-live="polite" data-wp-text="context.message"></p>
+	<?php elseif ( 'prerequisite' === $publiclms_state['state'] ) : ?>
+		<?php $publiclms_decision = $publiclms_blocks->policy->can_enroll( $publiclms_course ); ?>
+		<p class="wp-block-publiclms-enroll-button__note"><?php echo esc_html( $publiclms_decision->message() ); ?></p>
+		<?php foreach ( $publiclms_decision->requires() as $publiclms_required ) : ?>
+			<a class="wp-block-publiclms-enroll-button__button wp-element-button" href="<?php echo esc_url( (string) get_permalink( $publiclms_required ) ); ?>">
+				<?php
+				/* translators: %s: course title. */
+				echo esc_html( sprintf( __( 'Go to %s', 'public-lms' ), wp_strip_all_tags( get_the_title( $publiclms_required ) ) ) );
+				?>
+			</a>
+		<?php endforeach; ?>
 	<?php elseif ( in_array( $publiclms_state['state'], array( 'enrolled', 'completed', 'logged_out' ), true ) ) : ?>
 		<a class="wp-block-publiclms-enroll-button__button wp-element-button" href="<?php echo esc_url( $publiclms_state['url'] ); ?>"><?php echo esc_html( $publiclms_label ); ?></a>
 	<?php else : ?>

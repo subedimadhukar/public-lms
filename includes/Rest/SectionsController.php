@@ -87,15 +87,18 @@ final class SectionsController extends AbstractController {
 					'methods'             => WP_REST_Server::EDITABLE,
 					'callback'            => array( $this, 'update_item' ),
 					'permission_callback' => array( $this, 'update_item_permissions_check' ),
-					'args'                => array(
-						'title'    => $title,
-						'position' => array(
-							'description'       => __( 'Zero-based position among the course\'s sections.', 'public-lms' ),
-							'type'              => 'integer',
-							'minimum'           => 0,
-							'sanitize_callback' => 'absint',
-							'validate_callback' => 'rest_validate_request_arg',
+					'args'                => array_merge(
+						array(
+							'title'    => $title,
+							'position' => array(
+								'description'       => __( 'Zero-based position among the course\'s sections.', 'public-lms' ),
+								'type'              => 'integer',
+								'minimum'           => 0,
+								'sanitize_callback' => 'absint',
+								'validate_callback' => 'rest_validate_request_arg',
+							),
 						),
+						AccessRules::drip_args()
 					),
 				),
 				array(
@@ -169,6 +172,10 @@ final class SectionsController extends AbstractController {
 		if ( isset( $request['title'] ) && ! $this->structure->rename( $section_id, (string) $request['title'] ) ) {
 			return new WP_Error( 'publiclms_rest_cannot_update', __( 'The section could not be renamed.', 'public-lms' ), array( 'status' => 500 ) );
 		}
+		if ( isset( $request['drip_days'] ) || isset( $request['drip_date'] ) ) {
+			AccessRules::apply_drip( $section_id, $request );
+			$this->structure->invalidate( $this->structure->course_id_for( $section_id ) );
+		}
 		if ( isset( $request['position'] ) ) {
 			$course_id = $this->structure->course_id_for( $section_id );
 			$tree      = array();
@@ -231,16 +238,19 @@ final class SectionsController extends AbstractController {
 		$course_id = $this->structure->course_id_for( $section_id );
 		foreach ( $this->structure->get_structure( $course_id )['sections'] as $section ) {
 			if ( (int) $section['id'] === $section_id ) {
-				return array_merge( array( 'course_id' => $course_id ), $section );
+				return array_merge( array( 'course_id' => $course_id ), $section, AccessRules::drip_data( $section_id ) );
 			}
 		}
-		return array(
-			'id'         => $section_id,
-			'course_id'  => $course_id,
-			'title'      => (string) get_post_field( 'post_title', $section_id ),
-			'status'     => (string) get_post_status( $section_id ),
-			'menu_order' => (int) get_post_field( 'menu_order', $section_id ),
-			'items'      => array(),
+		return array_merge(
+			array(
+				'id'         => $section_id,
+				'course_id'  => $course_id,
+				'title'      => (string) get_post_field( 'post_title', $section_id ),
+				'status'     => (string) get_post_status( $section_id ),
+				'menu_order' => (int) get_post_field( 'menu_order', $section_id ),
+				'items'      => array(),
+			),
+			AccessRules::drip_data( $section_id )
 		);
 	}
 
@@ -257,26 +267,29 @@ final class SectionsController extends AbstractController {
 			'$schema'    => 'http://json-schema.org/draft-04/schema#',
 			'title'      => 'publiclms-section',
 			'type'       => 'object',
-			'properties' => array(
-				'id'         => array(
-					'type'     => 'integer',
-					'readonly' => true,
+			'properties' => array_merge(
+				array(
+					'id'         => array(
+						'type'     => 'integer',
+						'readonly' => true,
+					),
+					'course_id'  => array( 'type' => 'integer' ),
+					'title'      => array( 'type' => 'string' ),
+					'status'     => array(
+						'type'     => 'string',
+						'readonly' => true,
+					),
+					'menu_order' => array(
+						'type'     => 'integer',
+						'readonly' => true,
+					),
+					'items'      => array(
+						'type'     => 'array',
+						'readonly' => true,
+						'items'    => array( 'type' => 'object' ),
+					),
 				),
-				'course_id'  => array( 'type' => 'integer' ),
-				'title'      => array( 'type' => 'string' ),
-				'status'     => array(
-					'type'     => 'string',
-					'readonly' => true,
-				),
-				'menu_order' => array(
-					'type'     => 'integer',
-					'readonly' => true,
-				),
-				'items'      => array(
-					'type'     => 'array',
-					'readonly' => true,
-					'items'    => array( 'type' => 'object' ),
-				),
+				AccessRules::drip_schema()
 			),
 		);
 		return $this->add_additional_fields_schema( $this->schema );

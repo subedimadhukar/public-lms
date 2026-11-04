@@ -213,7 +213,7 @@ class CourseFields {
 	/**
 	 * Describes what the enrol button should do for a user.
 	 *
-	 * States: logged_out, can_enroll, enrolled, completed, closed, paid, unavailable.
+	 * States: logged_out, can_enroll, enrolled, completed, closed, paid, prerequisite, unavailable.
 	 *
 	 * @param int $course_id Course ID.
 	 * @param int $user_id   User; 0 for the current user.
@@ -272,6 +272,14 @@ class CourseFields {
 					'state'       => 'closed',
 					'url'         => $course_url,
 					'label'       => __( 'Enrolment by invitation', 'public-lms' ),
+					'resume_item' => 0,
+				);
+			case 'prerequisite':
+				$required = $decision->requires();
+				return array(
+					'state'       => 'prerequisite',
+					'url'         => empty( $required ) ? $course_url : (string) get_permalink( $required[0] ),
+					'label'       => __( 'Complete the required course first', 'public-lms' ),
 					'resume_item' => 0,
 				);
 		}

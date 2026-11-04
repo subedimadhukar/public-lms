@@ -52,16 +52,25 @@ final class AccessDecision {
 	private $available_at;
 
 	/**
+	 * Courses or items the learner must complete first, for prerequisite denials.
+	 *
+	 * @var array<int, int>
+	 */
+	private $requires;
+
+	/**
 	 * Constructor. Use allow() or deny().
 	 *
-	 * @param bool     $allowed      Whether access is granted.
-	 * @param string   $reason       Reason when denied.
-	 * @param int|null $available_at When a drip-locked item opens.
+	 * @param bool            $allowed      Whether access is granted.
+	 * @param string          $reason       Reason when denied.
+	 * @param int|null        $available_at When a drip-locked item opens.
+	 * @param array<int, int> $requires     Courses or items to complete first.
 	 */
-	private function __construct( bool $allowed, string $reason, ?int $available_at ) {
+	private function __construct( bool $allowed, string $reason, ?int $available_at, array $requires = array() ) {
 		$this->allowed      = $allowed;
 		$this->reason       = $reason;
 		$this->available_at = $available_at;
+		$this->requires     = array_values( array_map( 'intval', $requires ) );
 	}
 
 	/**
@@ -76,12 +85,13 @@ final class AccessDecision {
 	/**
 	 * Denies access.
 	 *
-	 * @param string   $reason       One of the REASON_* constants.
-	 * @param int|null $available_at When a drip-locked item opens, as a Unix timestamp.
+	 * @param string          $reason       One of the REASON_* constants.
+	 * @param int|null        $available_at When a drip-locked item opens, as a Unix timestamp.
+	 * @param array<int, int> $requires     For prerequisite denials: the courses or items to complete first.
 	 * @return AccessDecision
 	 */
-	public static function deny( string $reason, ?int $available_at = null ): AccessDecision {
-		return new self( false, $reason, $available_at );
+	public static function deny( string $reason, ?int $available_at = null, array $requires = array() ): AccessDecision {
+		return new self( false, $reason, $available_at, $requires );
 	}
 
 	/**
@@ -112,6 +122,15 @@ final class AccessDecision {
 	}
 
 	/**
+	 * Returns the courses or items to complete first (prerequisite denials), or an empty list.
+	 *
+	 * @return array<int, int>
+	 */
+	public function requires(): array {
+		return $this->requires;
+	}
+
+	/**
 	 * Returns a sentence explaining the decision to a learner, or '' when allowed.
 	 *
 	 * @return string
@@ -127,7 +146,7 @@ final class AccessDecision {
 			case self::REASON_EXPIRED:
 				return __( 'Your access to this course has ended.', 'public-lms' );
 			case self::REASON_PREREQUISITE:
-				return __( 'Complete the earlier steps of this course first.', 'public-lms' );
+				return $this->prerequisite_message();
 			case self::REASON_DRIP:
 				if ( null !== $this->available_at ) {
 					/* translators: %s: date the item becomes available. */
@@ -151,14 +170,46 @@ final class AccessDecision {
 	/**
 	 * Returns the decision as an array for REST responses and Interactivity state.
 	 *
-	 * @return array{allowed: bool, reason: string, available_at: int|null, message: string}
+	 * @return array{allowed: bool, reason: string, available_at: int|null, message: string, requires: array<int, array{id: int, title: string, url: string}>}
 	 */
 	public function to_array(): array {
+		$requires = array();
+		foreach ( $this->requires as $id ) {
+			$requires[] = array(
+				'id'    => $id,
+				'title' => wp_strip_all_tags( get_the_title( $id ) ),
+				'url'   => (string) get_permalink( $id ),
+			);
+		}
 		return array(
 			'allowed'      => $this->allowed,
 			'reason'       => $this->reason,
 			'available_at' => $this->available_at,
 			'message'      => $this->message(),
+			'requires'     => $requires,
 		);
+	}
+
+	/**
+	 * Names what a learner must complete first: "Complete “Lesson 3” first."
+	 *
+	 * @return string
+	 */
+	private function prerequisite_message(): string {
+		if ( empty( $this->requires ) ) {
+			return __( 'Complete the earlier steps of this course first.', 'public-lms' );
+		}
+		$titles = array();
+		foreach ( $this->requires as $id ) {
+			/* translators: %s: title of a course or lesson. */
+			$titles[] = sprintf( __( '“%s”', 'public-lms' ), wp_strip_all_tags( get_the_title( $id ) ) );
+		}
+		$list = wp_sprintf_l( '%l', $titles );
+		if ( 'plms_course' === get_post_type( $this->requires[0] ) ) {
+			/* translators: %s: list of course titles. */
+			return sprintf( __( 'Complete %s before starting this course.', 'public-lms' ), $list );
+		}
+		/* translators: %s: list of lesson, quiz or assignment titles. */
+		return sprintf( __( 'Complete %s first.', 'public-lms' ), $list );
 	}
 }

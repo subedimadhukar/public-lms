@@ -327,3 +327,56 @@
 		left: 16px;
 	}
 }
+
+// Access rules, prerequisites and item types (phase 2).
+.publiclms-badge.is-rules {
+	background: #f0f6fc;
+	color: #1d2327;
+}
+
+.publiclms-builder__add-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.publiclms-access-modal {
+	max-width: 560px;
+}
+
+.publiclms-access-modal__prerequisites {
+	margin: 16px 0;
+	padding: 0;
+	border: 0;
+
+	legend {
+		margin-bottom: 8px;
+		font-weight: 600;
+	}
+}
+
+.publiclms-access-modal__section {
+	margin-bottom: 12px;
+}
+
+.publiclms-access-modal__section-title {
+	margin: 0 0 4px;
+	color: var(--publiclms-admin-muted);
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.publiclms-prerequisites {
+	margin-bottom: 16px;
+}
+
+.publiclms-prerequisites__list {
+	margin: 8px 0 0;
+
+	li {
+		display: flex;
+		justify-content: space-between;
+		gap: 8px;
+	}
+}

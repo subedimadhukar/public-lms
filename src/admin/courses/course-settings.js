@@ -3,17 +3,19 @@
  */
 import {
 	Button,
+	ComboboxControl,
 	Panel,
 	PanelBody,
 	SelectControl,
 	TextControl,
 	TextareaControl,
+	ToggleControl,
 } from '@wordpress/components';
 import { store as coreStore } from '@wordpress/core-data';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useState } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { MediaUpload } from '@wordpress/media-utils';
 
 import { STORE_NAME } from '../../store/courses';
@@ -37,6 +39,93 @@ function useTermOptions( taxonomy, emptyLabel ) {
 			label: decodeEntities( term.name ),
 		} ) ),
 	];
+}
+
+const OTHER_COURSES_QUERY = {
+	per_page: 100,
+	status: [ 'publish', 'draft', 'private' ],
+	orderby: 'title',
+	order: 'asc',
+};
+
+/**
+ * Picks the courses a learner must complete before enrolling.
+ *
+ * @param {Object}                       props
+ * @param {Object}                       props.course   The course being edited.
+ * @param {Array<number>}                props.value    Selected course IDs.
+ * @param {(ids: Array<number>) => void} props.onChange Receives the new list.
+ */
+function PrerequisiteCourses( { course, value, onChange } ) {
+	const courses = useSelect(
+		( select ) =>
+			select( STORE_NAME ).getCourseList( OTHER_COURSES_QUERY )?.items ??
+			[],
+		[]
+	);
+	const titleOf = ( id ) =>
+		decodeEntities(
+			courses.find( ( other ) => other.id === id )?.title || `#${ id }`
+		);
+	const options = courses
+		.filter(
+			( other ) => other.id !== course.id && ! value.includes( other.id )
+		)
+		.map( ( other ) => ( {
+			value: String( other.id ),
+			label: decodeEntities( other.title ) || `#${ other.id }`,
+		} ) );
+
+	return (
+		<div className="publiclms-prerequisites">
+			<ComboboxControl
+				__next40pxDefaultSize
+				__nextHasNoMarginBottom
+				label={ __( 'Required courses', 'public-lms' ) }
+				help={ __(
+					'Learners must complete these before they can enrol.',
+					'public-lms'
+				) }
+				value={ null }
+				options={ options }
+				onChange={ ( next ) => {
+					if ( next ) {
+						onChange( [ ...value, Number( next ) ] );
+					}
+				} }
+			/>
+			{ value.length > 0 && (
+				<ul className="publiclms-prerequisites__list">
+					{ value.map( ( id ) => (
+						<li key={ id }>
+							<span>{ titleOf( id ) }</span>
+							<Button
+								variant="link"
+								isDestructive
+								onClick={ () =>
+									onChange(
+										value.filter(
+											( other ) => other !== id
+										)
+									)
+								}
+								aria-label={ sprintf(
+									/* translators: %s: course title. */
+									__(
+										'Remove required course %s',
+										'public-lms'
+									),
+									titleOf( id )
+								) }
+							>
+								{ __( 'Remove', 'public-lms' ) }
+							</Button>
+						</li>
+					) ) }
+				</ul>
+			) }
+		</div>
+	);
 }
 
 export default function CourseSettings( { course } ) {
@@ -241,6 +330,20 @@ export default function CourseSettings( { course } ) {
 						onChange={ ( next ) =>
 							set( 'duration' )( Number( next ) || 0 )
 						}
+					/>
+					<PrerequisiteCourses
+						course={ course }
+						value={ value( 'prerequisites' ) || [] }
+						onChange={ set( 'prerequisites' ) }
+					/>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Award a certificate on completion',
+							'public-lms'
+						) }
+						checked={ value( 'certificate' ) !== false }
+						onChange={ set( 'certificate' ) }
 					/>
 					<SelectControl
 						__next40pxDefaultSize

@@ -54,6 +54,7 @@ final class Blocks {
 		'lesson-navigation',
 		'mark-complete',
 		'student-dashboard',
+		'video',
 	);
 
 	/**
@@ -281,6 +282,7 @@ final class Blocks {
 					'backToCourse'   => __( 'Back to course', 'public-lms' ),
 					'courseComplete' => __( 'Course complete', 'public-lms' ),
 					'startLearning'  => __( 'Start learning', 'public-lms' ),
+					'videoComplete'  => __( 'Video watched. This lesson is now complete.', 'public-lms' ),
 				),
 			);
 			if ( $item_id > 0 ) {
@@ -407,6 +409,40 @@ final class Blocks {
 			'title'    => __( 'Back to course', 'public-lms' ),
 			'isCourse' => true,
 		);
+	}
+
+	/**
+	 * Describes a list of curriculum items by type: "3 lessons, 1 quiz".
+	 *
+	 * @param array<int, array<string, mixed>> $items Structure items with a `type`.
+	 * @return string
+	 */
+	public static function items_label( array $items ): string {
+		$counts = array(
+			'lesson'     => 0,
+			'quiz'       => 0,
+			'assignment' => 0,
+		);
+		foreach ( $items as $item ) {
+			$type = (string) ( $item['type'] ?? 'lesson' );
+			if ( isset( $counts[ $type ] ) ) {
+				++$counts[ $type ];
+			}
+		}
+		$parts = array();
+		if ( $counts['lesson'] > 0 || ( 0 === $counts['quiz'] && 0 === $counts['assignment'] ) ) {
+			/* translators: %d: number of lessons. */
+			$parts[] = sprintf( _n( '%d lesson', '%d lessons', $counts['lesson'], 'public-lms' ), $counts['lesson'] );
+		}
+		if ( $counts['quiz'] > 0 ) {
+			/* translators: %d: number of quizzes. */
+			$parts[] = sprintf( _n( '%d quiz', '%d quizzes', $counts['quiz'], 'public-lms' ), $counts['quiz'] );
+		}
+		if ( $counts['assignment'] > 0 ) {
+			/* translators: %d: number of assignments. */
+			$parts[] = sprintf( _n( '%d assignment', '%d assignments', $counts['assignment'], 'public-lms' ), $counts['assignment'] );
+		}
+		return implode( ', ', $parts );
 	}
 
 	/**
