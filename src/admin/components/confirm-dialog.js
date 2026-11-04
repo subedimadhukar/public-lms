@@ -7,11 +7,12 @@ import { __ } from '@wordpress/i18n';
 
 /**
  * @param {Object}                     props
- * @param {string}                     props.title        Modal title.
- * @param {string}                     props.message      What will happen.
- * @param {string}                     props.confirmLabel Label of the destructive button.
- * @param {() => (Promise<void>|void)} props.onConfirm    Called on confirm.
- * @param {() => void}                 props.onCancel     Called on cancel or close.
+ * @param {string}                     props.title                Modal title.
+ * @param {string}                     props.message              What will happen.
+ * @param {string}                     props.confirmLabel         Label of the destructive button.
+ * @param {() => (Promise<void>|void)} props.onConfirm            Called on confirm.
+ * @param {() => void}                 props.onCancel             Called on cancel or close.
+ * @param {boolean}                    [props.isDestructive=true] Whether the action destroys something.
  */
 export default function ConfirmDialog( {
 	title,
@@ -19,6 +20,7 @@ export default function ConfirmDialog( {
 	confirmLabel,
 	onConfirm,
 	onCancel,
+	isDestructive = true,
 } ) {
 	const [ isBusy, setIsBusy ] = useState( false );
 
@@ -45,7 +47,7 @@ export default function ConfirmDialog( {
 				</Button>
 				<Button
 					variant="primary"
-					isDestructive
+					isDestructive={ isDestructive }
 					isBusy={ isBusy }
 					disabled={ isBusy }
 					onClick={ confirm }

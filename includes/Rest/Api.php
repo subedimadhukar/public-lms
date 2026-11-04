@@ -8,6 +8,10 @@
 namespace PublicLMS\Rest;
 
 use PublicLMS\Access\AccessPolicy;
+use PublicLMS\Commerce\Coupons;
+use PublicLMS\Commerce\Gateways\Gateways;
+use PublicLMS\Commerce\OrderService;
+use PublicLMS\Core\RateLimiter;
 use PublicLMS\Core\Container;
 use PublicLMS\Courses\CourseFields;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
@@ -96,6 +100,10 @@ final class Api {
 			new ProgressController( $progress, $enrollments, $policy ),
 			new StudentsController( $enrollments, $progress ),
 			new SettingsController(),
+			new OrdersController( $c->get( OrderService::class ), $c->get( RateLimiter::class ) ),
+			new WebhooksController( $c->get( OrderService::class ) ),
+			new PaymentsController( $c->get( Gateways::class ) ),
+			new CouponsController( $c->get( Coupons::class ) ),
 		);
 
 		/**

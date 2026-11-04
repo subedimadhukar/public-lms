@@ -23,7 +23,8 @@
 				"in-progress",
 				"completed",
 				"quiz-results",
-				"certificates"
+				"certificates",
+				"orders"
 			]
 		},
 		"defaultTab": {

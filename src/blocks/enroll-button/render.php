@@ -5,7 +5,8 @@
  * Learners who can enrol get a form that posts to admin-post.php with a
  * nonce (works without JavaScript); the Interactivity API turns it into an
  * in-place REST enrolment. Enrolled learners get a "Continue" link, logged
- * out visitors a login link.
+ * out visitors a login link, and paid courses a "Buy" link to the checkout
+ * (or, for guests when guest checkout is on, straight to it).
  *
  * @package PublicLMS
  *
@@ -85,7 +86,7 @@ $publiclms_context = array(
 				?>
 			</a>
 		<?php endforeach; ?>
-	<?php elseif ( in_array( $publiclms_state['state'], array( 'enrolled', 'completed', 'logged_out' ), true ) ) : ?>
+	<?php elseif ( in_array( $publiclms_state['state'], array( 'enrolled', 'completed', 'logged_out', 'paid' ), true ) && ( 'paid' !== $publiclms_state['state'] || get_permalink( $publiclms_course ) !== $publiclms_state['url'] ) ) : ?>
 		<a class="wp-block-publiclms-enroll-button__button wp-element-button" href="<?php echo esc_url( $publiclms_state['url'] ); ?>"><?php echo esc_html( $publiclms_label ); ?></a>
 	<?php else : ?>
 		<p class="wp-block-publiclms-enroll-button__note"><?php echo esc_html( $publiclms_label ); ?></p>

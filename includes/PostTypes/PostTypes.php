@@ -30,6 +30,7 @@ final class PostTypes {
 	const CERTIFICATE = 'plms_certificate';
 	const MEMBERSHIP  = 'plms_membership';
 	const GROUP       = 'plms_group';
+	const COUPON      = 'plms_coupon';
 
 	/**
 	 * Every post type key the plugin owns.
@@ -44,6 +45,7 @@ final class PostTypes {
 		self::CERTIFICATE,
 		self::MEMBERSHIP,
 		self::GROUP,
+		self::COUPON,
 	);
 
 	/**
@@ -333,6 +335,23 @@ final class PostTypes {
 					'description'  => __( 'A group of learners enrolled together, with seats and a leader.', 'public-lms' ),
 					'supports'     => array( 'title', 'author', 'custom-fields' ),
 					'capabilities' => self::capabilities( 'manage' ),
+				)
+			),
+			self::COUPON      => array_merge(
+				$internal,
+				array(
+					'labels'       => array(
+						'name'          => _x( 'Coupons', 'post type general name', 'public-lms' ),
+						'singular_name' => _x( 'Coupon', 'post type singular name', 'public-lms' ),
+						'all_items'     => __( 'Coupons', 'public-lms' ),
+						'add_new_item'  => __( 'Add New Coupon', 'public-lms' ),
+						'edit_item'     => __( 'Edit Coupon', 'public-lms' ),
+						'not_found'     => __( 'No coupons found.', 'public-lms' ),
+					),
+					'description'  => __( 'A discount code for the checkout (ADR-050). Published coupons are active; drafts are paused.', 'public-lms' ),
+					'supports'     => array( 'title', 'custom-fields' ),
+					'show_in_rest' => false,
+					'capabilities' => self::capabilities( 'orders' ),
 				)
 			),
 		);

@@ -1,12 +1,32 @@
 # Public LMS ↔ theme contracts
 
-**Contract version:** 1.3.0 (phase 2; additive changes only, listed under "Changes" below)
+**Contract version:** 1.4.0 (phase 2; additive changes only, listed under "Changes" below)
 **Applies to:** Public LMS ≥ 0.1.0 and any block theme that styles it, CampusInterface first.
 **Change rule:** a change to either contract is a pull request on both repositories, and bumps this version:
 removing or renaming anything is a major bump; adding a slug, pattern, key or token is a minor bump; wording
 fixes are a patch. The plugin lands contract changes two to three weeks before the theme consumes them.
 **Changes before the gate:** 2026-11-04, template slugs switched from `single-course` and friends to the
 post type keys and `plms-` page templates (ADR-023). Nothing had shipped, so the version stayed 1.0.0.
+
+**Changes in 1.4.0 (phase 2 part B, minor):**
+1. A6 and B1: a new block for themes to style, `publiclms/checkout` (attributes `showCoupon`, `gateways`). It
+   lives on the page saved in option `publiclms_checkout_page_id` (Payments → "Create a checkout page"), not
+   in a plugin template, so there is nothing to override. It sells a course (`?course={id}`) with an order
+   summary table, a coupon field, buyer details for guests and the payment methods, and shows an order
+   (`?order={key}`). Notices use `success`, `warning` and `danger` as a start-edge border on `surface`;
+   the order total uses `lg`. Elements: `__summary`, `__lines` (a table; `tr.is-total`), `__coupon`,
+   `__details` and `__gateways` (fieldsets), `__notice.is-success|is-warning|is-danger`, `__submit`.
+2. A7: `enroll_url` of a paid course now points to the checkout page (`?course={id}`), also for logged-out
+   visitors while guest checkout is on; it stays the course URL when no checkout page exists. Plugins can
+   change it with `publiclms_purchase_url` (the WooCommerce bridge points it at the linked product).
+3. A7: `price`, `regular_price` and `enroll_label` are formatted for the visitor's locale and the store's
+   ISO 4217 currency: the symbol may come after the number ("49,50 €") and digits may be non-Latin. Themes
+   must not assume a symbol-first, Latin-digit price. With no store currency chosen, prices print as plain
+   numbers.
+4. `publiclms/enroll-button` renders a link for paid courses (`is-state-paid`), not a note.
+5. A6: `publiclms/student-dashboard` gains the tab `orders` (order number linking to the order, date,
+   courses, total, status), shown only to learners who have placed an order. It is in the block's default
+   tabs; a saved block with its own `tabs` keeps them.
 
 **Changes in 1.3.0 (phase 2 part A, minor):**
 1. A1: `single-plms_quiz` is registered (quiz-header, quiz-runner, plus the lesson template's navigation and

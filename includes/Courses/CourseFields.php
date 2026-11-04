@@ -8,6 +8,8 @@
 namespace PublicLMS\Courses;
 
 use PublicLMS\Access\AccessPolicy;
+use PublicLMS\Commerce\CheckoutPage;
+use PublicLMS\Commerce\Money;
 use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Repositories\CourseStructureRepositoryInterface;
@@ -64,18 +66,11 @@ class CourseFields {
 	const URL_KEYS = array( 'instructor_url', 'instructor_avatar', 'enroll_url', 'course_url' );
 
 	/**
-	 * Currency symbols for the formats the plugin ships; other ISO codes print the code.
+	 * Kept for compatibility; prices are formatted by Commerce\Money (ADR-045).
+	 *
+	 * @deprecated 0.4.0 Use Commerce\Money::SYMBOLS.
 	 */
-	const SYMBOLS = array(
-		'USD' => '$',
-		'EUR' => '€',
-		'GBP' => '£',
-		'INR' => '₹',
-		'NPR' => 'Rs ',
-		'AUD' => 'A$',
-		'CAD' => 'C$',
-		'JPY' => '¥',
-	);
+	const SYMBOLS = Money::SYMBOLS;
 
 	/**
 	 * Course structure.
@@ -310,17 +305,19 @@ class CourseFields {
 					'resume_item' => 0,
 				);
 			case 'logged_out':
-				$mode = Meta::access_mode( $course_id );
+				$mode     = Meta::access_mode( $course_id );
+				$purchase = 'paid' === $mode ? $this->purchase_url( $course_id ) : '';
 				return array(
 					'state'       => 'logged_out',
-					'url'         => wp_login_url( $course_url ),
+					'url'         => '' !== $purchase && CheckoutPage::guests_allowed() ? $purchase : wp_login_url( '' === $purchase ? $course_url : $purchase ),
 					'label'       => 'paid' === $mode ? $this->buy_label( $course_id ) : __( 'Log in to enrol', 'public-lms' ),
 					'resume_item' => 0,
 				);
 			case 'payment_required':
+				$purchase = $this->purchase_url( $course_id );
 				return array(
 					'state'       => 'paid',
-					'url'         => $course_url,
+					'url'         => '' === $purchase ? $course_url : $purchase,
 					'label'       => $this->buy_label( $course_id ),
 					'resume_item' => 0,
 				);
@@ -369,6 +366,24 @@ class CourseFields {
 	}
 
 	/**
+	 * Returns where a paid course is bought: the checkout page, or '' when
+	 * the site has none. The WooCommerce bridge points it at the course's
+	 * product.
+	 *
+	 * @param int $course_id Course ID.
+	 * @return string
+	 */
+	public function purchase_url( int $course_id ): string {
+		/**
+		 * Filters the URL where a paid course is bought.
+		 *
+		 * @param string $url       Checkout URL for the course, or ''.
+		 * @param int    $course_id Course ID.
+		 */
+		return (string) apply_filters( 'publiclms_purchase_url', CheckoutPage::url( $course_id ), $course_id );
+	}
+
+	/**
 	 * Returns the price shown to learners: "Free" or the formatted (sale) price.
 	 *
 	 * @param int $course_id Course ID.
@@ -376,7 +391,15 @@ class CourseFields {
 	 */
 	public function price_label( int $course_id ): string {
 		$amount = $this->effective_price( $course_id );
-		return null === $amount ? __( 'Free', 'public-lms' ) : self::format_price( $amount );
+		$label  = null === $amount ? __( 'Free', 'public-lms' ) : self::format_price( $amount );
+		/**
+		 * Filters the price shown for a course ("Free" or the formatted price).
+		 *
+		 * @param string     $label     Label.
+		 * @param int        $course_id Course ID.
+		 * @param float|null $amount    Price in the store currency, or null when free.
+		 */
+		return (string) apply_filters( 'publiclms_course_price_label', $label, $course_id, $amount );
 	}
 
 	/**
@@ -414,19 +437,13 @@ class CourseFields {
 	}
 
 	/**
-	 * Formats an amount in the store currency (option publiclms_currency, default USD).
+	 * Formats an amount in the store currency for the current locale (Money::format(), ADR-045).
 	 *
 	 * @param float $amount Amount.
 	 * @return string
 	 */
 	public static function format_price( float $amount ): string {
-		$currency = strtoupper( (string) get_option( 'publiclms_currency', 'USD' ) );
-		$decimals = abs( $amount - round( $amount ) ) < 0.005 ? 0 : 2;
-		$number   = number_format_i18n( $amount, $decimals );
-		if ( isset( self::SYMBOLS[ $currency ] ) ) {
-			return self::SYMBOLS[ $currency ] . $number;
-		}
-		return $currency . ' ' . $number;
+		return Money::format( $amount );
 	}
 
 	/**
@@ -517,6 +534,6 @@ class CourseFields {
 			return __( 'Enrol now', 'public-lms' );
 		}
 		/* translators: %s: formatted price. */
-		return sprintf( __( 'Buy for %s', 'public-lms' ), self::format_price( $amount ) );
+		return sprintf( __( 'Buy for %s', 'public-lms' ), $this->price_label( $course_id ) );
 	}
 }

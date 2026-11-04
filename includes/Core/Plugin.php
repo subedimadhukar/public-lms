@@ -18,6 +18,7 @@ use PublicLMS\Courses\CourseFields;
 use PublicLMS\Frontend\EnrollmentHandler;
 use PublicLMS\Capabilities\Capabilities;
 use PublicLMS\Cli\Command;
+use PublicLMS\Commerce\CommerceServices;
 use PublicLMS\Licensing\LicenseProvider;
 use PublicLMS\Licensing\NullLicenseProvider;
 use PublicLMS\PostTypes\Meta;
@@ -144,6 +145,7 @@ final class Plugin {
 		$this->container->get( CertificateFields::class )->register();
 		$this->container->get( DashboardTab::class )->register();
 		$this->container->get( PersonalData::class )->register();
+		CommerceServices::boot( $this->container );
 		if ( is_admin() ) {
 			$this->container->get( AdminApp::class )->register();
 		}
@@ -524,6 +526,7 @@ final class Plugin {
 				return new NullLicenseProvider();
 			}
 		);
+		CommerceServices::register( $c );
 
 		/**
 		 * Fires after the core services are bound and before any is built.

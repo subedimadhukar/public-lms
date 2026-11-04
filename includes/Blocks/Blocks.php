@@ -47,6 +47,7 @@ final class Blocks {
 	 */
 	const BLOCKS = array(
 		'certificate-button',
+		'checkout',
 		'course-meta',
 		'course-progress',
 		'curriculum',

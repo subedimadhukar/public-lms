@@ -7,7 +7,7 @@
  * Without JavaScript every panel is shown under its own heading.
  *
  * Tabs: in-progress, completed, quiz-results (best score per quiz, phase 2)
- * and certificates (phase 2). Orders join with checkout.
+ * certificates and orders (phase 2; orders only for learners who have one).
  *
  * @package PublicLMS
  *
@@ -99,7 +99,7 @@ if ( in_array( 'quiz-results', $publiclms_tabs, true ) ) {
 }
 
 /**
- * Lets other tabs (certificates, Pro's orders) supply their rows: an array per tab slug.
+ * Lets other tabs (certificates, orders) supply their rows: an array per tab slug.
  *
  * @param array<string, array<int, mixed>> $publiclms_courses Rows keyed by tab slug.
  * @param int                              $user_id           The learner.
@@ -169,6 +169,7 @@ $publiclms_heading = sprintf(
 						'completed'    => __( 'Courses you finish appear here.', 'public-lms' ),
 						'quiz-results' => __( 'Your quiz scores appear here after your first quiz.', 'public-lms' ),
 						'certificates' => __( 'Certificates you earn by completing courses appear here.', 'public-lms' ),
+						'orders'       => __( 'Your orders appear here.', 'public-lms' ),
 					);
 					echo esc_html( $publiclms_empty[ $publiclms_tab ] ?? __( 'You are not taking any courses yet.', 'public-lms' ) );
 					?>

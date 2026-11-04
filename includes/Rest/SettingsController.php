@@ -8,6 +8,7 @@
 namespace PublicLMS\Rest;
 
 use PublicLMS\Capabilities\Capabilities;
+use PublicLMS\Commerce\Money;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -73,7 +74,7 @@ final class SettingsController extends AbstractController {
 							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'currency'                 => array(
-							'description'       => __( 'ISO 4217 currency code for prices.', 'public-lms' ),
+							'description'       => __( 'ISO 4217 currency code for prices; every active code is accepted.', 'public-lms' ),
 							'type'              => 'string',
 							'pattern'           => '^[A-Za-z]{3}$',
 							'sanitize_callback' => array( $this, 'sanitize_currency' ),
@@ -191,14 +192,14 @@ final class SettingsController extends AbstractController {
 	}
 
 	/**
-	 * Sanitises a currency code to three upper-case letters, defaulting to USD.
+	 * Sanitises a currency code to an active ISO 4217 code, or '' (no currency chosen; ADR-045).
 	 *
 	 * @param mixed $value Raw value.
 	 * @return string
 	 */
 	public function sanitize_currency( $value ): string {
-		$value = strtoupper( preg_replace( '/[^A-Za-z]/', '', is_string( $value ) ? $value : '' ) );
-		return 3 === strlen( $value ) ? $value : 'USD';
+		$value = strtoupper( (string) preg_replace( '/[^A-Za-z]/', '', is_string( $value ) ? $value : '' ) );
+		return Money::is_currency( $value ) ? $value : '';
 	}
 
 	/**
@@ -211,7 +212,7 @@ final class SettingsController extends AbstractController {
 		return array(
 			'dashboard_page_id'        => $page_id,
 			'dashboard_page_url'       => $page_id > 0 ? (string) get_permalink( $page_id ) : '',
-			'currency'                 => (string) get_option( self::OPTIONS['currency'], 'USD' ),
+			'currency'                 => Money::currency(),
 			'remove_data_on_uninstall' => 'yes' === get_option( self::OPTIONS['remove_data_on_uninstall'], 'no' ),
 		);
 	}

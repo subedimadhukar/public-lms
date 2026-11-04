@@ -6,7 +6,7 @@ export const boot = {
 	adminUrl: '',
 	appUrl: '',
 	userId: 0,
-	currency: 'USD',
+	currency: '',
 	permissions: {},
 	...( window.publiclmsAdmin || {} ),
 };

@@ -16,6 +16,9 @@ import { Notices } from './components/notices';
 import CourseBuilder from './courses/course-builder';
 import CourseList from './courses/course-list';
 import GradebookScreen from './grading/gradebook';
+import CouponsScreen from './orders/coupons';
+import OrdersScreen from './orders/orders';
+import PaymentsScreen from './orders/payments';
 import SubmissionsScreen from './grading/submissions';
 import QuestionBankScreen from './quizzes/question-bank';
 import QuizEditor from './quizzes/quiz-editor';
@@ -39,6 +42,12 @@ function App() {
 		screen = <SubmissionsScreen />;
 	} else if ( boot.screen === 'gradebook' ) {
 		screen = <GradebookScreen />;
+	} else if ( boot.screen === 'orders' ) {
+		screen = <OrdersScreen />;
+	} else if ( boot.screen === 'coupons' ) {
+		screen = <CouponsScreen />;
+	} else if ( boot.screen === 'payments' ) {
+		screen = <PaymentsScreen />;
 	} else if ( courseId > 0 && quizId > 0 ) {
 		screen = <QuizEditor courseId={ courseId } quizId={ quizId } />;
 	} else if ( courseId > 0 ) {

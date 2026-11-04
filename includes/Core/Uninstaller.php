@@ -71,6 +71,13 @@ final class Uninstaller {
 		delete_option( 'publiclms_dashboard_page_id' );
 		delete_option( 'publiclms_instructor_page_id' );
 		delete_option( \PublicLMS\Files\PrivateFiles::TOKEN_OPTION );
+		delete_option( \PublicLMS\Commerce\Money::OPTION );
+		delete_option( \PublicLMS\Commerce\CheckoutPage::OPTION );
+		delete_option( \PublicLMS\Commerce\CheckoutPage::GUEST_OPTION );
+		foreach ( array( 'offline', 'stripe', 'paypal' ) as $gateway ) {
+			delete_option( 'publiclms_gateway_' . $gateway );
+		}
+		delete_option( 'publiclms_woocommerce_bridge' );
 	}
 
 	/**

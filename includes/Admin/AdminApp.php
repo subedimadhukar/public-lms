@@ -18,8 +18,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Adds the "Public LMS" menu and mounts the React app on its pages.
  *
- * One app (ADR-007, ADR-033) serves three screens: Courses (list and the
- * course builder), Students and Settings. Each submenu renders the same
+ * One app (ADR-007, ADR-033) serves its screens: Courses (list and the
+ * course builder), Questions, Submissions, Gradebook, Students, Orders,
+ * Coupons, Payments and Settings. Each submenu renders the same
  * empty root; the app reads which screen it is from the boot data. Lesson
  * content is edited in the block editor, which the builder links to.
  */
@@ -84,6 +85,16 @@ final class AdminApp {
 		$students = add_submenu_page( self::SLUG, __( 'Students', 'public-lms' ), __( 'Students', 'public-lms' ), Capabilities::VIEW_REPORTS, self::SLUG . '-students', array( $this, 'render' ) );
 		if ( false !== $students ) {
 			$this->screens[ $students ] = 'students';
+		}
+		foreach ( array(
+			'orders'   => array( __( 'Orders', 'public-lms' ), __( 'Orders', 'public-lms' ) ),
+			'coupons'  => array( __( 'Coupons', 'public-lms' ), __( 'Coupons', 'public-lms' ) ),
+			'payments' => array( __( 'Payments', 'public-lms' ), __( 'Payments', 'public-lms' ) ),
+		) as $screen => $titles ) {
+			$hook = add_submenu_page( self::SLUG, $titles[0], $titles[1], Capabilities::MANAGE_ORDERS, self::SLUG . '-' . $screen, array( $this, 'render' ) );
+			if ( false !== $hook ) {
+				$this->screens[ $hook ] = $screen;
+			}
 		}
 		add_submenu_page( self::SLUG, __( 'Course Categories', 'public-lms' ), __( 'Categories', 'public-lms' ), Capabilities::MANAGE_COURSES, 'edit-tags.php?taxonomy=' . Taxonomies::COURSE_CATEGORY . '&post_type=' . PostTypes::COURSE );
 		add_submenu_page( self::SLUG, __( 'Levels', 'public-lms' ), __( 'Levels', 'public-lms' ), Capabilities::MANAGE_COURSES, 'edit-tags.php?taxonomy=' . Taxonomies::LEVEL . '&post_type=' . PostTypes::COURSE );
@@ -163,7 +174,7 @@ final class AdminApp {
 			'adminUrl'    => admin_url(),
 			'appUrl'      => admin_url( 'admin.php?page=' . self::SLUG ),
 			'userId'      => get_current_user_id(),
-			'currency'    => (string) get_option( 'publiclms_currency', 'USD' ),
+			'currency'    => \PublicLMS\Commerce\Money::currency(),
 			'restUrl'     => esc_url_raw( rest_url() ),
 			'restNonce'   => wp_create_nonce( 'wp_rest' ),
 			'permissions' => array(
@@ -171,6 +182,7 @@ final class AdminApp {
 				'createCourses'  => null !== $course_type && current_user_can( $course_type->cap->create_posts ),
 				'publishCourses' => null !== $course_type && current_user_can( $course_type->cap->publish_posts ),
 				'viewReports'    => current_user_can( Capabilities::VIEW_REPORTS ),
+				'manageOrders'   => current_user_can( Capabilities::MANAGE_ORDERS ),
 				'manageTerms'    => current_user_can( Capabilities::MANAGE_COURSES ),
 				'deletePlugins'  => current_user_can( 'delete_plugins' ),
 			),

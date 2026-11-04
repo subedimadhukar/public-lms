@@ -115,6 +115,7 @@ attempt or per order is a table with indexes.
 | `plms_certificate` | none | manage | Block-built certificate template |
 | `plms_membership` | none | orders | Access plan granting a set of courses |
 | `plms_group` | none | manage | Learners enrolled together with seats |
+| `plms_coupon` | none | orders | Discount code; published = active, draft = paused (phase 2, ADR-050) |
 
 Taxonomies, all on `plms_course`: `plms_course_category` (hierarchical, `/course-category/`),
 `plms_course_tag` (flat, `/course-tag/`), `plms_level` (flat list with checkbox UI, `/course-level/`).
@@ -179,8 +180,10 @@ header while more rows exist.
 | `assignments/{id}/submissions` | `GET`, `POST` (multipart), `PUT /{submission}/grade` (2 ✓) | own; others need `publiclms_view_course_reports` | submit: `can_submit_assignment`, rate-limited; grade: `publiclms_edit_course` |
 | `submissions` | `GET /submissions`, `GET /submissions/{id}`, `GET /submissions/{id}/files/{file}` (2 ✓) | list: `publiclms_view_reports`, scoped to taught courses; single and files: the learner or `publiclms_view_course_reports` | none |
 | `courses/{id}/gradebook` | `GET` (JSON pages, or `format=csv`) (2 ✓) | `publiclms_view_course_reports` | none |
-| `orders` | `GET`, `GET /{id}`, `POST /checkout`, `POST /{id}/refund` (2) | own orders; all need `publiclms_manage_orders` | checkout: logged in or guest with email; refund: `publiclms_manage_order` |
-| `webhooks/{gateway}` | `POST` (2) | none | signature verified server-side; no cookie auth |
+| `orders` | `GET`, `GET /counts`, `GET /{id}`, `POST /checkout`, `POST /quote`, `POST /{id}/complete`, `POST /{id}/cancel`, `POST /{id}/refund` (2 ✓) | own orders; all (and counts) need `publiclms_manage_orders` | checkout and quote: anyone (guests with name and email when guest checkout is on), rate-limited; complete, cancel, refund: `publiclms_manage_order` |
+| `webhooks/{gateway}` | `POST` (2 ✓) | none | signature verified server-side against the raw body; no cookie auth; 400 when unsigned or wrongly signed |
+| `coupons` | `GET`, `POST`, `GET`, `PATCH`, `DELETE /coupons/{id}` (2 ✓) | `publiclms_manage_orders` | `publiclms_manage_orders` |
+| `settings/payments` | `GET`, `POST`, `POST /checkout-page` (2 ✓) | `publiclms_manage_orders`; secrets are never returned, only whether they are set and whether a constant sets them | `publiclms_manage_orders` (creating the page also needs `publish_pages`) |
 | `reports` | `GET /courses/{id}`, `GET /site` (2) | `publiclms_view_course_reports` (meta; site-wide needs `publiclms_manage_courses` too) | none |
 | `certificates` | `GET /certificates/me`, `GET /certificates/{course_id}` PDF (`user_id` for report viewers), `GET /certificates/preview` (2 ✓) | me: logged in; PDF: AccessPolicy `can_view_certificate`; preview: `publiclms_manage_courses` | none |
 
@@ -238,7 +241,7 @@ phase 0 draft named one store per block).
 | `publiclms/course-qa` | `courseId`, `perPage` | yes | 2 |
 | `publiclms/announcements` | `courseId`, `perPage` | no | 2 |
 | `publiclms/certificate-button` | `courseId`, `label` (content) | no | 2 ✓ (in `course-enroll-card`) |
-| `publiclms/checkout` | `showCoupon`, `gateways` | yes | 2 |
+| `publiclms/checkout` | `showCoupon`, `gateways` | yes (coupon quote, order placement; no-JS form) | 2 ✓ |
 | `publiclms/course-filters` | `taxonomies`, `showSearch` | yes (filters a `publiclms/course-query`) | 2 |
 | `publiclms/login-form` | `redirect`, `showRegister` | no | 2 |
 | `publiclms/instructor-card` | `userId`, `showBio`, `showCourses` | no | 2 |
@@ -767,4 +770,75 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   Nepali learner name prints as boxes until a font is added through `publiclms_certificate_css` (open
   question for the owner). Dompdf ignores flexbox, so side-by-side columns in a template stack. Rendering
   takes about half a second per certificate; Pro's bulk downloads should queue them on Action Scheduler.
+
+### ADR-045 Money: any ISO 4217 currency, minor units, formatted for the reader
+- **Context.** The audience is global: no country or currency may be assumed. Phase 1 stored a currency
+  option that defaulted to USD and formatted prices with an eight-symbol table, symbol first.
+- **Decision.** `Commerce\Money` holds the active ISO 4217 codes (fund and precious-metal codes and
+  withdrawn currencies left out) and their minor units: 0 (JPY, KRW, VND and others), 3 (KWD, BHD, JOD, OMR,
+  TND, IQD, LYD), otherwise 2. The store currency (option `publiclms_currency`) has no default: until the
+  owner picks one, prices show as plain numbers and checkout refuses with "no currency has been chosen".
+  Amounts are rounded to the currency's minor units when priced, discounted and stored (DECIMAL(19,4)).
+  `Money::format()` formats for the reader's locale (`determine_locale()`) with PHP's intl
+  `NumberFormatter` (symbol position, separators, digits), dropping decimals for whole amounts as phase 1
+  did ("$49", "49 €"). When intl is missing, or its ICU data lacks the locale (Alpine builds ship English
+  only and silently fall back), a table takes over: `number_format_i18n()`, a symbol for common currencies
+  or the code, and the symbol after the number for languages that write it there. Filters:
+  `publiclms_format_price`, `publiclms_format_price_with_intl`. `CourseFields::format_price()` and the
+  `price` binding use it; the settings sanitiser accepts any listed code and nothing else.
+- **Consequences.** Gateways convert to their own minor units (ADR-048, ADR-049). Admin screens name
+  currencies with the browser's `Intl.DisplayNames`, so the list needs no translations from the plugin.
+
+### ADR-046 Orders, checkout and guest buyers
+- **Context.** ADR-011 fixes native checkout with hosted or redirect flows; the orders tables have existed
+  since schema 1. The free tier sells single courses (PRD §3).
+- **Decision.** `Commerce\OrderService` owns every order change. Checkout prices the courses on the server
+  (the sale price when lower; never a price from the request), checks each is published, paid and open to
+  this buyer (already enrolled, prerequisites), applies a coupon, and creates the order (`pending`) with
+  its lines. A zero total completes at once (`gateway` = `free`); otherwise the chosen gateway, which must
+  be on, set up and take the currency, returns a redirect (or `on-hold` for Offline). Gateways report
+  payment results (ADR-047); `apply()` records each payment or refund once by the provider's ID, checks
+  amount and currency against the order (a mismatch puts it on hold with a note instead of enrolling), and
+  moves the order with a compare-and-set on its status (`OrderRepository::transition()`), so a webhook and
+  the buyer's return cannot both complete it. Completing enrols the buyer in each course with source
+  `order` and the order ID; refunding in full cancels exactly those enrolments
+  (`publiclms_revoke_access_on_refund`), partial refunds keep access. Statuses: pending, on-hold,
+  completed (shown as "Paid"), failed, cancelled, refunded. History lines live in the order's meta (last
+  100); events `order.created`, `order.completed`, `order.refunded`; hooks `publiclms_order_completed`,
+  `publiclms_order_refunded`.
+- **Decision (guests).** Guest checkout is on by default (`publiclms_guest_checkout`): the buyer gives a
+  name (for certificates) and an email. The account is created only once the order is paid, with
+  WordPress's own "set your password" email; an email that already has an account buys into it.
+- **Decision (the page).** One page holds `publiclms/checkout` (option `publiclms_checkout_page_id`,
+  created from Payments). `?course=` sells, `?order={key}` shows the order to whoever holds the link (the
+  key is 29 random characters), `?cancelled={key}` cancels a pending order the buyer abandoned at the
+  provider. Provider returns are handled on `template_redirect` and redirected to the clean URL, so a
+  reload never repeats a capture. Without JavaScript the form posts to `admin-post.php`
+  (`publiclms_checkout`, nonce); errors come back through a five-minute transient, never the URL. The page
+  sets `DONOTCACHEPAGE` and no-cache headers. Paid courses' `enroll_url` points here
+  (`publiclms_purchase_url` lets the WooCommerce bridge point it at a product).
+- **Decision (emails).** Plain-text emails for on-hold (with the offline instructions; the owner gets one
+  too), completed (course links) and refunded, in the buyer's language (`switch_to_user_locale()`, or the
+  language of the checkout page for guests). `publiclms_send_order_email` can stop any. The Community item
+  moves notifications onto Action Scheduler later.
+- **Consequences.** Checkout and quotes are rate-limited per user or address (10 and 30 per ten minutes,
+  429 with Retry-After). The dashboard gains an Orders tab for learners who have orders. Abandoned pending
+  orders stay pending until the buyer returns or a webhook says so; a clean-up job can come with
+  notifications.
+
+### ADR-047 Gateways: one interface, payment results, settings with configuration precedence
+- **Decision.** `Commerce\Gateways\Gateway` defines what a gateway does: start a payment (redirect URL,
+  provider reference, status), confirm on return, refund in full, verify and translate a webhook, and
+  describe its settings. Gateways never touch orders: every method returns payment results
+  (`paid`, `pending`, `failed`, `cancelled`, `refunded`) that `OrderService::apply()` applies. Free ships
+  Offline (on-hold with the owner's instructions; marked paid by hand), Stripe and PayPal; add-ons append
+  instances on `publiclms_gateways`. Settings live in `publiclms_gateway_{id}`; a field may name a
+  constant, and a defined constant wins over the stored value and locks the field in the admin. Secret
+  fields are write-only over REST: responses carry `is_set` and `from_config`, never the value; a string
+  replaces it, `false` removes it. HTTP goes through one helper with a 30-second timeout, no redirects and
+  no logging of requests or answers. The webhook route is public; the gateway verifies the provider's
+  signature on the raw body first.
+- **Consequences.** The Payments screen (`publiclms_manage_orders`) shows each gateway's state, whether
+  it takes the store currency, its mode and its webhook URL. Orders and Coupons are new screens for the
+  same capability.
 

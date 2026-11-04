@@ -19,8 +19,6 @@ import { __ } from '@wordpress/i18n';
 import { boot } from '../boot';
 import { notifyError, notifySuccess } from '../components/notices';
 
-const CURRENCIES = [ 'USD', 'EUR', 'GBP', 'INR', 'NPR', 'AUD', 'CAD', 'JPY' ];
-
 export default function SettingsScreen() {
 	const [ settings, setSettings ] = useState( null );
 	const [ edits, setEdits ] = useState( {} );
@@ -143,18 +141,21 @@ export default function SettingsScreen() {
 						</Button>
 					) }
 				</PanelBody>
-				<PanelBody title={ __( 'Prices', 'public-lms' ) }>
-					<SelectControl
-						__next40pxDefaultSize
-						label={ __( 'Currency', 'public-lms' ) }
-						value={ value( 'currency' ) }
-						options={ CURRENCIES.map( ( code ) => ( {
-							value: code,
-							label: code,
-						} ) ) }
-						onChange={ set( 'currency' ) }
-					/>
-				</PanelBody>
+				{ boot.permissions.manageOrders && (
+					<PanelBody title={ __( 'Prices', 'public-lms' ) }>
+						<p>
+							{ __(
+								'The currency, checkout page and payment methods are under Payments.',
+								'public-lms'
+							) }{ ' ' }
+							<a
+								href={ `${ boot.adminUrl }admin.php?page=publiclms-payments` }
+							>
+								{ __( 'Open Payments', 'public-lms' ) }
+							</a>
+						</p>
+					</PanelBody>
+				) }
 				{ boot.permissions.deletePlugins && (
 					<PanelBody title={ __( 'Data', 'public-lms' ) }>
 						<ToggleControl

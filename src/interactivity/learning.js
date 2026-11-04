@@ -22,6 +22,7 @@ import { getContext, getElement, store } from '@wordpress/interactivity';
 
 import { post } from './api';
 import './assignment';
+import './checkout';
 import './quiz';
 
 const EMPTY = { percent: 0, done: 0, total: 0, completed: false, items: {} };
