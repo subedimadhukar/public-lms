@@ -33,6 +33,7 @@ use PublicLMS\Repositories\QuizAttemptRepository;
 use PublicLMS\Repositories\QuizAttemptRepositoryInterface;
 use PublicLMS\Repositories\SubmissionRepository;
 use PublicLMS\Files\PrivateFiles;
+use PublicLMS\Files\PrivateFilesCheck;
 use PublicLMS\Services\AssignmentService;
 use PublicLMS\Services\Gradebook;
 use PublicLMS\Certificates\CertificateFields;
@@ -146,6 +147,7 @@ final class Plugin {
 		$this->container->get( DashboardTab::class )->register();
 		$this->container->get( PersonalData::class )->register();
 		CommerceServices::boot( $this->container );
+		$this->container->get( PrivateFilesCheck::class )->register();
 		if ( is_admin() ) {
 			$this->container->get( AdminApp::class )->register();
 		}
@@ -350,6 +352,12 @@ final class Plugin {
 			PrivateFiles::class,
 			static function () {
 				return new PrivateFiles();
+			}
+		);
+		$c->set(
+			PrivateFilesCheck::class,
+			static function ( Container $container ) {
+				return new PrivateFilesCheck( $container->get( PrivateFiles::class ) );
 			}
 		);
 		$c->set(
