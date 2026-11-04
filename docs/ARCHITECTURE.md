@@ -868,8 +868,12 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   the mode (test or live) is read from the key's prefix. Filter: `publiclms_stripe_session_params`.
 - **Consequences.** Stripe takes about 135 currencies and which ones depends on the account, so the
   gateway accepts any currency and Stripe's own error ("The currency … is not supported") reaches the
-  buyer. Verified on the sandbox: a real session on the pinned version, and a `checkout.session.expired`
-  webhook forwarded by the Stripe CLI, signature-checked and applied.
+  buyer. Verified on the owner's sandbox (2026-11-05): a real session on the pinned version, with the
+  account's own methods offered (card, Apple Pay, Bancontact, MB WAY, Pay by Bank, EPS); an expired
+  session cancelling its order by webhook; a hosted payment with test card 4242 completing the order on
+  return and by `checkout.session.completed` (applied once) and enrolling the buyer; and a refund from the
+  Orders screen, with `refund.created`, `charge.refunded` and `refund.updated` all answered 200, the
+  refund recorded once and the enrolment closed. The account does send `refund.*` events.
 
 ### ADR-049 PayPal: Orders v2, capture on return, webhooks verified by PayPal
 - **Context.** ADR-011 names PayPal Orders v2. Many sites (and the owner's development machine) have no
