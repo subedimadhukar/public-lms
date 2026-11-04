@@ -337,7 +337,8 @@ final class StripeGateway extends AbstractGateway {
 					'order_id'  => (string) $order['id'],
 				),
 			),
-			'publiclms-refund-' . $order['order_key']
+			// A fresh key per attempt so a failed refund can be retried; Stripe refuses to refund more than was paid.
+			'publiclms-refund-' . $order['order_key'] . '-' . wp_generate_uuid4()
 		);
 		if ( is_wp_error( $refund ) ) {
 			return $refund;

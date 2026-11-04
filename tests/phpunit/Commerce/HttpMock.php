@@ -75,7 +75,16 @@ final class HttpMock {
 			'body'    => $args['body'] ?? null,
 		);
 		$key              = $method . ' ' . $url;
-		foreach ( $this->responses as $needle => $queue ) {
+		$needles          = array_keys( $this->responses );
+		// The most specific match wins: ".../orders/{id}/capture" before ".../orders".
+		usort(
+			$needles,
+			static function ( $a, $b ) {
+				return strlen( (string) $b ) - strlen( (string) $a );
+			}
+		);
+		foreach ( $needles as $needle ) {
+			$queue = $this->responses[ $needle ];
 			if ( false !== strpos( $key, $needle ) && ! empty( $queue ) ) {
 				$response = count( $queue ) > 1 ? array_shift( $this->responses[ $needle ] ) : $queue[0];
 				return array(

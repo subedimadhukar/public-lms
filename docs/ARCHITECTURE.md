@@ -848,8 +848,10 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   from your Dashboard").
 - **Decision.** Each order becomes a Checkout Session in payment mode (Stripe creates the PaymentIntent),
   so card data never reaches the site and the account's Dashboard decides the payment methods: the request
-  names none. Every request sends `Stripe-Version: 2026-10-28.endive` and, for writes, an
-  `Idempotency-Key` from the order key, so retries never create a second session or refund. Lines carry the
+  names none. Every request sends `Stripe-Version: 2026-10-28.endive`. Creating the session sends an
+  `Idempotency-Key` made from the order key, so a retry never makes a second session; refunds send a
+  fresh key per attempt (Stripe replays a stored failure for a repeated key, and it refuses to refund
+  more than was paid, so a double click cannot refund twice). Lines carry the
   per-line totals after discount; the last line absorbs any rounding so the session total equals the
   order's. Amounts follow Stripe's rules: whole units for its zero-decimal list (JPY, KRW, VND, XOF…),
   ISK and UGX as two-decimal values ending in 00, three-decimal currencies in thousandths ending in 0
@@ -868,4 +870,33 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   gateway accepts any currency and Stripe's own error ("The currency … is not supported") reaches the
   buyer. Verified on the sandbox: a real session on the pinned version, and a `checkout.session.expired`
   webhook forwarded by the Stripe CLI, signature-checked and applied.
+
+### ADR-049 PayPal: Orders v2, capture on return, webhooks verified by PayPal
+- **Context.** ADR-011 names PayPal Orders v2. Many sites (and the owner's development machine) have no
+  public HTTPS address, so PayPal cannot always reach a webhook.
+- **Decision.** Each order becomes a PayPal order: intent `CAPTURE`, `custom_id` and `reference_id` = the
+  order key, line items as `DIGITAL_GOODS` with a breakdown (`item_total`, `discount`), and an
+  `experience_context` with `NO_SHIPPING`, `PAY_NOW`, the site name and the return and cancel URLs. The
+  buyer is sent to the `payer-action` link. When they come back (`?token=` equal to the stored PayPal
+  order ID) the site captures the order, so the return alone completes it without any webhook; a capture
+  PayPal already made is read back (`ORDER_ALREADY_CAPTURED`), an order not yet approved stays pending, a
+  `PENDING` capture waits with PayPal's reason in the history. Captures and refunds send a fresh
+  `PayPal-Request-Id` per attempt, because PayPal replays a cached answer for a repeated ID (a capture
+  tried before approval would otherwise keep failing after it); PayPal refuses a second capture or an
+  over-refund itself. Refunds post an empty body to the capture's refund route (the whole amount).
+  Webhooks need the webhook ID: the plugin sends PayPal's five transmission headers, the webhook ID and
+  the event exactly as received (not re-encoded, which could change the signed text) to
+  `/v1/notifications/verify-webhook-signature` and acts only on `SUCCESS`. Events used:
+  `CHECKOUT.ORDER.APPROVED` (capture for a buyer who never came back), `PAYMENT.CAPTURE.COMPLETED`,
+  `…PENDING`, `…DENIED`/`…DECLINED`, `…REFUNDED` (matched to the capture through its `up` link) and
+  `…REVERSED`. The OAuth token is cached in a transient per client ID and mode until two minutes before
+  it expires, and refreshed once on a 401. Currencies: PayPal's 24; HUF, JPY and TWD without decimals (an
+  order PayPal cannot represent is refused with a clear message). Settings: sandbox switch (on by
+  default), client ID, secret, webhook ID, each overridable by `PUBLICLMS_PAYPAL_SANDBOX`,
+  `PUBLICLMS_PAYPAL_CLIENT_ID`, `PUBLICLMS_PAYPAL_CLIENT_SECRET`, `PUBLICLMS_PAYPAL_WEBHOOK_ID`. Filters:
+  `publiclms_paypal_order_body`, `publiclms_paypal_currencies`.
+- **Consequences.** Refunds made in the PayPal account reach the site only through the webhook. Verified
+  on the sandbox: a token and a real order through the plugin, and a capture attempted before approval
+  leaving the order pending. Still owed: the owner's approval of a sandbox order in a browser, and a
+  live webhook once a public URL exists.
 

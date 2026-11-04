@@ -10,6 +10,7 @@ namespace PublicLMS\Commerce;
 use PublicLMS\Access\AccessPolicy;
 use PublicLMS\Commerce\Gateways\Gateways;
 use PublicLMS\Commerce\Gateways\OfflineGateway;
+use PublicLMS\Commerce\Gateways\PayPalGateway;
 use PublicLMS\Commerce\Gateways\StripeGateway;
 use PublicLMS\Core\Container;
 use PublicLMS\Courses\CourseFields;
@@ -54,6 +55,7 @@ final class CommerceServices {
 					array(
 						new OfflineGateway(),
 						new StripeGateway(),
+						new PayPalGateway(),
 					)
 				);
 			}
