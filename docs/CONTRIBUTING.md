@@ -26,7 +26,9 @@ otherwise.
 
 In CI, or without the sibling theme checkout, create `.wp-env.override.json` with `{ "themes": [] }`.
 The override file is gitignored; use it locally to pin `core` or `phpVersion` too, for example
-`{ "core": "https://wordpress.org/wordpress-6.7.zip", "phpVersion": "7.4" }` to test the floor.
+`{ "core": "https://wordpress.org/wordpress-6.7.11.zip", "phpVersion": "7.4" }` to test the floor. Use the
+newest 6.7 point release, not `wordpress-6.7.zip`: 6.7.0 rejects underscores in registered template names, so
+`single-plms_course` and the other post-type templates do not register on it (ADR-020).
 
 `@wordpress/env` 12 still starts a separate tests environment by default but warns that this is deprecated.
 `npm run test:php` relies on its `tests-cli` container; when wp-env drops it, move the tests config to its own

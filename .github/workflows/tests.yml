@@ -21,7 +21,10 @@ jobs:
       fail-fast: false
       matrix:
         php: ['7.4', '8.3']
-        wp: ['6.7', 'latest']
+        # The 6.7 floor is tested at its newest point release. 6.7.0 rejects
+        # underscores in registered template names (fixed in 6.7.1), so the
+        # post-type template slugs cannot register there. See ADR-020.
+        wp: ['6.7.11', 'latest']
     steps:
       - uses: actions/checkout@v4
 

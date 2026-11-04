@@ -353,6 +353,11 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   and 8.3 against WordPress 6.7 and latest (the brief), not the document's 7.4–8.4 and 6.7/7.1/7.2 matrix.
   Add 7.2 to the matrix when it ships on 8 Dec 2026. Node 24 LTS for tooling (Node 20 is end of life and
   `@wordpress/scripts` 37 requires 22 or 24).
+- **Known limit on 6.7.0.** WordPress 6.7.0's template registry only accepts `[a-z0-9-]` in template names;
+  6.7.1 widened it to allow underscores. The post-type slugs (ADR-023) contain underscores, so on 6.7.0
+  exactly the course, archive and lesson templates fail to register and the theme's own templates apply.
+  Core applies minor releases automatically by default, so CI tests the floor at the newest 6.7 point
+  release (6.7.11 as of 4 Nov 2026) rather than 6.7.0. Raising the header to 6.7.1 is an open question.
 
 ### ADR-021 Uninstall keeps data unless the owner opts in
 - **Context.** The document is silent. Deleting a plugin by accident must not destroy grades and orders.
