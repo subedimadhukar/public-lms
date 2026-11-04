@@ -385,7 +385,7 @@ export default function QuestionEditor( {
 					<TextareaControl
 						label={ __( 'Explanation', 'public-lms' ) }
 						help={ __(
-							'Shown with the result after the learner submits, when the quiz shows results. It is not shown before.',
+							'Shown with the result after the learner submits, when the quiz shows results. It is not shown before. If learners can try again, explain why without giving the answer away.',
 							'public-lms'
 						) }
 						value={ question.explanation }

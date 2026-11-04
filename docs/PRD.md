@@ -135,8 +135,14 @@ theme half is the theme session's.
 
 ## 7a. Phase 2 scope: teaching stack and theme completion, ending in a public beta
 
-**Status (2026-11-04): part A, the teaching stack, is done (0.3.0, contract 1.3.0).** Part B (community and
-instructors, commerce, catalogue and migration, beta hardening) has not started.
+**Status (2026-11-05): part A, the teaching stack, is done (0.3.0, contract 1.3.0). In part B, commerce is
+done (contract 1.4.0: orders, checkout with Offline, Stripe and PayPal, coupons, the WooCommerce bridge;
+ADR-045 to ADR-051).** Community and instructors, catalogue and migration, and beta hardening follow.
+
+**Backlog after phase 2**
+- Video "must watch first", an option per lesson, off by default: the Mark complete button waits until the
+  video's completion threshold is reached (today watching completes the lesson, and Mark complete is always
+  allowed; ADR-041). Sensei offers this for free.
 
 **Part A (plugin)**
 - ✓ Drip (days after enrolment, or a date) on sections and items, and prerequisites (course needs course,
