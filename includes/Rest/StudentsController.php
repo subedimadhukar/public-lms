@@ -217,6 +217,7 @@ final class StudentsController extends AbstractController {
 				'fields'           => 'ids',
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 			)
 		);
 

@@ -22,6 +22,9 @@ defined( 'ABSPATH' ) || exit;
  * with two queries and cached per course under `structure:{course_id}`;
  * any save, trash or delete of a course, section or item clears it, also
  * when the change comes from outside this class (block editor, wp-admin).
+ * Queries pass `'lang' => ''`: a course's structure is loaded by ID in
+ * every language, because Polylang adds its language condition on
+ * parse_query, which suppress_filters does not skip (finding 5).
  */
 class CourseStructureRepository implements CourseStructureRepositoryInterface {
 
@@ -118,6 +121,7 @@ class CourseStructureRepository implements CourseStructureRepositoryInterface {
 				),
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 			)
 		);
 
@@ -136,6 +140,7 @@ class CourseStructureRepository implements CourseStructureRepositoryInterface {
 					),
 					'no_found_rows'    => true,
 					'suppress_filters' => true,
+					'lang'             => '', // All languages (Polylang).
 				)
 			);
 
@@ -367,6 +372,7 @@ class CourseStructureRepository implements CourseStructureRepositoryInterface {
 				'fields'           => 'ids',
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 			)
 		);
 		$siblings = array_values( array_diff( array_map( 'intval', $siblings ), array( $item_id ) ) );
@@ -445,6 +451,7 @@ class CourseStructureRepository implements CourseStructureRepositoryInterface {
 				'fields'           => 'ids',
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 			)
 		);
 		foreach ( $children as $child_id ) {
@@ -561,6 +568,7 @@ class CourseStructureRepository implements CourseStructureRepositoryInterface {
 				'fields'           => 'ids',
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 			)
 		);
 		return count( $ids );

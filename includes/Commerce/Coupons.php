@@ -80,6 +80,7 @@ class Coupons {
 				'posts_per_page'   => 1,
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 				'meta_key'         => self::META_CODE, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One indexed meta_key lookup per checkout.
 				'meta_value'       => $code, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- As above.
 			)

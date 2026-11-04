@@ -346,6 +346,7 @@ final class Command {
 				'meta_key'         => self::FLAG, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-off maintenance command.
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 			)
 		);
 		return array_map( 'intval', $ids );

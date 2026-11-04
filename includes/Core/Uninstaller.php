@@ -139,6 +139,7 @@ final class Uninstaller {
 						'numberposts'      => 100,
 						'fields'           => 'ids',
 						'suppress_filters' => true,
+						'lang'             => '', // All languages (Polylang).
 					)
 				);
 				foreach ( $ids as $id ) {

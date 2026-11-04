@@ -277,6 +277,7 @@ final class QuestionBank {
 				'fields'           => 'ids',
 				'no_found_rows'    => true,
 				'suppress_filters' => true,
+				'lang'             => '', // All languages (Polylang).
 				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Editor-only lookup of a question's quizzes.
 				'meta_query'       => array(
 					array(
