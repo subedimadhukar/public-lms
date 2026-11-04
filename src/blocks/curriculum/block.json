@@ -1,0 +1,79 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/curriculum",
+	"version": "0.2.0",
+	"title": "Curriculum",
+	"category": "publiclms",
+	"icon": "editor-ol",
+	"description": "Shows a course's sections and lessons with completion and lock states.",
+	"keywords": [
+		"syllabus",
+		"outline",
+		"lessons",
+		"sections"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"courseId": {
+			"type": "number",
+			"default": 0
+		},
+		"showLockedState": {
+			"type": "boolean",
+			"default": true
+		},
+		"collapsible": {
+			"type": "boolean",
+			"default": true
+		},
+		"headingLevel": {
+			"type": "number",
+			"default": 3
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontWeight": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalTextTransform": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true,
+		"interactivity": true
+	},
+	"example": {},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens",
+		"file:./style-index.css"
+	],
+	"viewScriptModule": "@publiclms/learning",
+	"render": "file:./render.php"
+}

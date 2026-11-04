@@ -47,8 +47,8 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Templates | `Templates\TemplateRegistrar` | Slug list and hierarchy mapping; no template files | Files under `templates/` in phase 1. |
 | Licensing | `Licensing\LicenseProvider`, `NullLicenseProvider`, `LicenseStatus` | Done | Pro binds the EDD provider. |
 | Admin | One React app on `@wordpress/components`, `@wordpress/data` stores per domain, DataViews | Phase 1: "Public LMS" menu with Courses (DataViews list and course builder), Students (DataViews) and Settings | ADR-033, ADR-034. |
-| Front end | Dynamic blocks with block supports; Interactivity API for player, quiz runner, curriculum, dashboard | Not started | Phase 1 and 2. |
-| Bindings | `publiclms/course-field` source in PHP and JS | Keys frozen in `CONTRACTS.md` A7 | Phase 1. |
+| Front end | Dynamic blocks with block supports; Interactivity API for player, quiz runner, curriculum, dashboard | Phase 1: eight blocks, one shared store module | ADR-035. |
+| Bindings | `publiclms/course-field` source in PHP and JS | Phase 1: every A7 key; `rating` is empty until reviews (phase 2) | ADR-010. |
 | Payments | `Gateway` interface; hosted or redirect flows only | Not started | Phase 2. |
 | Jobs | Action Scheduler ^4.1 via Composer | Loaded when installed | Emails, PDFs, drip, aggregates, renewals, imports. |
 | Certificates | Block-built template rendered to PDF with Dompdf, prefixed with PHP-Scoper | Not started | Phase 2. |
@@ -193,20 +193,24 @@ Meta capabilities (resolved in `Capabilities::map_meta_cap()`):
 `publiclms_edit_own_course` for whoever teaches that course and to `publiclms_manage_courses` for everyone
 else, whoever authored the item (ADR-025). Items outside any course keep WordPress's author mapping.
 
-## 5. Block list (draft, frozen at the gate)
+## 5. Block list
 
-All blocks are dynamic (`render.php`), declare block supports, and mark user-editable attributes with
-`"role": "content"`. Interactivity API stores are named `publiclms/<block>`.
+All blocks are dynamic (`render.php`), declare block supports (colour, typography, spacing, border, shadow),
+and mark user-editable attributes with `"role": "content"`. Every learner block shares one Interactivity
+API store, `publiclms/learning`, loaded once as the script module `@publiclms/learning` (ADR-035; the
+phase 0 draft named one store per block).
 
 | Block | Key attributes | Interactive | Phase |
 |---|---|---|---|
-| `publiclms/curriculum` | `courseId`, `showLockedState`, `collapsible`, `headingLevel` | yes (accordion) | 1 |
-| `publiclms/enroll-button` | `courseId`, `label` (content), `showPrice` | yes | 1 |
-| `publiclms/course-progress` | `courseId`, `style` (bar, ring, text) | no | 1 |
-| `publiclms/mark-complete` | `label` (content), `completedLabel` (content) | yes | 1 |
-| `publiclms/lesson-navigation` | `showTitles`, `previousLabel` (content), `nextLabel` (content) | no | 1 |
-| `publiclms/student-dashboard` | `tabs`, `defaultTab` | yes (tabs) | 1 |
-| `publiclms/video` | `provider`, `src`, `trackCompletion`, `requiredPercent` | yes | 1 |
+| `publiclms/curriculum` | `courseId`, `showLockedState`, `collapsible`, `headingLevel` | yes (completion and lock state; sections are native `<details>`) | 1 ✓ |
+| `publiclms/enroll-button` | `courseId`, `label` (content), `showPrice` | yes (in-place REST enrolment; no-JS form) | 1 ✓ |
+| `publiclms/course-progress` | `courseId`; block styles `bar` (default), `ring`, `text` | yes (live value) | 1 ✓ |
+| `publiclms/mark-complete` | `label` (content), `completedLabel` (content) | yes (the lesson player) | 1 ✓ |
+| `publiclms/lesson-navigation` | `showTitles`, `previousLabel` (content), `nextLabel` (content) | yes (next link follows completion) | 1 ✓ |
+| `publiclms/lesson-content` | `lockedMessage` (content) | no (gated by the access policy) | 1 ✓ (added in phase 1) |
+| `publiclms/course-meta` | `courseId`, `fields`, `showLabels`, `layout` | no | 1 ✓ (added in phase 1) |
+| `publiclms/student-dashboard` | `tabs`, `defaultTab` | yes (WAI-ARIA tabs) | 1 ✓ (tabs: in progress, completed) |
+| `publiclms/video` | `provider`, `src`, `trackCompletion`, `requiredPercent` | yes | moved to 2 |
 | `publiclms/quiz` | `quizId` | yes (runner) | 2 |
 | `publiclms/assignment` | `assignmentId`, `allowedTypes`, `maxFileSize` | yes | 2 |
 | `publiclms/instructor-dashboard` | `tabs` | yes | 2 |
@@ -219,7 +223,8 @@ All blocks are dynamic (`render.php`), declare block supports, and mark user-edi
 | `publiclms/login-form` | `redirect`, `showRegister` | no | 2 |
 | `publiclms/instructor-card` | `userId`, `showBio`, `showCourses` | no | 2 |
 
-Plus the Query Loop variation `publiclms/course-query` and the bindings source `publiclms/course-field`.
+Plus the Query Loop variation `publiclms/course-query` (titled "Course Grid" in the inserter, ADR-036) and the
+bindings source `publiclms/course-field`.
 
 ## 6. Security, caching and scale
 
@@ -499,3 +504,39 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   once and is saved with `PUT /courses/{id}/curriculum`; on failure the server's order comes back.
 - **Consequences.** About 45 KB of the admin bundle. Nested drag (sections inside sections) is not needed
   and not supported.
+
+### ADR-035 Learner blocks share one Interactivity store; derived state on both sides
+- **Context.** The phase 0 draft named one store per block (`publiclms/<block>`). But marking a lesson
+  complete must move the progress bar, tick the curriculum and change the next link, which live in other
+  blocks; and WordPress processes directives on the server, so a `data-wp-text` that points at a getter
+  only JavaScript knows renders empty.
+- **Decision.** One store, `publiclms/learning`, built as one script module (`build/interactivity/learning.js`,
+  registered as `@publiclms/learning`); every interactive block's `block.json` names it in
+  `viewScriptModule`, so it loads once. `Blocks::seed_state()` seeds the REST URL, the `wp_rest` nonce, the
+  course's progress, the enrolment flag, the next item and the translated strings (script modules cannot
+  load translations). Every getter in the JS store has a PHP closure twin in `Blocks::derived_state()`, so
+  server-rendered markup and hydrated markup agree (core evaluates closures during directive processing and
+  never serializes them). Mark complete posts to `publiclms/v1/progress`; the response updates the shared
+  progress and the next link without a reload; the result is announced in a polite live region.
+- **Lesson HTML.** `publiclms/lesson-content` and `GET /lessons/{id}` pass the stored HTML through
+  `wp_kses_post()` before `the_content` renders blocks, so script in lesson HTML never reaches learners
+  (whoever wrote it) while embeds, which render from block markup, keep working.
+- **Course progress looks** are block style variations (`is-style-bar`, `is-style-ring`, `is-style-text`),
+  not an attribute: an attribute named `style` collides with WordPress's own block-supports `style`.
+- **Accessibility.** The curriculum's sections are native `<details>`; the dashboard tabs follow the WAI-ARIA
+  tabs pattern; the mark-complete button keeps its visible label as its name and gains a description while
+  complete; progress is a `role="progressbar"` with live `aria-valuenow`; no motion without
+  `prefers-reduced-motion: no-preference`.
+- **Consequences.** Adding a learner block means adding its getters in both files. Directive attributes on
+  WordPress 6.7 and 6.8 rely on closures too; 6.9 also tells the client which ones they are.
+
+### ADR-036 Course grid is a Query Loop variation, not a wrapper block
+- **Context.** The brief asked for `publiclms/course-grid` as a Query Loop variation, or a wrapper block if
+  the variation could not carry course data. `CONTRACTS.md` A5 names the variation `publiclms/course-query`
+  and the archive pattern `publiclms/course-grid`.
+- **Decision.** The variation keeps the contract's name, `publiclms/course-query` (shown as "Course Grid" in
+  the inserter), and the pattern keeps `publiclms/course-grid`. Course data on the cards comes from core
+  blocks bound to `publiclms/course-field`, so no wrapper is needed. The variation adds one setting core
+  lacks, `query.publiclmsHideEnrolled`, applied on the front end (`query_loop_block_query_vars`) and in the
+  editor preview (`rest_plms_course_query`); level and category filtering use core's taxonomy controls.
+- **Consequences.** No contract change; themes compose course cards from core blocks.

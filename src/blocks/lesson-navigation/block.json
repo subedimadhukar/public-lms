@@ -1,0 +1,76 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/lesson-navigation",
+	"version": "0.2.0",
+	"title": "Lesson Navigation",
+	"category": "publiclms",
+	"icon": "leftright",
+	"description": "Links to the previous and next items in the course.",
+	"keywords": [
+		"next",
+		"previous",
+		"pagination"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"showTitles": {
+			"type": "boolean",
+			"default": true
+		},
+		"previousLabel": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"nextLabel": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontWeight": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalTextTransform": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true,
+		"interactivity": true
+	},
+	"example": {},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens",
+		"file:./style-index.css"
+	],
+	"viewScriptModule": "@publiclms/learning",
+	"render": "file:./render.php"
+}

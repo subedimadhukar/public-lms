@@ -1,0 +1,81 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/course-progress",
+	"version": "0.2.0",
+	"title": "Course Progress",
+	"category": "publiclms",
+	"icon": "chart-bar",
+	"description": "Shows the current learner's progress in a course. Styles: bar, ring or text.",
+	"keywords": [
+		"progress",
+		"completion",
+		"percent"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"courseId": {
+			"type": "number",
+			"default": 0
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontWeight": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalTextTransform": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true,
+		"interactivity": true
+	},
+	"styles": [
+		{
+			"name": "bar",
+			"label": "Bar",
+			"isDefault": true
+		},
+		{
+			"name": "ring",
+			"label": "Ring"
+		},
+		{
+			"name": "text",
+			"label": "Text"
+		}
+	],
+	"example": {},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens",
+		"file:./style-index.css"
+	],
+	"viewScriptModule": "@publiclms/learning",
+	"render": "file:./render.php"
+}

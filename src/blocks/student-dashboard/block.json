@@ -1,0 +1,72 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/student-dashboard",
+	"version": "0.2.0",
+	"title": "Student Dashboard",
+	"category": "publiclms",
+	"icon": "welcome-learn-more",
+	"description": "Lists the learner's courses with progress, in tabs.",
+	"keywords": [
+		"dashboard",
+		"my courses",
+		"learning"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"tabs": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"default": [
+				"in-progress",
+				"completed"
+			]
+		},
+		"defaultTab": {
+			"type": "string",
+			"default": "in-progress"
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontWeight": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalTextTransform": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true,
+		"interactivity": true
+	},
+	"example": {},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens",
+		"file:./style-index.css"
+	],
+	"viewScriptModule": "@publiclms/learning",
+	"render": "file:./render.php"
+}

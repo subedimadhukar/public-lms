@@ -1,0 +1,35 @@
+// Enrol button. Reads only the token aliases (CONTRACTS.md B5).
+.wp-block-publiclms-enroll-button {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--publiclms-space-20);
+}
+
+:where(.wp-block-publiclms-enroll-button__price) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-2-xl);
+	font-weight: 700;
+}
+
+:where(.wp-block-publiclms-enroll-button__form) {
+	margin: 0;
+}
+
+:where(.wp-block-publiclms-enroll-button__button) {
+	cursor: pointer;
+}
+
+.wp-block-publiclms-enroll-button__button[disabled] {
+	cursor: progress;
+	opacity: 0.7;
+}
+
+:where(.wp-block-publiclms-enroll-button__message:empty) {
+	display: none;
+}
+
+:where(.wp-block-publiclms-enroll-button__message, .wp-block-publiclms-enroll-button__note) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-sm);
+}

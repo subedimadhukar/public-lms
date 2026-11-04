@@ -1,0 +1,10 @@
+// Lesson content takes its typography from the theme.
+:where(.wp-block-publiclms-lesson-content.is-locked) .publiclms-locked-notice {
+	padding: var(--publiclms-space-50);
+	border-radius: var(--publiclms-radius-lg);
+}
+
+:where(.publiclms-locked-notice__message) {
+	margin-top: 0;
+	font-size: var(--publiclms-font-size-lg);
+}

@@ -10,6 +10,9 @@ namespace PublicLMS\Core;
 use PublicLMS\Access\AccessPolicy;
 use PublicLMS\Admin\AdminApp;
 use PublicLMS\Admin\EditorAssets;
+use PublicLMS\Blocks\BindingsSource;
+use PublicLMS\Blocks\Blocks;
+use PublicLMS\Blocks\CourseQuery;
 use PublicLMS\Access\ContentGate;
 use PublicLMS\Courses\CourseFields;
 use PublicLMS\Frontend\EnrollmentHandler;
@@ -115,6 +118,9 @@ final class Plugin {
 		$this->container->get( EnrollmentHandler::class )->register();
 		$this->container->get( PostFields::class )->register();
 		$this->container->get( EditorAssets::class )->register();
+		$this->container->get( Blocks::class )->register();
+		$this->container->get( BindingsSource::class )->register();
+		$this->container->get( CourseQuery::class )->register();
 		if ( is_admin() ) {
 			$this->container->get( AdminApp::class )->register();
 		}
@@ -262,6 +268,30 @@ final class Plugin {
 			PostFields::class,
 			static function ( Container $container ) {
 				return new PostFields( $container->get( CourseFields::class ) );
+			}
+		);
+		$c->set(
+			Blocks::class,
+			static function ( Container $container ) {
+				return new Blocks(
+					$container->get( CourseFields::class ),
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( ProgressService::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( AccessPolicy::class )
+				);
+			}
+		);
+		$c->set(
+			BindingsSource::class,
+			static function ( Container $container ) {
+				return new BindingsSource( $container->get( CourseFields::class ) );
+			}
+		);
+		$c->set(
+			CourseQuery::class,
+			static function ( Container $container ) {
+				return new CourseQuery( $container->get( EnrollmentRepository::class ) );
 			}
 		);
 		$c->set(

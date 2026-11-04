@@ -40,6 +40,9 @@ jobs:
 
       - run: npm ci
 
+      # Block render tests need the built blocks and store module.
+      - run: npm run build
+
       # The committed .wp-env.json maps the sibling theme checkout, which CI
       # does not have; the override drops it and pins the matrix versions.
       - name: Configure wp-env for this matrix cell

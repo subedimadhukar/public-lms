@@ -1,0 +1,115 @@
+// Student dashboard: tabs and course cards.
+:where(.wp-block-publiclms-student-dashboard__heading) {
+	margin-top: 0;
+	font-size: var(--publiclms-font-size-2-xl);
+}
+
+:where(.wp-block-publiclms-student-dashboard__tabs) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--publiclms-space-20);
+	margin-bottom: var(--publiclms-space-50);
+	border-bottom: 1px solid var(--publiclms-color-line);
+}
+
+:where(.wp-block-publiclms-student-dashboard__tab) {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--publiclms-space-20);
+	margin-bottom: -1px;
+	padding: var(--publiclms-space-30) var(--publiclms-space-40);
+	border: 0;
+	border-bottom: 3px solid transparent;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.wp-block-publiclms-student-dashboard__tab[aria-selected="true"] {
+	border-bottom-color: var(--publiclms-color-primary);
+	font-weight: 600;
+}
+
+.wp-block-publiclms-student-dashboard__tab:focus-visible,
+.wp-block-publiclms-student-dashboard__panel:focus-visible {
+	outline: 2px solid var(--publiclms-color-primary);
+	outline-offset: 2px;
+}
+
+:where(.wp-block-publiclms-student-dashboard__tab-count) {
+	padding: 0 var(--publiclms-space-20);
+	border-radius: var(--publiclms-radius-pill);
+	background: var(--publiclms-color-primary-soft);
+	font-size: var(--publiclms-font-size-xs);
+}
+
+:where(.wp-block-publiclms-student-dashboard__courses) {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+	gap: var(--publiclms-space-50);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+:where(.wp-block-publiclms-student-dashboard__course) {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-lg);
+	background: var(--publiclms-color-base);
+	box-shadow: var(--publiclms-shadow-card);
+}
+
+:where(.wp-block-publiclms-student-dashboard__image) {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+}
+
+:where(.wp-block-publiclms-student-dashboard__body) {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: var(--publiclms-space-30);
+	padding: var(--publiclms-space-40);
+}
+
+:where(.wp-block-publiclms-student-dashboard__title) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-lg);
+}
+
+:where(.wp-block-publiclms-student-dashboard__meta) {
+	margin: var(--publiclms-space-20) 0 0;
+	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(.wp-block-publiclms-student-dashboard__action) {
+	align-self: flex-start;
+	margin-top: auto;
+}
+
+.wp-block-publiclms-student-dashboard__progress {
+	--publiclms-progress: 0%;
+}
+
+:where(.wp-block-publiclms-student-dashboard) .wp-block-publiclms-course-progress__track {
+	position: relative;
+	overflow: hidden;
+	height: 0.5rem;
+	border-radius: var(--publiclms-radius-pill);
+	background: var(--publiclms-color-surface);
+	box-shadow: inset 0 0 0 1px var(--publiclms-color-line);
+}
+
+:where(.wp-block-publiclms-student-dashboard) .wp-block-publiclms-course-progress__fill {
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: var(--publiclms-progress);
+	background: var(--publiclms-color-primary);
+}

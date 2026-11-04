@@ -1,0 +1,49 @@
+// Lesson navigation: previous on the start side, next on the end side.
+.wp-block-publiclms-lesson-navigation {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--publiclms-space-40);
+}
+
+:where(.wp-block-publiclms-lesson-navigation__link) {
+	display: flex;
+	flex-direction: column;
+	max-width: 48%;
+	padding: var(--publiclms-space-30) var(--publiclms-space-40);
+	border: 1px solid var(--publiclms-color-line);
+	border-radius: var(--publiclms-radius-md);
+	color: inherit;
+	text-decoration: none;
+}
+
+.wp-block-publiclms-lesson-navigation__link:hover {
+	border-color: var(--publiclms-color-primary);
+}
+
+.wp-block-publiclms-lesson-navigation__link:focus-visible {
+	outline: 2px solid var(--publiclms-color-primary);
+	outline-offset: 2px;
+}
+
+:where(.wp-block-publiclms-lesson-navigation__link.is-next) {
+	margin-inline-start: auto;
+	text-align: end;
+}
+
+:where(.wp-block-publiclms-lesson-navigation__link.is-next.is-ready) {
+	border-color: var(--publiclms-color-primary);
+	background: var(--publiclms-color-primary);
+	color: var(--publiclms-color-base);
+}
+
+:where(.wp-block-publiclms-lesson-navigation__label) {
+	font-size: var(--publiclms-font-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+:where(.wp-block-publiclms-lesson-navigation__title) {
+	font-size: var(--publiclms-font-size-base);
+	font-weight: 600;
+}

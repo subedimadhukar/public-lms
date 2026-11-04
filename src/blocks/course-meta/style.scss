@@ -1,0 +1,35 @@
+// Course details as a description list.
+.wp-block-publiclms-course-meta {
+	display: grid;
+	gap: var(--publiclms-space-20);
+	margin: 0;
+}
+
+.wp-block-publiclms-course-meta.is-layout-inline {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--publiclms-space-30) var(--publiclms-space-50);
+}
+
+:where(.wp-block-publiclms-course-meta__item) {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--publiclms-space-30);
+	padding-bottom: var(--publiclms-space-20);
+	border-bottom: 1px solid var(--publiclms-color-line);
+}
+
+:where(.wp-block-publiclms-course-meta.is-layout-inline .wp-block-publiclms-course-meta__item) {
+	flex-direction: column;
+	gap: 0;
+	border-bottom: 0;
+}
+
+:where(.wp-block-publiclms-course-meta__label) {
+	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(.wp-block-publiclms-course-meta__value) {
+	margin: 0;
+	font-weight: 600;
+}

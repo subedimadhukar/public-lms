@@ -1,0 +1,62 @@
+/**
+ * Public LMS token aliases (docs/CONTRACTS.md, B5).
+ *
+ * Plugin block styles never read --wp--preset--* directly; they read these
+ * aliases, each with a fallback that passes WCAG 2.2 AA on a white page.
+ * :where() keeps them at zero specificity, so any theme rule wins, and a
+ * theme may set an alias directly to restyle plugin blocks only.
+ */
+:where([class*="wp-block-publiclms-"]) {
+	--publiclms-color-base: var(--wp--preset--color--base, #fff);
+	--publiclms-color-contrast: var(--wp--preset--color--contrast, #1e1e1e);
+	--publiclms-color-primary: var(--wp--preset--color--primary, #3858e9);
+	--publiclms-color-primary-soft: var(--wp--preset--color--primary-soft, #eff2fd);
+	--publiclms-color-secondary: var(--wp--preset--color--secondary, #0f766e);
+	--publiclms-color-accent: var(--wp--preset--color--accent, #f0b849);
+	--publiclms-color-surface: var(--wp--preset--color--surface, #f6f7f7);
+	--publiclms-color-line: var(--wp--preset--color--line, #dcdcde);
+	--publiclms-color-success: var(--wp--preset--color--success, #007017);
+	--publiclms-color-warning: var(--wp--preset--color--warning, #996800);
+	--publiclms-color-danger: var(--wp--preset--color--danger, #cc1818);
+	--publiclms-font-size-xs: var(--wp--preset--font-size--xs, 0.75rem);
+	--publiclms-font-size-sm: var(--wp--preset--font-size--sm, 0.875rem);
+	--publiclms-font-size-base: var(--wp--preset--font-size--base, 1rem);
+	--publiclms-font-size-lg: var(--wp--preset--font-size--lg, 1.125rem);
+	--publiclms-font-size-xl: var(--wp--preset--font-size--xl, 1.25rem);
+	--publiclms-font-size-2-xl: var(--wp--preset--font-size--2-xl, 1.5rem);
+	--publiclms-font-size-3-xl: var(--wp--preset--font-size--3-xl, 2rem);
+	--publiclms-font-size-4-xl: var(--wp--preset--font-size--4-xl, 2.75rem);
+	--publiclms-space-20: var(--wp--preset--spacing--20, 0.44rem);
+	--publiclms-space-30: var(--wp--preset--spacing--30, 0.67rem);
+	--publiclms-space-40: var(--wp--preset--spacing--40, 1rem);
+	--publiclms-space-50: var(--wp--preset--spacing--50, 1.5rem);
+	--publiclms-space-60: var(--wp--preset--spacing--60, 2.25rem);
+	--publiclms-space-70: var(--wp--preset--spacing--70, 3.38rem);
+	--publiclms-space-80: var(--wp--preset--spacing--80, 5.06rem);
+	--publiclms-radius-sm: var(--wp--custom--radius--sm, 4px);
+	--publiclms-radius-md: var(--wp--custom--radius--md, 8px);
+	--publiclms-radius-lg: var(--wp--custom--radius--lg, 16px);
+	--publiclms-radius-pill: var(--wp--custom--radius--pill, 9999px);
+	--publiclms-shadow-card: var(--wp--preset--shadow--card, none);
+}
+
+/* Shared helpers used by several blocks. */
+.publiclms-visually-hidden {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+:where(.publiclms-locked-notice) {
+	padding: var(--publiclms-space-40, 1rem);
+	border: 1px solid var(--publiclms-color-line, #dcdcde);
+	border-radius: var(--publiclms-radius-md, 8px);
+	background: var(--publiclms-color-surface, #f6f7f7);
+	color: var(--publiclms-color-contrast, #1e1e1e);
+}

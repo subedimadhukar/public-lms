@@ -1,0 +1,91 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "publiclms/course-meta",
+	"version": "0.2.0",
+	"title": "Course Details",
+	"category": "publiclms",
+	"icon": "list-view",
+	"description": "Lists course facts: lessons, duration, level, instructor, learners and last update.",
+	"keywords": [
+		"meta",
+		"duration",
+		"level",
+		"lessons"
+	],
+	"textdomain": "public-lms",
+	"attributes": {
+		"courseId": {
+			"type": "number",
+			"default": 0
+		},
+		"fields": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"default": [
+				"lessons",
+				"duration",
+				"level",
+				"instructor",
+				"learners",
+				"updated"
+			]
+		},
+		"showLabels": {
+			"type": "boolean",
+			"default": true
+		},
+		"layout": {
+			"type": "string",
+			"enum": [
+				"list",
+				"inline"
+			],
+			"default": "list"
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontWeight": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalTextTransform": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true
+	},
+	"example": {},
+	"editorScript": "file:./index.js",
+	"style": [
+		"publiclms-tokens",
+		"file:./style-index.css"
+	],
+	"render": "file:./render.php"
+}

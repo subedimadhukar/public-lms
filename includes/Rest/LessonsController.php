@@ -385,7 +385,8 @@ final class LessonsController extends AbstractController {
 				$previous_post   = $GLOBALS['post'] ?? null;
 				$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Content filters read the global post; restored below.
 				setup_postdata( $post );
-				$data['content'] = wp_kses_post( (string) apply_filters( 'the_content', $post->post_content ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
+				// Sanitise the stored HTML before blocks render, as publiclms/lesson-content does (ADR-035).
+				$data['content'] = (string) apply_filters( 'the_content', wp_kses_post( $post->post_content ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
 				$GLOBALS['post'] = $previous_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restoring.
 				wp_reset_postdata();
 			}

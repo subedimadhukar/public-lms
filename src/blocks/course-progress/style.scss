@@ -1,0 +1,63 @@
+// Course progress: bar, ring or text. The fill reads --publiclms-progress.
+.wp-block-publiclms-course-progress {
+	--publiclms-progress: 0%;
+}
+
+:where(.wp-block-publiclms-course-progress__track) {
+	position: relative;
+	overflow: hidden;
+	height: 0.5rem;
+	border-radius: var(--publiclms-radius-pill);
+	background: var(--publiclms-color-surface);
+	box-shadow: inset 0 0 0 1px var(--publiclms-color-line);
+}
+
+:where(.wp-block-publiclms-course-progress__fill) {
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: var(--publiclms-progress);
+	border-radius: inherit;
+	background: var(--publiclms-color-primary);
+	transition: width 0.3s ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
+
+:where(.wp-block-publiclms-course-progress__label) {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--publiclms-space-20);
+	margin: var(--publiclms-space-20) 0 0;
+	font-size: var(--publiclms-font-size-sm);
+}
+
+.wp-block-publiclms-course-progress.is-style-ring {
+	display: flex;
+	align-items: center;
+	gap: var(--publiclms-space-30);
+
+	.wp-block-publiclms-course-progress__track {
+		flex: none;
+		width: 3.5rem;
+		height: 3.5rem;
+		border-radius: 50%;
+		background: conic-gradient(var(--publiclms-color-primary) var(--publiclms-progress), var(--publiclms-color-surface) 0);
+		box-shadow: none;
+		mask: radial-gradient(circle at center, transparent 55%, #000 56%);
+	}
+
+	.wp-block-publiclms-course-progress__fill {
+		display: none;
+	}
+
+	.wp-block-publiclms-course-progress__label {
+		flex-direction: column;
+		margin: 0;
+	}
+}
+
+.wp-block-publiclms-course-progress.is-style-text .wp-block-publiclms-course-progress__track {
+	display: none;
+}

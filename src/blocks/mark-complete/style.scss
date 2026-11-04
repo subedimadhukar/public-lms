@@ -1,0 +1,49 @@
+// Mark complete. The tick turns the completion colour once done.
+.wp-block-publiclms-mark-complete {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--publiclms-space-30);
+}
+
+:where(.wp-block-publiclms-mark-complete__button) {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--publiclms-space-20);
+	cursor: pointer;
+}
+
+.wp-block-publiclms-mark-complete__button[disabled] {
+	cursor: progress;
+	opacity: 0.7;
+}
+
+.wp-block-publiclms-mark-complete__icon {
+	display: inline-block;
+	width: 1.1em;
+	height: 1.1em;
+	border: 2px solid currentcolor;
+	border-radius: 50%;
+	box-sizing: border-box;
+}
+
+:where(.wp-block-publiclms-mark-complete.is-completed) .wp-block-publiclms-mark-complete__button {
+	background-color: var(--publiclms-color-secondary);
+	color: var(--publiclms-color-base);
+}
+
+.wp-block-publiclms-mark-complete.is-completed .wp-block-publiclms-mark-complete__icon {
+	border-color: currentcolor;
+	background:
+		linear-gradient(45deg, transparent 45%, currentcolor 45%, currentcolor 60%, transparent 60%) 30% 60% / 40% 40% no-repeat,
+		linear-gradient(-45deg, transparent 45%, currentcolor 45%, currentcolor 60%, transparent 60%) 65% 45% / 55% 55% no-repeat;
+}
+
+:where(.wp-block-publiclms-mark-complete__status) {
+	margin: 0;
+	font-size: var(--publiclms-font-size-sm);
+}
+
+:where(.wp-block-publiclms-mark-complete__status:empty) {
+	display: none;
+}

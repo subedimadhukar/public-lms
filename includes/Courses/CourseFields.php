@@ -271,19 +271,20 @@ class CourseFields {
 	/**
 	 * Returns the nonce-protected URL that enrols the current user and redirects to the first lesson.
 	 *
+	 * The URL is raw (unescaped); escape it with esc_url() when printing it.
+	 *
 	 * @param int $course_id Course ID.
 	 * @return string
 	 */
 	public static function enroll_action_url( int $course_id ): string {
-		return wp_nonce_url(
-			add_query_arg(
-				array(
-					'action'    => 'publiclms_enroll',
-					'course_id' => $course_id,
-				),
-				admin_url( 'admin-post.php' )
+		// Not wp_nonce_url(): it HTML-escapes the URL, and callers escape for their own context.
+		return add_query_arg(
+			array(
+				'action'    => 'publiclms_enroll',
+				'course_id' => $course_id,
+				'_wpnonce'  => wp_create_nonce( 'publiclms_enroll_' . $course_id ),
 			),
-			'publiclms_enroll_' . $course_id
+			admin_url( 'admin-post.php' )
 		);
 	}
 
