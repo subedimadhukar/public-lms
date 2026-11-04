@@ -18,8 +18,9 @@ defined( 'ABSPATH' ) || exit;
  * Settings live in the option `publiclms_gateway_{id}`. A field may name a
  * constant; when that constant is defined (in wp-config.php, or wp-env's
  * config), it wins over the stored value, the admin shows the field as "set
- * in configuration" and cannot change it. Secret fields are write-only: the
- * admin learns whether one is set, never its value (ADR-047).
+ * in configuration" and cannot change it. Secret fields, and every field
+ * set in configuration, are write-only: the admin learns whether one is
+ * set, never its value (ADR-047).
  */
 abstract class AbstractGateway implements Gateway {
 
@@ -138,8 +139,9 @@ abstract class AbstractGateway implements Gateway {
 			$entry = array(
 				'from_config' => $this->from_config( $key ),
 			);
-			if ( 'secret' === $field['type'] ) {
-				$entry['is_set'] = is_string( $value ) && '' !== $value;
+			if ( 'secret' === $field['type'] || ( $entry['from_config'] && 'toggle' !== $field['type'] ) ) {
+				// Secrets, and anything set in configuration, are never sent back.
+				$entry['is_set'] = is_scalar( $value ) && '' !== (string) $value;
 				$entry['value']  = '';
 			} elseif ( 'toggle' === $field['type'] ) {
 				$entry['value'] = (bool) $value;

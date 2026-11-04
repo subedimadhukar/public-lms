@@ -152,7 +152,8 @@ function GatewayField( { field, state, edit, onChange } ) {
 			label={ field.label }
 			help={ fromConfig ? configHelp : field.help }
 			disabled={ fromConfig }
-			value={ value || '' }
+			placeholder={ fromConfig && state?.is_set ? '••••••••' : '' }
+			value={ fromConfig ? '' : value || '' }
 			onChange={ onChange }
 		/>
 	);

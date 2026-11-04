@@ -239,6 +239,7 @@ class OrdersControllerTest extends RestTestCase {
 		define( 'PUBLICLMS_TEST_FAKE_SECRET', 'from-config' );
 		$after = $this->request( 'GET', '/settings/payments', array(), $this->manager )->get_data()['gateways'][0];
 		$this->assertTrue( $after['settings']['secret']['from_config'] );
+		$this->assertTrue( $after['settings']['secret']['is_set'] );
 		$this->assertStringNotContainsString( 'from-config', (string) wp_json_encode( $after ) );
 		$this->request( 'POST', '/settings/payments', array( 'gateways' => array( 'fake' => array( 'secret' => 'ignored' ) ) ), $this->manager );
 		$this->assertSame( 'sk_test_do_not_echo', get_option( 'publiclms_gateway_fake' )['secret'], 'A field set in configuration is not saved over.' );

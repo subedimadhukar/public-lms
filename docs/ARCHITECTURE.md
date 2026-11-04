@@ -834,8 +834,8 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   Offline (on-hold with the owner's instructions; marked paid by hand), Stripe and PayPal; add-ons append
   instances on `publiclms_gateways`. Settings live in `publiclms_gateway_{id}`; a field may name a
   constant, and a defined constant wins over the stored value and locks the field in the admin. Secret
-  fields are write-only over REST: responses carry `is_set` and `from_config`, never the value; a string
-  replaces it, `false` removes it. HTTP goes through one helper with a 30-second timeout, no redirects and
+  fields, and every text field set by a constant, are write-only over REST: responses carry `is_set` and
+  `from_config`, never the value; a string replaces a stored secret, `false` removes it. HTTP goes through one helper with a 30-second timeout, no redirects and
   no logging of requests or answers. The webhook route is public; the gateway verifies the provider's
   signature on the raw body first.
 - **Consequences.** The Payments screen (`publiclms_manage_orders`) shows each gateway's state, whether
