@@ -42,8 +42,8 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Post types and taxonomies | `PostTypes\PostTypes`, `Taxonomies\Taxonomies` | Done | All `show_in_rest`; capability mapping in ADR-025. |
 | Capabilities | `Capabilities\Capabilities`, `Capabilities\Roles` | Done | Five primitive capabilities, four meta capabilities, three roles. |
 | Data | `Core\Installer` (dbDelta schema), `Repositories\*` | Schema done; interfaces and base repository only | Phase 1: enrolment, progress, event and course structure repositories with object caching. |
-| Access | `Access\AccessPolicy`, `Access\AccessDecision` | Signatures and docs; permissive stub | Rule order documented in the class. |
-| REST | `Rest\AbstractController`, `Rest\Api`, `Rest\HealthController` | Namespace and health route | Controllers per resource in phase 1. |
+| Access | `Access\AccessPolicy`, `Access\AccessDecision`, `Access\ContentGate` | Phase 1: enrolment, publish state, preview; drip and prerequisites are documented no-ops | Rule order documented in the class; the gate filters `the_content` for every template and API. |
+| REST | `Rest\AbstractController`, `Rest\Api`, controllers per resource | Phase 1: courses, curriculum, sections, lessons, enrolments, progress, students | Matrix in §4. |
 | Templates | `Templates\TemplateRegistrar` | Slug list and hierarchy mapping; no template files | Files under `templates/` in phase 1. |
 | Licensing | `Licensing\LicenseProvider`, `NullLicenseProvider`, `LicenseStatus` | Done | Pro binds the EDD provider. |
 | Admin | One React app on `@wordpress/components`, `@wordpress/data` stores per domain, DataViews | Not started | Phase 1. |
@@ -141,21 +141,31 @@ version in `publiclms_version`. `Installer::maybe_upgrade()` runs `dbDelta()` wh
 ## 4. REST resources and permission matrix
 
 Namespace `publiclms/v1` (ADR-006, ADR-018). Post types are also on `wp/v2` under their keys
-(`/wp/v2/plms_course`). Collections use keyset pagination (`after`, `per_page` ≤ 100).
+(`/wp/v2/plms_course`); gated item content is filtered there too (ADR-031). Collections sorted by ID use
+keyset pagination (`after`, `per_page` ≤ 100); collections with other sort orders use an opaque `cursor`
+(ADR-030). Every collection sends `X-WP-Total`, and `X-PublicLMS-Next-Cursor` plus a `Link: rel="next"`
+header while more rows exist.
 
 | Resource | Routes (phase) | Read | Write |
 |---|---|---|---|
 | `health` | `GET /health` (0) | anyone (status only); version and tables for `publiclms_manage_courses` | none |
-| `courses/{id}/curriculum` | `GET`, `PUT` (1) | AccessPolicy `can_view_course` | `publiclms_edit_course` (meta) |
+| `courses` | `GET /courses`, `POST /courses`, `GET`, `PATCH`, `DELETE /courses/{id}` (1) | published: anyone; `context=edit` or other statuses: `publiclms_edit_own_course`, limited to own courses without `publiclms_manage_courses`; single: AccessPolicy `can_view_course` | create: the course type's `create_posts`; publish: `publish_posts`; update: `publiclms_edit_course` (meta); delete: `delete_post` |
+| `courses/{id}/curriculum` | `GET`, `PUT` (1) | AccessPolicy `can_view_course`; editors get every status, learners published items with `completed` and `locked` | `publiclms_edit_course` on the course and on any course a section or item is taken from; the body must list every current section and item (409 otherwise) |
+| `sections` | `POST /sections`, `PATCH`, `DELETE /sections/{id}` (1) | via curriculum | `publiclms_edit_course` on the section's course |
+| `lessons` | `GET`, `PATCH`, `DELETE /lessons/{id}`, `POST /lessons` (1) | `can_view_course` on its course; `content` only when `can_access_item` allows | `publiclms_edit_course` on its course, and on the target course of a move |
 | `courses/{id}/enrollments` | `GET`, `POST`, `DELETE /{user_id}` (1) | `publiclms_view_course_reports` (meta) | `publiclms_enroll_student` (meta) |
 | `enrollments/me` | `GET`, `POST` (free enrol) (1) | logged in | logged in + AccessPolicy `can_enroll` |
-| `progress` | `GET /courses/{id}/progress/me`, `POST /items/{id}/complete` (1) | logged in + enrolled | logged in + AccessPolicy `can_access_item` |
+| `progress` | `GET /courses/{id}/progress/me`, `POST /progress` `{item_id, status}` (1) | logged in + enrolled (or can edit the course) | logged in + AccessPolicy `can_access_item` + active enrolment |
+| `students` | `GET /students`, `GET /students/{id}` (1) | `publiclms_view_reports`; all courses with `publiclms_manage_courses`, otherwise the courses the user teaches; `course` filter needs `publiclms_view_course_reports` on it | none |
 | `quizzes/{id}/attempts` | `POST` start, `POST /{attempt}/answers`, `POST /{attempt}/submit` (2) | own attempts; others need `publiclms_view_course_reports` | AccessPolicy `can_attempt_quiz`; rate-limited |
 | `assignments/{id}/submissions` | `GET`, `POST`, `PUT /{id}/grade` (2) | own; others need `publiclms_view_course_reports` | submit: `can_submit_assignment`; grade: `publiclms_edit_course` |
 | `orders` | `GET`, `GET /{id}`, `POST /checkout`, `POST /{id}/refund` (2) | own orders; all need `publiclms_manage_orders` | checkout: logged in or guest with email; refund: `publiclms_manage_order` |
 | `webhooks/{gateway}` | `POST` (2) | none | signature verified server-side; no cookie auth |
 | `reports` | `GET /courses/{id}`, `GET /site` (2) | `publiclms_view_course_reports` (meta; site-wide needs `publiclms_manage_courses` too) | none |
 | `certificates/{course_id}` | `GET` PDF (2) | AccessPolicy `can_view_certificate` | none |
+
+The phase 0 draft named the completion route `POST /items/{id}/complete`; phase 1 ships `POST /progress` with
+`status` `completed` or `incomplete`, so undoing a completion needs no second route.
 
 Capability holders by default:
 
@@ -178,6 +188,10 @@ Meta capabilities (resolved in `Capabilities::map_meta_cap()`):
 | `publiclms_manage_order` | order ID | n/a | `publiclms_manage_orders` |
 
 "Teaches" means post author, or co-instructor through the `publiclms_user_teaches_course` filter (Pro).
+
+`edit_post` and `delete_post` on a section, lesson, quiz or assignment that belongs to a course resolve to
+`publiclms_edit_own_course` for whoever teaches that course and to `publiclms_manage_courses` for everyone
+else, whoever authored the item (ADR-025). Items outside any course keep WordPress's author mapping.
 
 ## 5. Block list (draft, frozen at the gate)
 
@@ -424,3 +438,34 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   `enrolled_count:{course}`, `progress_items:{user}:{course}` and `course_progress:user:{id}`, all cleared by
   the repository that writes them.
 - **Events.** Enrolment, item completion and course completion append to `plms_events` for phase 2 reports.
+
+### ADR-030 Cursor pagination for sorted lists
+- **Context.** ADR-006 and §4 call for keyset pagination. Keyset on the ID alone cannot serve the admin's
+  lists, which sort by title, date, name or enrolment date.
+- **Decision.** Lists sorted by ID keep `after`. Lists with other sort orders (`/courses`, `/students`) take
+  an opaque `cursor`: base64url JSON of the last row's sort value and ID. The query continues with
+  `(sort > v) OR (sort = v AND id > i)`, so pages are stable while rows are added. `X-WP-Total` is computed
+  with a separate count query; there are no page numbers. The admin app keeps the cursors of the pages it
+  has seen and offers "next" only when the server sent a cursor.
+- **Consequences.** No `OFFSET` scans on large tables; a client cannot jump to page 40 directly.
+
+### ADR-031 Gate item content at `the_content`, not only in blocks
+- **Context.** Lessons are public post types on `wp/v2`, in feeds and in oEmbed, and a theme may render a
+  lesson with core Post Content instead of `publiclms/lesson-content`.
+- **Decision.** `Access\ContentGate` filters `the_content` at priority 0 for lessons, quizzes and
+  assignments: when `AccessPolicy::can_access_item()` denies, the content is replaced by a notice before any
+  block renders. Generated excerpts of locked items are emptied after `wp_trim_excerpt()`; hand-written
+  excerpts stay public. Lesson pages and the dashboard page define `DONOTCACHEPAGE`.
+- **Consequences.** No path leaks locked content, whatever the template. Raw content is still visible in
+  `context=edit`, which needs `edit_post`.
+
+### ADR-032 Services own the side effects of enrolment and progress
+- **Decision.** `Services\EnrollmentService` and `Services\ProgressService` sit between REST (and the
+  no-JavaScript `admin-post.php?action=publiclms_enroll` handler) and the repositories. They check the access
+  policy, write the rows, refresh the course aggregate, append events and fire `publiclms_enrolled`,
+  `publiclms_unenrolled`, `publiclms_item_completed` and `publiclms_course_completed`, each exactly once.
+  `Courses\CourseFields` computes every learner-facing course value (price, duration, counts, enrol state)
+  for REST, blocks and the bindings source, so they never disagree.
+- **Consequences.** Progress needs an active enrolment even for free previews and for teachers previewing
+  their own course; summaries are computed from the cached structure, so they reflect lessons added since
+  the stored aggregate was written.

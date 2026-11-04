@@ -8,6 +8,9 @@
 namespace PublicLMS\Core;
 
 use PublicLMS\Access\AccessPolicy;
+use PublicLMS\Access\ContentGate;
+use PublicLMS\Courses\CourseFields;
+use PublicLMS\Frontend\EnrollmentHandler;
 use PublicLMS\Capabilities\Capabilities;
 use PublicLMS\Licensing\LicenseProvider;
 use PublicLMS\Licensing\NullLicenseProvider;
@@ -20,6 +23,8 @@ use PublicLMS\Repositories\EventRepository;
 use PublicLMS\Repositories\EventRepositoryInterface;
 use PublicLMS\Repositories\ProgressRepository;
 use PublicLMS\Rest\Api;
+use PublicLMS\Services\EnrollmentService;
+use PublicLMS\Services\ProgressService;
 use PublicLMS\Taxonomies\Taxonomies;
 use PublicLMS\Templates\TemplateRegistrar;
 
@@ -103,6 +108,8 @@ final class Plugin {
 
 		$this->container->get( Meta::class )->register();
 		$this->container->get( CourseStructureRepository::class )->register();
+		$this->container->get( ContentGate::class )->register();
+		$this->container->get( EnrollmentHandler::class )->register();
 
 		$this->container->get( Capabilities::class )->register();
 		$this->container->get( TemplateRegistrar::class )->register();
@@ -183,14 +190,64 @@ final class Plugin {
 		);
 		$c->set(
 			Capabilities::class,
-			static function () {
-				return new Capabilities();
+			static function ( Container $container ) {
+				return new Capabilities( $container->get( CourseStructureRepositoryInterface::class ) );
 			}
 		);
 		$c->set(
 			AccessPolicy::class,
-			static function () {
-				return new AccessPolicy();
+			static function ( Container $container ) {
+				return new AccessPolicy(
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( EnrollmentRepository::class )
+				);
+			}
+		);
+		$c->set(
+			EnrollmentService::class,
+			static function ( Container $container ) {
+				return new EnrollmentService(
+					$container->get( EnrollmentRepository::class ),
+					$container->get( ProgressRepository::class ),
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( EventRepositoryInterface::class ),
+					$container->get( AccessPolicy::class )
+				);
+			}
+		);
+		$c->set(
+			ProgressService::class,
+			static function ( Container $container ) {
+				return new ProgressService(
+					$container->get( ProgressRepository::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( EventRepositoryInterface::class ),
+					$container->get( AccessPolicy::class )
+				);
+			}
+		);
+		$c->set(
+			CourseFields::class,
+			static function ( Container $container ) {
+				return new CourseFields(
+					$container->get( CourseStructureRepositoryInterface::class ),
+					$container->get( EnrollmentRepository::class ),
+					$container->get( ProgressService::class ),
+					$container->get( AccessPolicy::class )
+				);
+			}
+		);
+		$c->set(
+			ContentGate::class,
+			static function ( Container $container ) {
+				return new ContentGate( $container->get( AccessPolicy::class ) );
+			}
+		);
+		$c->set(
+			EnrollmentHandler::class,
+			static function ( Container $container ) {
+				return new EnrollmentHandler( $container->get( EnrollmentService::class ), $container->get( CourseFields::class ) );
 			}
 		);
 		$c->set(

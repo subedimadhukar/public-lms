@@ -8,6 +8,7 @@
 namespace PublicLMS\Capabilities;
 
 use PublicLMS\PostTypes\PostTypes;
+use PublicLMS\Repositories\CourseStructureRepositoryInterface;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -59,6 +60,23 @@ final class Capabilities {
 
 	/** Meta capability: manage one order. Argument: order ID. */
 	const META_MANAGE_ORDER = 'publiclms_manage_order';
+
+	/**
+	 * Course structure, used to find the course a section or item belongs to.
+	 *
+	 * @var CourseStructureRepositoryInterface|null
+	 */
+	private $structure;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param CourseStructureRepositoryInterface|null $structure Course structure; without it sections and
+	 *                                                           items follow WordPress's author mapping.
+	 */
+	public function __construct( ?CourseStructureRepositoryInterface $structure = null ) {
+		$this->structure = $structure;
+	}
 
 	/**
 	 * Hooks the meta-capability map.
@@ -116,9 +134,37 @@ final class Capabilities {
 
 			case self::META_MANAGE_ORDER:
 				return array( self::MANAGE_ORDERS );
+
+			case 'edit_post':
+			case 'delete_post':
+				$course_id = $this->course_of_structure_post( $object_id );
+				if ( $course_id > 0 ) {
+					// ADR-025: a section or item belongs to whoever teaches its course.
+					return $this->user_teaches_course( $user_id, $course_id )
+						? array( self::EDIT_OWN_COURSE )
+						: array( self::MANAGE_COURSES );
+				}
+				break;
 		}
 
 		return $caps;
+	}
+
+	/**
+	 * Returns the course of a section, lesson, quiz or assignment, or 0 for anything else.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return int
+	 */
+	private function course_of_structure_post( int $post_id ): int {
+		if ( null === $this->structure || $post_id <= 0 ) {
+			return 0;
+		}
+		$type = get_post_type( $post_id );
+		if ( ! in_array( $type, array( PostTypes::SECTION, PostTypes::LESSON, PostTypes::QUIZ, PostTypes::ASSIGNMENT ), true ) ) {
+			return 0;
+		}
+		return $this->structure->course_id_for( $post_id );
 	}
 
 	/**

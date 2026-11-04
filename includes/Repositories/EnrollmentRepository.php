@@ -401,6 +401,35 @@ class EnrollmentRepository extends AbstractRepository implements EnrollmentRepos
 	}
 
 	/**
+	 * Counts the learners students() would list across all pages.
+	 *
+	 * @param array<int, int>|null $course_ids Limit to these courses; null for every course.
+	 * @param string               $search     Matches display name, email or login.
+	 * @param string               $status     Enrolment status to count.
+	 * @return int
+	 */
+	public function count_students( ?array $course_ids, string $search = '', string $status = self::STATUS_ACTIVE ): int {
+		if ( is_array( $course_ids ) && empty( $course_ids ) ) {
+			return 0;
+		}
+		$where = array( 'e.status = %s' );
+		$args  = array( $this->table(), $this->db->users, $status );
+		if ( is_array( $course_ids ) ) {
+			$course_ids = array_values( array_unique( array_map( 'intval', $course_ids ) ) );
+			$where[]    = 'e.course_id IN (' . implode( ', ', array_fill( 0, count( $course_ids ), '%d' ) ) . ')';
+			$args       = array_merge( $args, $course_ids );
+		}
+		if ( '' !== $search ) {
+			$like    = '%' . $this->db->esc_like( $search ) . '%';
+			$where[] = '(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
+			array_push( $args, $like, $like, $like );
+		}
+		$sql = 'SELECT COUNT(DISTINCT e.user_id) FROM %i e INNER JOIN %i u ON u.ID = e.user_id WHERE ' . implode( ' AND ', $where );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Custom table; every value is a placeholder.
+		return (int) $this->db->get_var( $this->db->prepare( $sql, $args ) );
+	}
+
+	/**
 	 * Returns every enrolment of a user keyed by course ID, cached.
 	 *
 	 * @param int $user_id User ID.

@@ -204,6 +204,7 @@ class EnrollmentRepositoryTest extends TestCase {
 
 	/**
 	 * @covers ::students
+	 * @covers ::count_students
 	 */
 	public function test_students_lists_one_row_per_learner_with_search_scope_and_cursor() {
 		$a      = $this->create_course();
@@ -242,6 +243,10 @@ class EnrollmentRepositoryTest extends TestCase {
 
 		$this->assertSame( array( $chen ), wp_list_pluck( $this->repo->students( null, 'chen@' ), 'user_id' ) );
 		$this->assertSame( array(), $this->repo->students( array() ) );
+		$this->assertSame( 3, $this->repo->count_students( null ) );
+		$this->assertSame( 2, $this->repo->count_students( array( $a ) ) );
+		$this->assertSame( 1, $this->repo->count_students( null, 'Thapa' ) );
+		$this->assertSame( 0, $this->repo->count_students( array() ) );
 
 		$first  = $this->repo->students( null, '', 'name', 'desc', null, 1 );
 		$second = $this->repo->students( null, '', 'name', 'desc', array( $first[0]['display_name'], $first[0]['user_id'] ), 2 );

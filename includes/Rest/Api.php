@@ -7,7 +7,13 @@
 
 namespace PublicLMS\Rest;
 
+use PublicLMS\Access\AccessPolicy;
 use PublicLMS\Core\Container;
+use PublicLMS\Courses\CourseFields;
+use PublicLMS\Repositories\CourseStructureRepositoryInterface;
+use PublicLMS\Repositories\EnrollmentRepository;
+use PublicLMS\Services\EnrollmentService;
+use PublicLMS\Services\ProgressService;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -58,8 +64,21 @@ final class Api {
 	 * @return array<int, \WP_REST_Controller>
 	 */
 	public function controllers(): array {
+		$c           = $this->container;
+		$structure   = $c->get( CourseStructureRepositoryInterface::class );
+		$enrollments = $c->get( EnrollmentRepository::class );
+		$policy      = $c->get( AccessPolicy::class );
+		$progress    = $c->get( ProgressService::class );
+		$fields      = $c->get( CourseFields::class );
+
 		$controllers = array(
 			new HealthController(),
+			new CoursesController( $structure, $enrollments, $policy, $progress, $fields ),
+			new SectionsController( $structure ),
+			new LessonsController( $structure, $policy, $progress ),
+			new EnrollmentsController( $enrollments, $c->get( EnrollmentService::class ), $progress, $fields ),
+			new ProgressController( $progress, $enrollments, $policy ),
+			new StudentsController( $enrollments, $progress ),
 		);
 
 		/**
