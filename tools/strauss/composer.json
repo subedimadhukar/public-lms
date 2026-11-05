@@ -1,11 +1,14 @@
 {
 	"name": "wpinterface/public-lms-strauss",
-	"description": "Strauss, installed apart from the plugin because it needs PHP 8. Used by bin/prefix-vendor.sh.",
+	"description": "Strauss, installed apart from the plugin because it needs PHP 8. Used by bin/prefix-vendor.sh. Locked against PHP 8.2 so CI (8.3) and contributors on PHP 8.2+ can install it.",
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"brianhenryie/strauss": "^0.31"
 	},
 	"config": {
+		"platform": {
+			"php": "8.2.0"
+		},
 		"sort-packages": true
 	}
 }
