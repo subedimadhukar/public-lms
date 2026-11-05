@@ -6,6 +6,7 @@ Requirements: PHP 7.4+ (8.3 recommended for tooling), Composer 2, Node 24 (see `
 
 ```bash
 composer install
+composer prefix            # builds vendor-prefixed/ (mPDF for certificates); needs PHP 8
 nvm use && npm install
 npm run env:start          # wp-env on http://localhost:8888 (admin / password); maps ../../themes/campusinterface
 npm run test:php           # PHPUnit inside wp-env
@@ -19,8 +20,8 @@ WP_BASE_URL=http://localhost:8889 npm run test:e2e  # Playwright against the wp-
 bin/timing-check.sh http://localhost:8888/lessons/<slug>/  # time to first byte, median and slowest
 ```
 
-mPDF (certificates) ships prefixed in the `vendor-prefixed/` folder, which `bin/prefix-vendor.sh` builds
-(needs PHP 8 and Composer 2): it installs Strauss in `tools/strauss`, prefixes mPDF 8.3.1 from
+mPDF (certificates) ships prefixed in the `vendor-prefixed/` folder. It is not committed: `composer prefix`
+(`bin/prefix-vendor.sh`, needs PHP 8 and Composer 2) builds it for development, CI and release zips. It installs Strauss in `tools/strauss`, prefixes mPDF 8.3.1 from
 `tools/prefix/composer.json`, applies `bin/patch-mpdf.php` (OpenType structures current Noto fonts use) and
 trims mPDF's fonts (ADR-052). To update mPDF, change its version there, run the script, and check that every
 patch still applies; then render the certificate test matrix (`CertificateFontsTest`) and look at a
@@ -86,7 +87,10 @@ the contracts follow the contract change rule regardless.
 3. Update `Tested up to`, the changelog and the upgrade notice in `readme.txt`.
 4. Regenerate the POT file: `wp i18n make-pot . languages/public-lms.pot --slug=public-lms --domain=public-lms --exclude=node_modules,vendor,build,tests`.
 5. CI green, including the upgrade test from the previous release.
-6. Tag `vx.y.z` on `main` after merging; the build workflow attaches `public-lms.zip`.
+6. Tag `vx.y.z` on `main` after merging and publish a GitHub release for the tag; the build workflow attaches
+   `public-lms.zip`, which the Playground blueprint (`playground.json`) installs from the latest release.
+   To build the zip locally: `composer prefix && composer install --no-dev && npm ci && npm run build &&
+   npm run plugin-zip`.
 7. Deploy to wordpress.org SVN (from phase 2, once the plugin is approved) and publish release notes.
 8. Record the CampusInterface version the release was tested with in the release notes.
 

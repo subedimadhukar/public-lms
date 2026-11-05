@@ -21,7 +21,8 @@ Thumbs.db
 # Playwright
 /artifacts/
 
-# Prefixing tools (bin/prefix-vendor.sh); vendor-prefixed/ itself is committed
+# Prefixed mPDF and the tools that build it (`composer prefix`, ADR-053); release zips and CI build it
+/vendor-prefixed/
 /tools/strauss/vendor/
 /tools/prefix/packages/
 /tools/prefix/vendor-prefixed/

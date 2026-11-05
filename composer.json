@@ -11,8 +11,8 @@
 		}
 	],
 	"support": {
-		"issues": "https://github.com/wpinterface/public-lms/issues",
-		"source": "https://github.com/wpinterface/public-lms"
+		"issues": "https://github.com/subedimadhukar/public-lms/issues",
+		"source": "https://github.com/subedimadhukar/public-lms"
 	},
 	"require": {
 		"php": ">=7.4",
@@ -49,6 +49,10 @@
 		}
 	},
 	"scripts": {
+		"prefix": [
+			"Composer\\Config::disableProcessTimeout",
+			"bash bin/prefix-vendor.sh"
+		],
 		"lint": "phpcs",
 		"lint:fix": "phpcbf",
 		"analyse": "phpstan analyse --memory-limit=1G",
@@ -59,6 +63,7 @@
 		]
 	},
 	"scripts-descriptions": {
+		"prefix": "Build vendor-prefixed/: mPDF prefixed with Strauss, patched and trimmed (needs PHP 8; ADR-052, ADR-053).",
 		"lint": "Check PHP against the WordPress coding standards and PHP 7.4 compatibility.",
 		"lint:fix": "Fix what PHPCS can fix automatically.",
 		"analyse": "Run PHPStan at level 6.",

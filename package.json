@@ -15,10 +15,10 @@
 	"homepage": "https://wpinterface.com/plugins/public-lms/",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/wpinterface/public-lms.git"
+		"url": "https://github.com/subedimadhukar/public-lms.git"
 	},
 	"bugs": {
-		"url": "https://github.com/wpinterface/public-lms/issues"
+		"url": "https://github.com/subedimadhukar/public-lms/issues"
 	},
 	"engines": {
 		"node": "^22.22.2 || >=24.15.0",

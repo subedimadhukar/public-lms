@@ -28,11 +28,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The runner's PHP only installs tools; PHPUnit runs in wp-env on matrix.php.
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.3'
           coverage: none
           tools: composer:v2
+
+      # vendor-prefixed/ (mPDF for certificates) is built, not committed: Strauss
+      # needs PHP 8, so the runner is on 8.3 whatever PHP the tests use.
+      - name: Build vendor-prefixed
+        run: composer prefix
 
       - uses: ramsey/composer-install@v3
 
@@ -75,6 +81,11 @@ jobs:
           php-version: '8.3'
           coverage: none
           tools: composer:v2
+
+      # vendor-prefixed/ (mPDF for certificates) is built, not committed: Strauss
+      # needs PHP 8, so the runner is on 8.3 whatever PHP the tests use.
+      - name: Build vendor-prefixed
+        run: composer prefix
 
       - uses: ramsey/composer-install@v3
         with:

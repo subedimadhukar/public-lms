@@ -2,7 +2,7 @@
 	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
 	"meta": {
 		"title": "Public LMS with CampusInterface",
-		"description": "Installs the Public LMS plugin and the CampusInterface theme from their main branches.",
+		"description": "Installs the latest Public LMS release and the CampusInterface theme from its main branch.",
 		"author": "WPInterface",
 		"categories": [
 			"LMS",
@@ -22,11 +22,8 @@
 		{
 			"step": "installPlugin",
 			"pluginData": {
-				"resource": "git:directory",
-				"url": "https://github.com/wpinterface/public-lms",
-				"ref": "main",
-				"refType": "branch",
-				"path": "/"
+				"resource": "url",
+				"url": "https://github.com/subedimadhukar/public-lms/releases/latest/download/public-lms.zip"
 			},
 			"options": {
 				"activate": true,
@@ -37,7 +34,7 @@
 			"step": "installTheme",
 			"themeData": {
 				"resource": "git:directory",
-				"url": "https://github.com/wpinterface/campusinterface",
+				"url": "https://github.com/subedimadhukar/campusinterface",
 				"ref": "main",
 				"refType": "branch",
 				"path": "/"

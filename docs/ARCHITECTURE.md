@@ -70,7 +70,7 @@ public-lms/
 │             interactivity/learning.js (the shared store module)
 ├─ patterns/   templates/   assets/css/tokens.css
 ├─ build/      (gitignored)    languages/   docs/   bin/timing-check.sh   bin/prefix-vendor.sh
-├─ vendor-prefixed/  mPDF under PublicLMS\Vendor (built by bin/prefix-vendor.sh, ADR-052)   tools/  (Strauss and its input)
+├─ vendor-prefixed/  mPDF under PublicLMS\Vendor (built by `composer prefix`, not committed, ADR-053)   tools/  (Strauss and its input)
 ├─ tests/      phpunit/  phpstan/  e2e/
 └─ .github/workflows/  lint.yml  tests.yml (PHPUnit matrix, Playwright)  build.yml
 ```
@@ -1015,3 +1015,27 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   - CJK names print in the viewer's regular weight, not bold, unless the site adds a font.
   - The patches are ours to maintain. A new mPDF release needs the patch script to apply cleanly and the
     spike matrix re-rendered.
+
+### ADR-053 Built, not committed: vendor-prefixed/, release zips and Playground (supersedes "committed" in ADR-044)
+- **Context.** ADR-044 committed `vendor-prefixed/` (9 MB, mostly fonts), so Playground's `git:directory`
+  install and source checkouts worked without a build. That put a third-party library's history in the
+  repository, and a `git:directory` install still lacked `build/` (blocks) and the RTL stylesheets
+  (finding 8). The repository moved to `subedimadhukar/public-lms` and is public (fix plan O7).
+- **Decision.**
+  - `vendor-prefixed/` is gitignored. `composer prefix` runs `bin/prefix-vendor.sh`, which needs PHP 8.
+  - CI builds the folder on a PHP 8.3 runner before PHPUnit, PHPStan, the e2e journey and the zip. PHPUnit
+    still runs on PHP 7.4 and 8.3, inside wp-env.
+  - `build.yml` checks that the zip has the prefixed mPDF, the Noto fonts, `build/` and an `-rtl.css`
+    for every stylesheet, and attaches `public-lms.zip` to each published GitHub release.
+  - `playground.json` installs the plugin from
+    `https://github.com/subedimadhukar/public-lms/releases/latest/download/public-lms.zip` and the theme
+    from `subedimadhukar/campusinterface` (`main`).
+  - GitHub links in `composer.json` and `package.json` move to `subedimadhukar/public-lms`. The Composer
+    package names stay `wpinterface/…`.
+  - The history from the first commit that added `vendor-prefixed/` is rewritten without it, keeping
+    every commit message. The old-to-new hash map is kept outside the repository.
+- **Consequences.**
+  - A source checkout needs `composer prefix` before certificates work. Without it, the Certificate screen
+    and Site Health say the PDF library is missing.
+  - The Playground demo works once a release is published and the theme's `main` carries phase 2.
+  - ADR-022's autoloader fallback still serves source checkouts without `vendor/`.

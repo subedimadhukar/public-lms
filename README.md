@@ -15,7 +15,7 @@ importers and beta hardening are part B of phase 2.
 ## Try the alpha
 
 ```bash
-composer install && npm install && npm run build
+composer install && composer prefix && npm install && npm run build
 npm run env:start
 npx wp-env run cli wp publiclms seed --courses=10
 ```
