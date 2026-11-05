@@ -1,9 +1,9 @@
 {
 	"name": "wpinterface/public-lms-prefixed",
-	"description": "Libraries copied into vendor-prefixed/ under the PublicLMS\\Vendor namespace (ADR-044). Run bin/prefix-vendor.sh after changing a version.",
+	"description": "Libraries copied into vendor-prefixed/ under the PublicLMS\\Vendor namespace (ADR-044, ADR-052). Run bin/prefix-vendor.sh after changing a version.",
 	"license": "GPL-2.0-or-later",
 	"require": {
-		"dompdf/dompdf": "3.1.6"
+		"mpdf/mpdf": "8.3.1"
 	},
 	"config": {
 		"platform": {
@@ -19,8 +19,13 @@
 			"classmap_prefix": "PublicLMS_Vendor_",
 			"constant_prefix": "PUBLICLMS_VENDOR_",
 			"packages": [
-				"dompdf/dompdf"
+				"mpdf/mpdf"
 			],
+			"exclude_from_copy": {
+				"packages": [
+					"paragonie/random_compat"
+				]
+			},
 			"delete_vendor_packages": false,
 			"delete_vendor_files": false
 		}

@@ -154,8 +154,10 @@ ADR-045 to ADR-051).** Community and instructors, catalogue and migration, and b
   progress; `single-plms_quiz` with `quiz-header` and `quiz-runner`; a Quiz results dashboard tab (ADR-042).
 - ✓ Assignments with private file uploads served only through a permission-checked route, grading with
   feedback, and the free gradebook with CSV export; `single-plms_assignment` (ADR-043).
-- ✓ One block-built certificate template rendered to PDF with a prefixed Dompdf, issued on completion, with a
-  Certificates dashboard tab; personal data export and erase for every learner table (ADR-044).
+- ✓ One block-built certificate template rendered to PDF with a prefixed, patched mPDF that shapes and orders
+  every script (bundled Noto and DejaVu fonts, then the Font Library's TTF/OTF fonts), issued on completion,
+  with a Certificates dashboard tab; personal data export and erase for every learner table (ADR-044,
+  ADR-052).
 - ✓ Seed courses include quizzes, an assignment and a certificate; PHPUnit for grading, access rules, upload
   permissions and certificate issue; the Playwright journey covers a quiz attempt and a certificate download.
 

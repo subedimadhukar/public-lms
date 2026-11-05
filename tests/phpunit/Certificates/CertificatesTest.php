@@ -90,7 +90,7 @@ class CertificatesTest extends RestTestCase {
 	}
 
 	public function test_learners_download_their_certificate_as_a_pdf() {
-		$this->assertTrue( CertificateRenderer::available(), 'The prefixed Dompdf is installed.' );
+		$this->assertTrue( CertificateRenderer::available(), 'The prefixed mPDF is installed.' );
 		$this->assertSame( 401, $this->request( 'GET', '/certificates/' . $this->fixture['course'] )->get_status() );
 		$this->assertSame( 404, $this->request( 'GET', '/certificates/' . $this->fixture['course'], array(), $this->subscriber )->get_status(), 'Not before completing the course.' );
 

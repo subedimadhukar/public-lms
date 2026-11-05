@@ -18,8 +18,9 @@ defined( 'ABSPATH' ) || exit;
  * (ADR-044). Free has exactly one; Pro adds more and picks one per course.
  *
  * The default uses only headings, paragraphs and a separator with text
- * alignment and helper classes, because Dompdf lays out block flow and
- * tables but not flexbox; the frame and type come from the PDF stylesheet.
+ * alignment and helper classes, because the PDF engine (mPDF) lays out
+ * block flow and tables but not flexbox; the frame and type come from the
+ * PDF stylesheet.
  */
 class CertificateTemplate {
 

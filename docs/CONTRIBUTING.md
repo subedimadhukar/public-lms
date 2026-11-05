@@ -19,10 +19,12 @@ WP_BASE_URL=http://localhost:8889 npm run test:e2e  # Playwright against the wp-
 bin/timing-check.sh http://localhost:8888/lessons/<slug>/  # time to first byte, median and slowest
 ```
 
-Dompdf (certificates) ships prefixed in the committed `vendor-prefixed/` folder. To update it, change the
-version in `tools/prefix/composer.json` and run `bin/prefix-vendor.sh` (needs PHP 8 and Composer 2); it
-installs Strauss in `tools/strauss`, rebuilds the folder and applies two small patches (ADR-044). Then render
-a certificate to check it.
+mPDF (certificates) ships prefixed in the `vendor-prefixed/` folder, which `bin/prefix-vendor.sh` builds
+(needs PHP 8 and Composer 2): it installs Strauss in `tools/strauss`, prefixes mPDF 8.3.1 from
+`tools/prefix/composer.json`, applies `bin/patch-mpdf.php` (OpenType structures current Noto fonts use) and
+trims mPDF's fonts (ADR-052). To update mPDF, change its version there, run the script, and check that every
+patch still applies; then render the certificate test matrix (`CertificateFontsTest`) and look at a
+certificate in each script.
 
 Seeded users share the password `public-lms-demo` unless you pass `--password` or set
 `PUBLICLMS_SEED_PASSWORD`. The e2e spec activates the plugin and Twenty Twenty-Five on the tests site and

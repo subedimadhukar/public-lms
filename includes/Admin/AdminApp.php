@@ -8,7 +8,7 @@
 namespace PublicLMS\Admin;
 
 use PublicLMS\Capabilities\Capabilities;
-use PublicLMS\Certificates\CertificateRenderer;
+use PublicLMS\Certificates\CertificateHealth;
 use PublicLMS\Certificates\CertificateTemplate;
 use PublicLMS\PostTypes\PostTypes;
 use PublicLMS\Taxonomies\Taxonomies;
@@ -132,9 +132,7 @@ final class AdminApp {
 			<h1><?php esc_html_e( 'Certificate', 'public-lms' ); ?></h1>
 			<p><?php esc_html_e( 'Learners receive a certificate when they complete a course, and download it as a PDF from their dashboard. Edit the template in the block editor: paragraphs and headings bound to certificate fields fill in the learner, course, completion date and certificate ID.', 'public-lms' ); ?></p>
 			<p><?php esc_html_e( 'Courses can switch certificates off in their settings in the course builder.', 'public-lms' ); ?></p>
-			<?php if ( ! CertificateRenderer::available() ) : ?>
-				<div class="notice notice-error inline"><p><?php esc_html_e( 'The PDF library is missing from this copy of Public LMS. Reinstall the plugin to create certificates.', 'public-lms' ); ?></p></div>
-			<?php endif; ?>
+			<?php publiclms()->container()->get( CertificateHealth::class )->screen_notices(); ?>
 			<p>
 				<a class="button button-primary" href="<?php echo esc_url( $edit ); ?>"><?php esc_html_e( 'Edit the certificate', 'public-lms' ); ?></a>
 				<a class="button" href="<?php echo esc_url( $preview ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Preview PDF', 'public-lms' ); ?></a>

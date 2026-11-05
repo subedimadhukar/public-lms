@@ -52,7 +52,7 @@ admin passes the REST layer and the single access policy before it reaches a pos
 | Bindings | `publiclms/course-field` source in PHP and JS | Phase 1: every A7 key; `rating` is empty until reviews (phase 2) | ADR-010. |
 | Payments | `Gateway` interface; hosted or redirect flows only | Not started | Phase 2. |
 | Jobs | Action Scheduler ^4.1 via Composer | Loaded when installed | Emails, PDFs, drip, aggregates, renewals, imports. |
-| Certificates | Block-built template rendered to PDF with Dompdf 3.1, prefixed with Strauss into `vendor-prefixed/` | Phase 2: one template, issue on completion, PDF download, dashboard tab (ADR-044) | Multiple templates and the public verification page are Pro. |
+| Certificates | Block-built template rendered to PDF with a patched mPDF 8.3.1, prefixed with Strauss into `vendor-prefixed/`; a font per script from bundled Noto and DejaVu, the Font Library and a filter | Phase 2: one template, issue on completion, PDF download, dashboard tab, every script (ADR-044, ADR-052) | Multiple templates and the public verification page are Pro. |
 | Privacy | `Privacy\PersonalData` | Phase 2: exporters and erasers for every learner table (ADR-044) | Orders are kept with personal details removed. |
 
 ### Folder layout
@@ -70,7 +70,7 @@ public-lms/
 │             interactivity/learning.js (the shared store module)
 ├─ patterns/   templates/   assets/css/tokens.css
 ├─ build/      (gitignored)    languages/   docs/   bin/timing-check.sh   bin/prefix-vendor.sh
-├─ vendor-prefixed/  Dompdf under PublicLMS\Vendor (committed, ADR-044)   tools/  (Strauss and its input)
+├─ vendor-prefixed/  mPDF under PublicLMS\Vendor (built by bin/prefix-vendor.sh, ADR-052)   tools/  (Strauss and its input)
 ├─ tests/      phpunit/  phpstan/  e2e/
 └─ .github/workflows/  lint.yml  tests.yml (PHPUnit matrix, Playwright)  build.yml
 ```
@@ -334,6 +334,7 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
 - **Consequences.** Emails, PDFs, drip releases, aggregates and imports never block a request.
 
 ### ADR-013 Certificates rendered with Dompdf behind a prefixed namespace
+- **Status.** Superseded: Strauss replaced PHP-Scoper (ADR-044), and mPDF replaced Dompdf (ADR-052).
 - **Decision.** Certificate templates are built with blocks and bindings and rendered with Dompdf, scoped
   with PHP-Scoper to avoid clashes. TCPDF is deprecated; its successor needs PHP 8.2.
 - **Consequences.** A build step for scoping arrives with certificates in phase 2.
@@ -739,7 +740,7 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   progress summary, one cached query per learner per page. Replaced hand-ins keep their files until the
   learner's data is erased.
 
-### ADR-044 Certificates with a prefixed Dompdf, and personal data tools
+### ADR-044 Certificates with a prefixed Dompdf, and personal data tools (Dompdf superseded by ADR-052)
 - **Context.** PRD §3: one block-built certificate template rendered to PDF in free; multiple templates
   and a public verification page are Pro. ADR-013 planned Dompdf behind PHP-Scoper. PRD §6 and ADR-001
   require GDPR export and erase for every learner table.
@@ -946,3 +947,71 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   block checkout, cash on delivery) enrolled the buyer and noted it on the order. Public LMS is listed as
   compatible with the order tables.
 
+
+### ADR-052 Certificates with a patched mPDF and fonts for every script (supersedes the Dompdf part of ADR-044)
+- **Context.** The audience is global, so a certificate must print any learner's name. Dompdf (ADR-044) has
+  no OpenType shaping or bidi: Arabic letters print unjoined, Hebrew and Arabic print left to right, and
+  Indic conjuncts and vowel signs print wrong, whatever font is added. mPDF 8.3.1 shapes with each
+  font's OpenType tables and runs the Unicode bidi algorithm, and supports PHP 7.4 to 8.5. The owner
+  approved mPDF and six Noto Sans families (Arabic, Hebrew, Devanagari, Bengali, Tamil, Thai) within
+  2 MB zipped, without a Dompdf fallback (fix plan O1–O3). The spike found that mPDF's font reader
+  rejects five of the six current Noto builds, and the owner chose to patch mPDF and keep Noto.
+- **Decision (engine).** `CertificateRenderer` renders the same block template and print stylesheet with
+  mPDF 8.3.1, prefixed by Strauss under `PublicLMS\Vendor` like Dompdf was. Dompdf is removed.
+  `bin/prefix-vendor.sh` runs Strauss (with a 1 GB memory limit, for mPDF's 27,000-line main class), then
+  `bin/patch-mpdf.php`, then trims mPDF's fonts to DejaVu Sans and Serif, regular and bold, and drops its
+  index collations. The patch script applies 12 changes, and each must match exactly once, so an mPDF
+  update cannot drop one silently:
+  - GSUB lookup type 5 format 3 (coverage-based context) is read and applied as 6.3 without context.
+  - GDEF mark filtering sets are read at their real offset and stored as the marks to ignore. The
+    "no set" check is strict, because set 0 == '' on PHP 7.
+  - Nested contextual lookups and contextual `locl` rules no longer crash the reader (a Bengali
+    TypeError on PHP 8).
+  - Arabic joining forms that are one-to-many substitutions are inserted as several glyphs. Noto draws
+    Farsi yeh and kaf as a dotless body plus a dots mark, which mPDF had read as one code point, leaving a
+    blank.
+  - WebP images on a server without GD are left out; before, that one unguarded GD call was a fatal
+    error for the whole certificate.
+  mPDF gets no network: its HTTP client refuses every request (`Certificates\Pdf\NoNetwork`). Its file
+  reader opens only files under the uploads folder and the plugin (`Certificates\Pdf\LocalFiles`), as
+  Dompdf's chroot did. Font caches live in a per-site, per-version folder in the temp dir, so a new
+  version re-reads fonts with its patches. A4 landscape. The `<html>` element has `dir` but no `lang`,
+  because mPDF would give the whole page that language's font, and a font for one script often lacks
+  Latin. `publiclms_certificate_pdf_options` now filters mPDF's configuration array.
+- **Decision (fonts).** `CertificateFonts` reads each font's character map (`FontCoverage`, which accepts
+  TrueType outlines only: no CFF OpenType, collections or WOFF). For every script in the text, it picks
+  the first font that has a glyph for each of that script's characters, in this order:
+  1. the bundled fonts: the script's Noto Sans (`assets/fonts/noto/`, 12 unhinted TTFs and their OFL
+     licences, 0.49 MB zipped), then DejaVu Sans, which also covers Latin, Greek, Cyrillic, Armenian and
+     Georgian;
+  2. the Font Library's faces stored as TTF, or OTF with TrueType outlines (`wp_font_face`; WOFF and WOFF2
+     cannot be embedded);
+  3. the `publiclms_certificate_fonts` filter, which receives the Font Library list and can append or
+     prepend.
+  mPDF tags each run of non-Latin text with a language (`autoScriptToLang`, with its Arabic detection of
+  Persian, Urdu, Pashto and Sindhi). `Certificates\Pdf\LanguageToFont` answers each tag with the font
+  chosen for that script, matching case-insensitively because mPDF lowercases tags. Chinese, Japanese and
+  Korean with no site font fall back to mPDF's Adobe CJK fonts, which embed nothing and are drawn by the
+  reader's PDF viewer: Han is drawn as Japanese when the text has kana, otherwise as Chinese.
+- **Decision (reporting).** `CertificateHealth` adds a Site Health test and the Certificate screen's
+  notices:
+  - **Critical:** the library or mbstring is missing.
+  - **Recommended:** GD is missing. Text still prints, but some images are left out: PNG with
+    transparency, GIF and WebP.
+  - **Recommended:** a script with no font, named (for example "Sinhala"), with how to add a font for it.
+    The scan covers the names and titles certificates print, or will print: issued certificates, enrolled
+    learners' display names, published course titles, the site name and the template.
+  - **Noted, still good:** scripts left to the viewer's CJK fonts.
+- **Consequences.**
+  - Every seeded name renders correctly as a PDF: Arabic, Devanagari, Chinese, Japanese, Korean,
+    Cyrillic and Latin.
+  - The spike matrix renders correctly in regular and bold for 17 rows: Latin, Cyrillic, Greek, Arabic,
+    Persian, Urdu, Hebrew, Devanagari, Bengali, Tamil, Thai, CJK and a mixed bidi sentence.
+  - A certificate takes 0.02–0.25 s once fonts are cached, and the first use of a font builds its cache.
+  - Fonts in the zip are 1.6 MB zipped (Noto 0.49 MB, DejaVu 1.12 MB).
+  - mPDF is GPL-2.0-only, so a copy distributed with it is under GPL 2.0, which the plugin's
+    "GPLv2 or later" allows. Noto is OFL 1.1, and DejaVu uses the Bitstream Vera licence; both licence
+    files ship.
+  - CJK names print in the viewer's regular weight, not bold, unless the site adds a font.
+  - The patches are ours to maintain. A new mPDF release needs the patch script to apply cleanly and the
+    spike matrix re-rendered.

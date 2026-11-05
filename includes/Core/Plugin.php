@@ -37,6 +37,8 @@ use PublicLMS\Files\PrivateFilesCheck;
 use PublicLMS\Services\AssignmentService;
 use PublicLMS\Services\Gradebook;
 use PublicLMS\Certificates\CertificateFields;
+use PublicLMS\Certificates\CertificateFonts;
+use PublicLMS\Certificates\CertificateHealth;
 use PublicLMS\Certificates\CertificateRenderer;
 use PublicLMS\Certificates\CertificateService;
 use PublicLMS\Certificates\CertificateTemplate;
@@ -148,6 +150,7 @@ final class Plugin {
 		$this->container->get( PersonalData::class )->register();
 		CommerceServices::boot( $this->container );
 		$this->container->get( PrivateFilesCheck::class )->register();
+		$this->container->get( CertificateHealth::class )->register();
 		if ( is_admin() ) {
 			$this->container->get( AdminApp::class )->register();
 		}
@@ -291,9 +294,22 @@ final class Plugin {
 			}
 		);
 		$c->set(
+			CertificateFonts::class,
+			static function () {
+				return new CertificateFonts();
+			}
+		);
+		$c->set(
 			CertificateRenderer::class,
 			static function ( Container $container ) {
-				return new CertificateRenderer( $container->get( CertificateTemplate::class ) );
+				return new CertificateRenderer( $container->get( CertificateTemplate::class ), $container->get( CertificateFonts::class ) );
+			}
+		);
+		$c->set(
+			CertificateHealth::class,
+			static function ( Container $container ) {
+				global $wpdb;
+				return new CertificateHealth( $container->get( CertificateFonts::class ), $container->get( CertificateTemplate::class ), $wpdb );
 			}
 		);
 		$c->set(
