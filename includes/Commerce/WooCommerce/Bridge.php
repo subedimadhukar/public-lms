@@ -7,6 +7,7 @@
 
 namespace PublicLMS\Commerce\WooCommerce;
 
+use PublicLMS\Capabilities\Capabilities;
 use PublicLMS\Commerce\Customers;
 use PublicLMS\PostTypes\Meta;
 use PublicLMS\PostTypes\PostTypes;
@@ -110,6 +111,10 @@ final class Bridge {
 	 */
 	public function register(): void {
 		add_action( 'before_woocommerce_init', array( $this, 'declare_compatibility' ) );
+		// WooCommerce sends users without edit_posts from wp-admin to My account and hides their
+		// toolbar, bridge on or off. Instructors and course managers work in wp-admin (ADR-051).
+		add_filter( 'woocommerce_prevent_admin_access', array( $this, 'keep_staff_in_admin' ) );
+		add_filter( 'woocommerce_disable_admin_bar', array( $this, 'keep_staff_toolbar' ) );
 		if ( ! self::enabled() ) {
 			return;
 		}
@@ -122,6 +127,43 @@ final class Bridge {
 		add_filter( 'publiclms_purchase_url', array( $this, 'purchase_url' ), 10, 2 );
 		add_filter( 'publiclms_course_price_label', array( $this, 'price_label' ), 10, 2 );
 		add_filter( 'publiclms_course_purchasable', array( $this, 'purchasable' ), 10, 2 );
+	}
+
+	/**
+	 * Whether the current user is Public LMS staff: holds any of its capabilities (instructors,
+	 * course managers, administrators). Students hold none.
+	 *
+	 * @return bool
+	 */
+	public static function current_user_is_staff(): bool {
+		foreach ( Capabilities::ALL as $capability ) {
+			if ( current_user_can( $capability ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Lets Public LMS staff into wp-admin, which WooCommerce otherwise closes to users without
+	 * edit_posts. Everyone else keeps WooCommerce's answer.
+	 *
+	 * @param bool $prevent Whether WooCommerce would redirect the user to My account.
+	 * @return bool
+	 */
+	public function keep_staff_in_admin( $prevent ): bool {
+		return self::current_user_is_staff() ? false : (bool) $prevent;
+	}
+
+	/**
+	 * Keeps the toolbar for Public LMS staff, which WooCommerce otherwise hides from users without
+	 * edit_posts. Everyone else keeps WooCommerce's answer.
+	 *
+	 * @param bool $disable Whether WooCommerce hides the toolbar.
+	 * @return bool
+	 */
+	public function keep_staff_toolbar( $disable ): bool {
+		return self::current_user_is_staff() ? false : (bool) $disable;
 	}
 
 	/**

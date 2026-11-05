@@ -938,6 +938,11 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   plugin declares compatibility with WooCommerce's order tables (HPOS).
   Saving a product that gives courses makes it "sold individually", so the cart has no quantity field and
   refuses a second copy.
+  WooCommerce sends users without `edit_posts` from wp-admin to My account, and hides their toolbar,
+  whether the bridge is on or off. Instructors and course managers have no `edit_posts`, so the bridge
+  answers `woocommerce_prevent_admin_access` and `woocommerce_disable_admin_bar` with false for anyone
+  holding a Public LMS capability. Students and every other role keep WooCommerce's answer. This was
+  chosen over granting `view_admin_dashboard`, which would widen the roles everywhere.
 - **Consequences.** Partial WooCommerce refunds keep access, like native ones. Verified against
   WooCommerce 11.2.1 on the dev site (2026-11-05), with both order storages (HPOS and posts): the product
   field links and unlinks; a linked course's Buy button adds the product to the cart and shows

@@ -7,6 +7,7 @@
 
 namespace PublicLMS\Tests\Commerce;
 
+use PublicLMS\Capabilities\Roles;
 use PublicLMS\Commerce\WooCommerce\Bridge;
 use PublicLMS\Services\EnrollmentService;
 
@@ -47,6 +48,26 @@ class WooCommerceBridgeTest extends CommerceTestCase {
 			)
 		);
 		$this->bridge->link( $this->product, $this->courses );
+	}
+
+	public function test_staff_keep_wp_admin_and_the_toolbar_that_woocommerce_closes() {
+		$this->assertSame( 10, has_filter( 'woocommerce_prevent_admin_access', array( $this->bridge, 'keep_staff_in_admin' ) ), 'Hooked with the bridge switched off too.' );
+		$this->assertSame( 10, has_filter( 'woocommerce_disable_admin_bar', array( $this->bridge, 'keep_staff_toolbar' ) ) );
+
+		$cases = array(
+			Roles::INSTRUCTOR => false,
+			Roles::MANAGER    => false,
+			Roles::STUDENT    => true,
+			'subscriber'      => true,
+		);
+		// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own filters, applied as WooCommerce does.
+		foreach ( $cases as $role => $woocommerce_decides ) {
+			wp_set_current_user( self::factory()->user->create( array( 'role' => $role ) ) );
+			$this->assertSame( $woocommerce_decides, apply_filters( 'woocommerce_prevent_admin_access', true ), "$role: WooCommerce's redirect to My account." );
+			$this->assertSame( $woocommerce_decides, apply_filters( 'woocommerce_disable_admin_bar', true ), "$role: WooCommerce hiding the toolbar." );
+		}
+		$this->assertFalse( apply_filters( 'woocommerce_prevent_admin_access', false ), 'A false from WooCommerce stays false.' );
+		// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 	}
 
 	public function test_link_records_both_directions_and_unlinks() {
