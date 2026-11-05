@@ -13,4 +13,4 @@ Each family is the unhinted Regular and Bold TTF from its release on github.com/
 | Noto Sans Tamil | 2.004 |
 | Noto Sans Thai | 2.002 |
 
-All are licensed under the SIL Open Font License 1.1; each family's licence is next to it (`OFL-*.txt`). mPDF reads them only with the patches in `bin/patch-mpdf.php`.
+All are licensed under the SIL Open Font License 1.1; each family's licence is next to it (`OFL-*.txt`). mPDF 8.3.1 reads them only with `tools/prefix/mpdf-8.3.1-publiclms.patch` applied.

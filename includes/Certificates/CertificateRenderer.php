@@ -106,19 +106,41 @@ class CertificateRenderer {
 	 * @throws RuntimeException When the PDF library is missing or fails.
 	 */
 	public function pdf( array $certificate ): string {
+		$html = $this->html( $certificate );
+		$mpdf = $this->engine( $html, $certificate );
+		try {
+			$mpdf->SetTitle( (string) $certificate['course_title'] );
+			$mpdf->SetCreator( 'Public LMS' );
+			$mpdf->WriteHTML( $html );
+			return (string) $mpdf->Output( '', Destination::STRING_RETURN );
+		} catch ( Throwable $error ) {
+			throw new RuntimeException( 'The certificate PDF could not be made: ' . $error->getMessage(), 0, $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Never printed; the REST controller answers with its own message.
+		}
+	}
+
+	/**
+	 * Returns mPDF set up for a document: fonts chosen for the scripts in its
+	 * text, script-to-font and bidi on, no network, and files read only from
+	 * the uploads folder and the plugin.
+	 *
+	 * @param string               $html        The HTML the document will print; fonts are chosen for its text.
+	 * @param array<string, mixed> $certificate Certificate row, passed to the filter.
+	 * @param array<string, mixed> $overrides   Configuration that wins over the defaults and the filter (tests).
+	 * @return Mpdf
+	 * @throws RuntimeException When the PDF library is missing or fails.
+	 */
+	public function engine( string $html, array $certificate = array(), array $overrides = array() ): Mpdf {
 		if ( ! self::available() ) {
 			throw new RuntimeException( 'The PDF library is not installed.' );
 		}
-		$html    = $this->html( $certificate );
 		$plan    = $this->fonts->plan( $html );
 		$uploads = wp_upload_dir( null, false );
-		$temp    = self::temp_dir();
 
 		$config = array(
 			'mode'             => 'utf-8',
 			'format'           => 'A4-L',
 			'orientation'      => 'L',
-			'tempDir'          => $temp,
+			'tempDir'          => self::temp_dir(),
 			'fontDir'          => $plan['font_dirs'],
 			'fontdata'         => $plan['fontdata'],
 			'default_font'     => 'dejavusans',
@@ -130,6 +152,10 @@ class CertificateRenderer {
 			'useAdobeCJK'      => true,
 			'biDirectional'    => true,
 			'languageToFont'   => new LanguageToFont( $plan['languages'] ),
+			// Punctuation inside a run of another script ("فاطمه · رضایی") takes that script's
+			// font, which may lack it; such characters come from DejaVu Sans instead of a box.
+			'useSubstitutions' => true,
+			'backupSubsFont'   => array( 'dejavusans' ),
 			'showImageErrors'  => false,
 			'debug'            => false,
 		);
@@ -140,7 +166,7 @@ class CertificateRenderer {
 		 * @param array<string, mixed> $config      mPDF configuration.
 		 * @param array<string, mixed> $certificate Certificate row.
 		 */
-		$config = (array) apply_filters( 'publiclms_certificate_pdf_options', $config, $certificate );
+		$config = $overrides + (array) apply_filters( 'publiclms_certificate_pdf_options', $config, $certificate );
 
 		$container = new SimpleContainer(
 			array(
@@ -152,12 +178,9 @@ class CertificateRenderer {
 		try {
 			$mpdf = new Mpdf( $config, $container );
 			$mpdf->SetDirectionality( is_rtl() ? 'rtl' : 'ltr' );
-			$mpdf->SetTitle( (string) $certificate['course_title'] );
-			$mpdf->SetCreator( 'Public LMS' );
-			$mpdf->WriteHTML( $html );
-			return (string) $mpdf->Output( '', Destination::STRING_RETURN );
+			return $mpdf;
 		} catch ( Throwable $error ) {
-			throw new RuntimeException( 'The certificate PDF could not be made: ' . $error->getMessage(), 0, $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Never printed; the REST controller answers with its own message.
+			throw new RuntimeException( 'The certificate PDF engine could not start: ' . $error->getMessage(), 0, $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Never printed; the REST controller answers with its own message.
 		}
 	}
 

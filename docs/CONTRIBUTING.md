@@ -21,11 +21,12 @@ bin/timing-check.sh http://localhost:8888/lessons/<slug>/  # time to first byte,
 ```
 
 mPDF (certificates) ships prefixed in the `vendor-prefixed/` folder. It is not committed: `composer prefix`
-(`bin/prefix-vendor.sh`, needs PHP 8 and Composer 2) builds it for development, CI and release zips. It installs Strauss in `tools/strauss`, prefixes mPDF 8.3.1 from
-`tools/prefix/composer.json`, applies `bin/patch-mpdf.php` (OpenType structures current Noto fonts use) and
-trims mPDF's fonts (ADR-052). To update mPDF, change its version there, run the script, and check that every
-patch still applies; then render the certificate test matrix (`CertificateFontsTest`) and look at a
-certificate in each script.
+(`bin/prefix-vendor.sh`, needs PHP 8 and Composer 2) builds it for development, CI and release zips. It installs Strauss in `tools/strauss`, installs mPDF 8.3.1 fresh from
+`tools/prefix/composer.json`, applies `tools/prefix/mpdf-8.3.1-publiclms.patch` with `git apply` (OpenType
+structures current Noto fonts use), prefixes it and trims mPDF's fonts (ADR-052). The script stops if the
+installed mPDF is not 8.3.1 or a hunk does not apply. To update mPDF: change the version in both places
+(`tools/prefix/composer.json` and `MPDF_VERSION` in the script), rework the patch until it applies, run
+`ShapingTest` and `CertificateFontsTest`, and look at a certificate in each script.
 
 Seeded users share the password `public-lms-demo` unless you pass `--password` or set
 `PUBLICLMS_SEED_PASSWORD`. The e2e spec activates the plugin and Twenty Twenty-Five on the tests site and

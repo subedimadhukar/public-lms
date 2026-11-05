@@ -87,6 +87,17 @@ Public LMS connects to a payment provider only when the site owner switches that
 
 The offline payment method and the WooCommerce bridge send nothing anywhere.
 
+Certificates are made on your server and fetch nothing from the network.
+
+== Credits ==
+
+Certificates are made with mPDF (GPL 2.0, https://mpdf.github.io), with a small patch that lets it read current Noto fonts. They print with these bundled fonts:
+
+* Noto Sans Arabic, Hebrew, Devanagari, Bengali, Tamil and Thai, from the Noto project (SIL Open Font License 1.1).
+* DejaVu Sans and DejaVu Serif (Bitstream Vera licence, with DejaVu changes in the public domain).
+
+Each licence ships with its files.
+
 == Screenshots ==
 
 1. Placeholder: the course catalogue.

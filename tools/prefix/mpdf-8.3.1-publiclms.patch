@@ -1,0 +1,269 @@
+Public LMS patch for mPDF 8.3.1 (ADR-052). Applied by bin/prefix-vendor.sh to a
+fresh mPDF from Composer, before Strauss prefixes it; `git apply` stops the build
+if any hunk no longer applies, for example after an mPDF version bump. Every mPDF
+upgrade must re-apply this patch and re-run the certificate tests and matrix.
+
+Why: current Noto Sans builds (fontmake) use OpenType structures mPDF 8.3.1's
+font reader and shaper reject or mishandle. With this patch, Noto Sans Arabic,
+Hebrew, Devanagari, Bengali, Tamil and Thai load and shape correctly.
+
+1. GSUB lookup type 5 (contextual substitution), format 3 (coverage-based).
+   OpenType: SequenceContextFormat3 = format, glyphCount, seqLookupCount,
+   coverageOffsets[glyphCount] (Offset16 from the subtable), then
+   seqLookupRecords[seqLookupCount] (sequenceIndex, lookupListIndex).
+   TTFontFile read it into nothing and threw "GPOS Lookup Type 5, Format 3 not
+   supported"; its builder threw "not tested"; Otl threw "not TESTED YET".
+   Read and applied as chained context format 3 (type 6.3) with no backtrack
+   or lookahead. Fonts: Noto Sans Arabic, Devanagari, Bengali.
+   Upstream: mpdf/mpdf discussion #1957 (Noto Naskh Arabic, same error).
+2. GDEF mark glyph sets (MarkGlyphSetsDef) and lookup flag 0x0010
+   (useMarkFilteringSet). OpenType: MarkGlyphSetsDef = format, markGlyphSetCount,
+   coverageOffsets[] (Offset32 from the start of MarkGlyphSetsDef). A lookup
+   with the flag ignores every mark NOT in its set. mPDF threw "not supported"
+   / "Not tested yet"; behind the throws, it seeked to each coverage offset as
+   if it were absolute and stored the set itself as the marks to ignore.
+   Fixed: offset = GDEF + MarkGlyphSetsDef + coverage offset; stored string =
+   all marks (GlyphClassDef class 3) minus the set, like mPDF's mark attachment
+   classes; the "no set given" check is strict, because set 0 == '' on PHP 7.
+   Fonts: Noto Sans Tamil, Thai. Upstream: mpdf/mpdf#1408 (closed as
+   unsupported); the same fix, checked against HarfBuzz hb-shape, is
+   GravityPDF/mpdf#14 (fork, merged 2026-09-07).
+3. Reader crashes: contextual builders count the `subs` of the lookups they
+   call, which are unset when that lookup is itself contextual (TypeError on
+   PHP 8, Noto Sans Bengali); the Indic `locl` collector read `replace` from
+   contextual rules, which have none (warning).
+4. Arabic joining forms that are 1-to-n substitutions (GSUB type 2 under
+   init/medi/fina): Noto draws Farsi yeh and kaf as a dotless body plus a dots
+   mark. mPDF stored the form as "0E008 0E06E" and the joining shaper used it
+   as one code point, so the letter was blank. The shaper now inserts every
+   glyph as GSUB type 2 does; the RTL glyph list and the kashida finals take
+   the parts too.
+5. WebP without GD: processWebp() called imagecreatefromstring() before
+   checking it exists, a fatal Error on a server without GD. Now the image is
+   left out, like mPDF's other GD paths.
+
+The "PublicLMS patch:" comments mark each change for review.
+
+diff --git a/src/Image/ImageProcessor.php b/src/Image/ImageProcessor.php
+index 98fd83f..951094a 100644
+--- a/src/Image/ImageProcessor.php
++++ b/src/Image/ImageProcessor.php
+@@ -1232,7 +1232,7 @@ class ImageProcessor implements \Psr\Log\LoggerAwareInterface
+ 
+ 	public function processWebp($data, $file, $firstTime)
+ 	{
+-		$im = @imagecreatefromstring($data);
++		$im = function_exists('imagecreatefromstring') ? @imagecreatefromstring($data) : false; // PublicLMS patch: webp without GD
+ 
+ 		if (!function_exists('imagewebp') || false === $im) {
+ 			return $this->imageError($file, $firstTime, 'Missing GD support for WEBP images.');
+diff --git a/src/Otl.php b/src/Otl.php
+index a89fd92..6e91220 100644
+--- a/src/Otl.php
++++ b/src/Otl.php
+@@ -2019,7 +2019,51 @@ class Otl
+ 			//===========
+ 			// Format 3: Coverage-based Context Glyph Substitution
+ 			elseif ($SubstFormat == 3) {
+-				throw new \Mpdf\MpdfException("GSUB Lookup Type " . $Type . " Format " . $SubstFormat . " not TESTED YET.");
++				// PublicLMS patch: apply GSUB 5.3
++				$InputGlyphCount = $this->read_ushort();
++				$SubstCount = $this->read_ushort();
++				$CoverageInputOffset = [];
++				for ($b = 0; $b < $InputGlyphCount; $b++) {
++					$CoverageInputOffset[] = $subtable_offset + $this->read_ushort();
++				}
++				$save_pos = $this->_pos;
++				$CoverageInputGlyphs = [];
++				for ($b = 0; $b < $InputGlyphCount; $b++) {
++					$this->seek($CoverageInputOffset[$b]);
++					$CoverageInputGlyphs[$b] = implode("|", $this->_getCoverage());
++				}
++				$matched = $this->checkContextMatchMultiple($CoverageInputGlyphs, [], [], $ignore, $ptr);
++				if ($matched) {
++					$this->seek($save_pos);
++					$SubstLookupRecord = [];
++					for ($p = 0; $p < $SubstCount; $p++) {
++						$SubstLookupRecord[$p]['SequenceIndex'] = $this->read_ushort();
++						$SubstLookupRecord[$p]['LookupListIndex'] = $this->read_ushort();
++					}
++					for ($p = 0; $p < $SubstCount; $p++) {
++						if ($SubstLookupRecord[$p]['SequenceIndex'] >= $InputGlyphCount) {
++							continue;
++						}
++						$lu = $SubstLookupRecord[$p]['LookupListIndex'];
++						$luType = $this->GSUBLookups[$lu]['Type'];
++						$luFlag = $this->GSUBLookups[$lu]['Flag'];
++						$luMarkFilteringSet = $this->GSUBLookups[$lu]['MarkFilteringSet'];
++						$luptr = $matched[$SubstLookupRecord[$p]['SequenceIndex']];
++						$lucurrGlyph = $this->OTLdata[$luptr]['hex'];
++						$lucurrGID = $this->OTLdata[$luptr]['uni'];
++						foreach ($this->GSUBLookups[$lu]['Subtables'] as $luc => $lusubtable_offset) {
++							$shift = $this->_applyGSUBsubtable($lu, $luc, $luptr, $lucurrGlyph, $lucurrGID, ($lusubtable_offset - $this->GSUB_offset), $luType, $luFlag, $luMarkFilteringSet, $this->GSLuCoverage[$lu][$luc], 1, $currentTag, $is_old_spec, $tagInt);
++							if ($shift) {
++								break;
++							}
++						}
++					}
++					if (!defined("OMIT_OTL_FIX_3") || OMIT_OTL_FIX_3 != 1) {
++						return (isset($shift) ? $shift : 0);
++					}
++					return $InputGlyphCount;
++				}
++				return 0;
+ 			}
+ 		} ////////////////////////////////////////////////////////////////////////////////
+ 		// LookupType 6: Chaining Contextual Substitution Subtable
+@@ -2893,10 +2937,14 @@ class Otl
+ 			$nextChar = $crntChar;
+ 		}
+ 		$ra = array_reverse($output);
+-		for ($i = 0; $i < count($this->OTLdata); $i++) {
+-			$this->OTLdata[$i]['uni'] = hexdec($ra[$i][0]);
+-			$this->OTLdata[$i]['hex'] = $ra[$i][0];
+-			$this->OTLdata[$i]['form'] = $ra[$i][1]; // Actaul form substituted 0=ISOLATED FORM :: 1=FINAL :: 2=INITIAL :: 3=MEDIAL
++		for ($i = count($this->OTLdata) - 1; $i >= 0; $i--) { // PublicLMS patch: multiple-glyph Arabic forms
++			$glyphs = explode(' ', trim($ra[$i][0]));
++			$this->OTLdata[$i]['uni'] = hexdec($glyphs[0]);
++			$this->OTLdata[$i]['hex'] = $glyphs[0];
++			if (count($glyphs) > 1) {
++				$this->GSUBsubstitute($i, array_map('hexdec', $glyphs), 2);
++			}
++			$this->OTLdata[$i]['form'] = $ra[$i][1]; // 0=ISOLATED FORM :: 1=FINAL :: 2=INITIAL :: 3=MEDIAL
+ 		}
+ 	}
+ 
+@@ -4488,9 +4536,8 @@ class Otl
+ 
+ 		// Flag & 0x0010 = UseMarkFilteringSet
+ 		if ($flag & 0x0010) {
+-			throw new \Mpdf\MpdfException("This font [" . $this->fontkey . "] contains MarkGlyphSets - Not tested yet");
+-			// Change also in ttfontsuni.php
+-			if ($MarkFilteringSet == '') {
++			// PublicLMS patch: GCOM mark filtering sets
++			if ($MarkFilteringSet === '' || !isset($this->MarkGlyphSets[$MarkFilteringSet])) {
+ 				throw new \Mpdf\MpdfException("This font [" . $this->fontkey . "] contains MarkGlyphSets - but MarkFilteringSet not set");
+ 			}
+ 			$str = $this->MarkGlyphSets[$MarkFilteringSet];
+diff --git a/src/TTFontFile.php b/src/TTFontFile.php
+index 2591bdb..1ddf3e2 100644
+--- a/src/TTFontFile.php
++++ b/src/TTFontFile.php
+@@ -1344,9 +1344,12 @@ class TTFontFile
+ 					$MarkSetOffset[] = $this->read_ulong();
+ 				}
+ 				for ($i = 0; $i < $MarkSetCount; $i++) {
+-					$this->seek($MarkSetOffset[$i]);
++					// PublicLMS patch: mark set offsets and complement
++					$this->seek($gdef_offset + $MarkGlyphSetsDef_offset + $MarkSetOffset[$i]);
+ 					$glyphs = $this->_getCoverage();
+-					$this->MarkGlyphSets[$i] = ' ' . implode('| ', $glyphs);
++					$ignored = (is_array($Marks) && count($Marks)) ? array_diff($Marks, $glyphs) : [];
++					sort($ignored, SORT_STRING);
++					$this->MarkGlyphSets[$i] = ' ' . implode('| ', $ignored);
+ 				}
+ 			} else {
+ 				$this->MarkGlyphSets = [];
+@@ -1790,6 +1793,19 @@ class TTFontFile
+ 								$Lookup[$i]['Subtable'][$c]['SubClassSetOffset'][] = $Lookup[$i]['Subtable'][$c]['Offset'] + $offset;
+ 							}
+ 						}
++					} // Format 3: Coverage-based Context Glyph Substitution. PublicLMS patch: read GSUB 5.3
++					elseif ($SubstFormat == 3) {
++						$Lookup[$i]['Subtable'][$c]['InputGlyphCount'] = $this->read_ushort();
++						$Lookup[$i]['Subtable'][$c]['SubstCount'] = $this->read_ushort();
++						for ($b = 0; $b < $Lookup[$i]['Subtable'][$c]['InputGlyphCount']; $b++) {
++							$Lookup[$i]['Subtable'][$c]['CoverageInput'][] = $Lookup[$i]['Subtable'][$c]['Offset'] + $this->read_ushort();
++						}
++						for ($b = 0; $b < $Lookup[$i]['Subtable'][$c]['SubstCount']; $b++) {
++							$Lookup[$i]['Subtable'][$c]['SubstLookupRecord'][$b]['SequenceIndex'] = $this->read_ushort();
++							$Lookup[$i]['Subtable'][$c]['SubstLookupRecord'][$b]['LookupListIndex'] = $this->read_ushort();
++						}
++						$Lookup[$i]['Subtable'][$c]['BacktrackGlyphCount'] = 0;
++						$Lookup[$i]['Subtable'][$c]['LookaheadGlyphCount'] = 0;
+ 					} else {
+ 						throw new \Mpdf\Exception\FontException("GPOS Lookup Type " . $Lookup[$i]['Type'] . ", Format " . $SubstFormat . " not supported (ttfontsuni.php).");
+ 					}
+@@ -2007,7 +2023,7 @@ class TTFontFile
+ 							$glyphs = $this->_getCoverage();
+ 							$Lookup[$i]['Subtable'][$c]['CoverageInputGlyphs'][] = implode("|", $glyphs);
+ 						}
+-						throw new \Mpdf\Exception\FontException("Lookup Type 5, SubstFormat 3 not tested. Please report this with the name of font used - " . $this->fontkey);
++						// PublicLMS patch: build GSUB 5.3
+ 					}
+ 				} // LookupType 6: Chaining Contextual Substitution Subtable
+ 				elseif ($Lookup[$i]['Type'] == 6) {
+@@ -2196,7 +2212,9 @@ class TTFontFile
+ 							if (isset($v['ignore']) && $v['ignore']) {
+ 								$rtl[$key]['ignore'][$kk] = $v['ignore'];
+ 							}
+-							$rtlpua[] = $sub;
++							foreach (explode(' ', $sub) as $subGlyph) { // PublicLMS patch: multiple-glyph forms are RTL
++								$rtlpua[] = $subGlyph;
++							}
+ 
+ 						} else { // Add any other glyphs which are in PUA
+ 							if (isset($v['context']) && $v['context']) {
+@@ -2232,7 +2250,7 @@ class TTFontFile
+ 								// This version does not exclude RA (0631) FEAE; Ya (064A)  FEF2; Alef Maqsurah (0649) FEF0 which
+ 								// are selected in priority if connected to a medial Bah
+ 								//if (strpos('0FE8E 0FE94 0FEA2 0FEAA 0FEC2 0FEDA 0FEDE 0FB93 0FECA 0FED2 0FED6 0FEEE', $variants[1])===false) {	// not already included
+-								$finals .= $variants[1] . ' ';
++								$finals .= strtok($variants[1], ' ') . ' '; // PublicLMS patch: base glyph of multiple-glyph finals
+ 							}
+ 						}
+ 					}
+@@ -2258,7 +2276,7 @@ class TTFontFile
+ 					// First get 'locl' substitutions (reversed!)
+ 					$loclsubs = [];
+ 					foreach ($volt as $v) {
+-						if (strpos('locl', $v['tag']) !== false) {
++						if (strpos('locl', $v['tag']) !== false && !isset($v['context'])) { // PublicLMS patch: skip contextual locl rules
+ 							$key = $v['match'];
+ 							$key = preg_replace('/[\(\)]*/', '', $key);
+ 							$sub = $v['replace'];
+@@ -2497,7 +2515,7 @@ class TTFontFile
+ 
+ 									// $Lookup[$lup] = secondary Lookup
+ 									for ($lus = 0; $lus < $Lookup[$lup]['SubtableCount']; $lus++) {
+-										if (count($Lookup[$lup]['Subtable'][$lus]['subs'])) {
++										if (!empty($Lookup[$lup]['Subtable'][$lus]['subs']) && is_array($Lookup[$lup]['Subtable'][$lus]['subs'])) { // PublicLMS patch: guard nested substitutions
+ 											foreach ($Lookup[$lup]['Subtable'][$lus]['subs'] as $luss) {
+ 												$lookupGlyphs = $luss['Replace'];
+ 												$mLen = count($lookupGlyphs);
+@@ -2628,7 +2646,7 @@ class TTFontFile
+ 							$lup = $Lookup[$i]['Subtable'][$c]['SubstLookupRecord'][$b]['LookupListIndex'];
+ 							$seqIndex = $Lookup[$i]['Subtable'][$c]['SubstLookupRecord'][$b]['SequenceIndex'];
+ 							for ($lus = 0; $lus < $Lookup[$lup]['SubtableCount']; $lus++) {
+-								if (count($Lookup[$lup]['Subtable'][$lus]['subs'])) {
++								if (!empty($Lookup[$lup]['Subtable'][$lus]['subs']) && is_array($Lookup[$lup]['Subtable'][$lus]['subs'])) { // PublicLMS patch: guard nested substitutions
+ 									foreach ($Lookup[$lup]['Subtable'][$lus]['subs'] as $luss) {
+ 										$lookupGlyphs = $luss['Replace'];
+ 										$mLen = count($lookupGlyphs);
+@@ -2707,7 +2725,7 @@ class TTFontFile
+ 
+ 									// $Lookup[$lup] = secondary Lookup
+ 									for ($lus = 0; $lus < $Lookup[$lup]['SubtableCount']; $lus++) {
+-										if (count($Lookup[$lup]['Subtable'][$lus]['subs'])) {
++										if (!empty($Lookup[$lup]['Subtable'][$lus]['subs']) && is_array($Lookup[$lup]['Subtable'][$lus]['subs'])) { // PublicLMS patch: guard nested substitutions
+ 											foreach ($Lookup[$lup]['Subtable'][$lus]['subs'] as $luss) {
+ 												$lookupGlyphs = $luss['Replace'];
+ 												$mLen = count($lookupGlyphs);
+@@ -2823,7 +2841,7 @@ class TTFontFile
+ 
+ 									// $Lookup[$lup] = secondary Lookup
+ 									for ($lus = 0; $lus < $Lookup[$lup]['SubtableCount']; $lus++) {
+-										if (count($Lookup[$lup]['Subtable'][$lus]['subs'])) {
++										if (!empty($Lookup[$lup]['Subtable'][$lus]['subs']) && is_array($Lookup[$lup]['Subtable'][$lus]['subs'])) { // PublicLMS patch: guard nested substitutions
+ 											foreach ($Lookup[$lup]['Subtable'][$lus]['subs'] as $luss) {
+ 												$lookupGlyphs = $luss['Replace'];
+ 												$mLen = count($lookupGlyphs);
+@@ -2973,7 +2991,7 @@ class TTFontFile
+ 
+ 		// Flag & 0x0010 = UseMarkFilteringSet
+ 		if ($flag & 0x0010) {
+-			throw new \Mpdf\Exception\FontException("Font \"" . $this->fontkey . "\" contains MarkGlyphSets which is not supported");
++			// PublicLMS patch: GSUB mark filtering sets
+ 			$str = $this->MarkGlyphSets[$MarkFilteringSet];
+ 		}
+ 

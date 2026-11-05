@@ -958,13 +958,28 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
   rejects five of the six current Noto builds, and the owner chose to patch mPDF and keep Noto.
 - **Decision (engine).** `CertificateRenderer` renders the same block template and print stylesheet with
   mPDF 8.3.1, prefixed by Strauss under `PublicLMS\Vendor` like Dompdf was. Dompdf is removed.
-  `bin/prefix-vendor.sh` runs Strauss (with a 1 GB memory limit, for mPDF's 27,000-line main class), then
-  `bin/patch-mpdf.php`, then trims mPDF's fonts to DejaVu Sans and Serif, regular and bold, and drops its
-  index collations. The patch script applies 12 changes, and each must match exactly once, so an mPDF
-  update cannot drop one silently:
-  - GSUB lookup type 5 format 3 (coverage-based context) is read and applied as 6.3 without context.
-  - GDEF mark filtering sets are read at their real offset and stored as the marks to ignore. The
-    "no set" check is strict, because set 0 == '' on PHP 7.
+  mPDF is pinned at exactly 8.3.1, and `tools/prefix/mpdf-8.3.1-publiclms.patch` changes it: a
+  unified diff of 3 files, 15 hunks, +85/−20 lines, in mPDF's own namespaces so it can go upstream.
+  `bin/prefix-vendor.sh` takes the following steps:
+  1. Installs a fresh mPDF from Composer.
+  2. Stops unless the installed version is 8.3.1.
+  3. Applies the patch with `git apply`, stopping if any hunk fails.
+  4. Runs Strauss, with a 1 GB memory limit for mPDF's 27,000-line main class.
+  5. Trims mPDF's fonts to DejaVu Sans and Serif, regular and bold, and drops its index collations.
+
+  **Every mPDF upgrade must re-apply the patch, rewrite it where it no longer applies, and re-run
+  `ShapingTest`, `CertificateFontsTest` and the script matrix.** The patch changes:
+  - **GSUB lookup type 5, format 3.** This is coverage-based contextual substitution
+    (SequenceContextFormat3 in the OpenType spec). It is read, and applied as chained format 3 with no
+    backtrack or lookahead. mPDF threw "not supported" for Noto Sans Arabic, Devanagari and Bengali.
+    Upstream, mpdf/mpdf discussion #1957 reports the same error for Noto Naskh Arabic, unanswered.
+  - **GDEF MarkGlyphSetsDef with lookup flag 0x0010 (useMarkFilteringSet).** A lookup that uses a set
+    ignores every mark outside it. mPDF threw for Noto Sans Tamil and Thai. Behind the throw, it read
+    each set's coverage at the wrong offset (the offsets are Offset32 from MarkGlyphSetsDef) and stored
+    the set itself as the marks to ignore. Now the offset is GDEF + MarkGlyphSetsDef + the set's offset,
+    and the ignore string is every mark minus the set. The "no set" check is strict, because
+    set 0 == '' on PHP 7. Upstream, mpdf/mpdf#1408 was closed as "not supported". The same fix, checked
+    against HarfBuzz `hb-shape`, is GravityPDF/mpdf#14 (a fork, merged 2026-09-07).
   - Nested contextual lookups and contextual `locl` rules no longer crash the reader (a Bengali
     TypeError on PHP 8).
   - Arabic joining forms that are one-to-many substitutions are inserted as several glyphs. Noto draws
@@ -972,6 +987,13 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
     blank.
   - WebP images on a server without GD are left out; before, that one unguarded GD call was a fatal
     error for the whole certificate.
+  `ShapingTest` loads all twelve Noto faces through the patched reader. It also asserts the shaped glyph
+  IDs of a string per script, regular and bold: Arabic, Persian, Urdu, Hebrew, Devanagari, Bengali,
+  Tamil and Thai. Turning off the Arabic forms change fails the Persian cases. The same strings render
+  like a browser (HarfBuzz) with the same font files.
+  Punctuation inside a run of another script takes that script's font, which may lack it: Noto Sans
+  Arabic has no middle dot. So `useSubstitutions` takes such characters from DejaVu Sans instead of
+  printing a box.
   mPDF gets no network: its HTTP client refuses every request (`Certificates\Pdf\NoNetwork`). Its file
   reader opens only files under the uploads folder and the plugin (`Certificates\Pdf\LocalFiles`), as
   Dompdf's chroot did. Font caches live in a per-site, per-version folder in the temp dir, so a new
@@ -1013,8 +1035,8 @@ Each record: context, decision, consequences. Status is **Accepted** for all, as
     "GPLv2 or later" allows. Noto is OFL 1.1, and DejaVu uses the Bitstream Vera licence; both licence
     files ship.
   - CJK names print in the viewer's regular weight, not bold, unless the site adds a font.
-  - The patches are ours to maintain. A new mPDF release needs the patch script to apply cleanly and the
-    spike matrix re-rendered.
+  - The patch is ours to maintain until upstream takes it. A draft upstream issue is kept outside the
+    repository, and nothing has been posted.
 
 ### ADR-053 Built, not committed: vendor-prefixed/, release zips and Playground (supersedes "committed" in ADR-044)
 - **Context.** ADR-044 committed `vendor-prefixed/` (9 MB, mostly fonts), so Playground's `git:directory`
