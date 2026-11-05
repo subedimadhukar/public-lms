@@ -14,7 +14,8 @@ const path = require( 'path' );
 const postcss = require( 'postcss' );
 
 const root = path.join( __dirname, '..' );
-const PHYSICAL = /^(left|right|inset|translate|transform|background(-position(-x)?)?|background-image|box-shadow|text-shadow|float|clear|text-align|border-radius|margin|padding|(margin|padding|border)-(left|right)(-.*)?|border-(top|bottom)-(left|right)-radius)$/;
+const PHYSICAL =
+	/^(left|right|inset|translate|transform|background(-position(-x)?)?|background-image|box-shadow|text-shadow|float|clear|text-align|border-radius|margin|padding|(margin|padding|border)-(left|right)(-.*)?|border-(top|bottom)-(left|right)-radius)$/;
 
 /**
  * Splits a value at top-level commas (not inside parentheses).
@@ -44,7 +45,8 @@ function splitTop( value ) {
 }
 
 const NONZERO_LENGTH = /^-?(\d*\.)?\d+[a-z%]*$/;
-const isNonZero = ( token ) => NONZERO_LENGTH.test( token ) && parseFloat( token ) !== 0;
+const isNonZero = ( token ) =>
+	NONZERO_LENGTH.test( token ) && parseFloat( token ) !== 0;
 
 /**
  * Whether a declaration reads differently in a mirrored layout.
@@ -63,13 +65,18 @@ function asymmetric( prop, value ) {
 		return parts.length === 4 && parts[ 1 ] !== parts[ 3 ];
 	}
 	if ( /shadow$/.test( prop ) ) {
-		return splitTop( v ).some( ( one ) => isNonZero( one.replace( /^inset\s+/, '' ).split( ' ' )[ 0 ] || '' ) );
+		return splitTop( v ).some( ( one ) =>
+			isNonZero( one.replace( /^inset\s+/, '' ).split( ' ' )[ 0 ] || '' )
+		);
 	}
 	if ( /gradient\(/.test( v ) ) {
 		return /to (left|right)|\b(?!0deg|180deg|360deg)-?\d+deg/.test( v );
 	}
 	if ( /^(translate|transform)$/.test( prop ) ) {
-		return /translate(X|3d)?\(\s*-?(\d*\.)?[1-9]/.test( v ) || ( prop === 'translate' && isNonZero( v.split( ' ' )[ 0 ] ) );
+		return (
+			/translate(X|3d)?\(\s*-?(\d*\.)?[1-9]/.test( v ) ||
+			( prop === 'translate' && isNonZero( v.split( ' ' )[ 0 ] ) )
+		);
 	}
 	if ( /^background$/.test( prop ) ) {
 		return /\b(left|right)\b/.test( v );
@@ -80,14 +87,18 @@ function asymmetric( prop, value ) {
 	return /(left|right)/.test( prop );
 }
 
-const swap = ( text ) => text.replace( /left|right/g, ( m ) => ( m === 'left' ? 'right' : 'left' ) );
+const swap = ( text ) =>
+	text.replace( /left|right/g, ( m ) => ( m === 'left' ? 'right' : 'left' ) );
 
 function walk( dir, out ) {
 	for ( const entry of fs.readdirSync( dir, { withFileTypes: true } ) ) {
 		const full = path.join( dir, entry.name );
 		if ( entry.isDirectory() ) {
 			walk( full, out );
-		} else if ( entry.name.endsWith( '.css' ) && ! entry.name.endsWith( '-rtl.css' ) ) {
+		} else if (
+			entry.name.endsWith( '.css' ) &&
+			! entry.name.endsWith( '-rtl.css' )
+		) {
 			out.push( full );
 		}
 	}
@@ -109,13 +120,22 @@ for ( const ltr of files ) {
 	}
 	const a = [];
 	const b = [];
-	postcss.parse( fs.readFileSync( ltr, 'utf8' ) ).walkDecls( ( d ) => a.push( d ) );
-	postcss.parse( fs.readFileSync( rtl, 'utf8' ) ).walkDecls( ( d ) => b.push( d ) );
+	postcss
+		.parse( fs.readFileSync( ltr, 'utf8' ) )
+		.walkDecls( ( d ) => a.push( d ) );
+	postcss
+		.parse( fs.readFileSync( rtl, 'utf8' ) )
+		.walkDecls( ( d ) => b.push( d ) );
 	const seen = new Set();
-	b.forEach( ( d ) => seen.add( `${ d.parent.selector }|${ d.prop }|${ d.value }` ) );
+	b.forEach( ( d ) =>
+		seen.add( `${ d.parent.selector }|${ d.prop }|${ d.value }` )
+	);
 	for ( const d of a ) {
 		const prop = d.prop.toLowerCase();
-		if ( ( ! PHYSICAL.test( prop ) && ! /gradient\(/.test( d.value ) ) || ! asymmetric( prop, d.value ) ) {
+		if (
+			( ! PHYSICAL.test( prop ) && ! /gradient\(/.test( d.value ) ) ||
+			! asymmetric( prop, d.value )
+		) {
 			continue;
 		}
 		const selector = d.parent.selector;
@@ -124,10 +144,14 @@ for ( const ltr of files ) {
 			? seen.has( `${ selector }|${ swap( d.prop ) }|${ d.value }` )
 			: ! seen.has( `${ selector }|${ d.prop }|${ d.value }` );
 		if ( ! flipped ) {
-			process.stdout.write( `UNFLIPPED ${ rel }: ${ selector } { ${ d.prop }: ${ d.value } }\n` );
+			process.stdout.write(
+				`UNFLIPPED ${ rel }: ${ selector } { ${ d.prop }: ${ d.value } }\n`
+			);
 			problems++;
 		}
 	}
 }
-process.stdout.write( `${ files.length } stylesheets checked; ${ problems } unflipped, ${ missing } missing RTL copies.\n` );
+process.stdout.write(
+	`${ files.length } stylesheets checked; ${ problems } unflipped, ${ missing } missing RTL copies.\n`
+);
 process.exit( problems + missing > 0 ? 1 : 0 );
